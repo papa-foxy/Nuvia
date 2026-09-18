@@ -273,82 +273,156 @@ export function ExerciseListView({ onOpenAddExercise, onNavigateTab }: ExerciseL
                 const isScheduledToday = routine.days.some(
                   (d) => d.toLowerCase() === todayName.toLowerCase()
                 );
+                // Use first exercise's YouTube ID for the banner thumbnail
+                const firstEx = routine.exercises[0];
+                const bannerThumb = firstEx?.youtube_id
+                  ? `https://img.youtube.com/vi/${firstEx.youtube_id}/hqdefault.jpg`
+                  : firstEx?.thumbnail_url;
+
                 return (
                   <div
                     key={routine.id}
                     onClick={() => setSelectedRoutine(routine)}
-                    className="ios-card overflow-hidden border border-white/[0.08] hover:border-[#30D158]/40 transition-all cursor-pointer p-4 space-y-3 group"
+                    className="ios-card overflow-hidden border border-white/[0.08] hover:border-[#30D158]/40 transition-all cursor-pointer group"
                   >
-                    {/* Routine Card Header */}
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <div className="flex items-center gap-2 mb-1.5">
-                          {isScheduledToday && (
-                            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#30D158] text-black">
+                    {/* ── Video Thumbnail Banner ── */}
+                    {bannerThumb && (
+                      <div className="relative h-36 bg-black overflow-hidden">
+                        <img
+                          src={bannerThumb}
+                          alt={routine.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
+                        />
+                        {/* Gradient overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+
+                        {/* Today badge top-left */}
+                        {isScheduledToday && (
+                          <div className="absolute top-2.5 left-2.5">
+                            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#30D158] text-black shadow">
                               Today
                             </span>
-                          )}
-                          <span className="text-[10px] font-semibold uppercase tracking-wider text-[#0A84FF] bg-[#0A84FF]/10 px-2 py-0.5 rounded-full">
-                            {routine.focus || 'Training'}
-                          </span>
-                          <span className="text-[11px] text-[#8E8E93]">
-                            {routine.exercises.length} exercises
-                          </span>
-                        </div>
-
-                        <h3 className="text-base font-bold text-white leading-snug group-hover:text-[#30D158] transition-colors">
-                          {routine.title}
-                        </h3>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={(e) => handleDeleteRoutine(routine.id, e)}
-                        className="p-1.5 text-[#8E8E93] hover:text-red-400 transition-colors shrink-0"
-                        title="Delete Routine"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-
-                    {/* Scheduled Days */}
-                    <div className="flex flex-wrap gap-1">
-                      {routine.days.map((day) => (
-                        <span
-                          key={day}
-                          className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
-                            day.toLowerCase() === todayName.toLowerCase()
-                              ? 'bg-[#30D158]/20 text-[#30D158] border border-[#30D158]/30 font-semibold'
-                              : 'bg-white/[0.05] text-[#8E8E93]'
-                          }`}
-                        >
-                          {day}
-                        </span>
-                      ))}
-                    </div>
-
-                    {/* Exercise Thumbnails Preview Strip & Open CTA */}
-                    <div className="flex items-center justify-between pt-1 border-t border-white/[0.04]">
-                      <div className="flex items-center gap-1.5 overflow-hidden">
-                        {routine.exercises.slice(0, 5).map((ex) => (
-                          <div
-                            key={ex.id}
-                            className="w-9 h-9 rounded-xl bg-black/50 p-1 border border-white/[0.08] shrink-0"
-                            title={ex.name}
-                          >
-                            <img src={ex.thumbnail_url} alt={ex.name} className="w-full h-full object-contain" />
-                          </div>
-                        ))}
-                        {routine.exercises.length > 5 && (
-                          <div className="w-9 h-9 rounded-xl bg-[#2C2C2E] border border-white/[0.08] shrink-0 flex items-center justify-center text-[10px] font-bold text-[#8E8E93]">
-                            +{routine.exercises.length - 5}
                           </div>
                         )}
+
+                        {/* Delete top-right */}
+                        <button
+                          type="button"
+                          onClick={(e) => handleDeleteRoutine(routine.id, e)}
+                          className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white/60 hover:text-red-400 hover:bg-black/70 transition-colors"
+                          title="Delete Routine"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+
+                        {/* Routine title + focus overlaid at bottom */}
+                        <div className="absolute bottom-0 left-0 right-0 p-3">
+                          <div className="flex items-center gap-1.5 mb-1">
+                            <span className="text-[10px] font-semibold uppercase tracking-wider text-[#0A84FF] bg-[#0A84FF]/20 px-2 py-0.5 rounded-full backdrop-blur-sm border border-[#0A84FF]/20">
+                              {routine.focus || 'Training'}
+                            </span>
+                            <span className="text-[10px] text-white/50">
+                              {routine.exercises.length} exercises
+                            </span>
+                          </div>
+                          <h3 className="text-sm font-bold text-white leading-snug group-hover:text-[#30D158] transition-colors line-clamp-2">
+                            {routine.title}
+                          </h3>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ── Card Body ── */}
+                    <div className="p-3 space-y-2.5">
+                      {/* If no banner (no exercises yet), show title here */}
+                      {!bannerThumb && (
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              {isScheduledToday && (
+                                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#30D158] text-black">
+                                  Today
+                                </span>
+                              )}
+                              <span className="text-[10px] font-semibold uppercase tracking-wider text-[#0A84FF] bg-[#0A84FF]/10 px-2 py-0.5 rounded-full">
+                                {routine.focus || 'Training'}
+                              </span>
+                            </div>
+                            <h3 className="text-sm font-bold text-white group-hover:text-[#30D158] transition-colors">
+                              {routine.title}
+                            </h3>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={(e) => handleDeleteRoutine(routine.id, e)}
+                            className="p-1.5 text-[#8E8E93] hover:text-red-400 transition-colors shrink-0"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Scheduled Days */}
+                      <div className="flex flex-wrap gap-1">
+                        {routine.days.map((day) => (
+                          <span
+                            key={day}
+                            className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                              day.toLowerCase() === todayName.toLowerCase()
+                                ? 'bg-[#30D158]/20 text-[#30D158] border border-[#30D158]/30 font-semibold'
+                                : 'bg-white/[0.05] text-[#8E8E93]'
+                            }`}
+                          >
+                            {day}
+                          </span>
+                        ))}
                       </div>
 
-                      <div className="flex items-center gap-1 text-xs font-semibold text-[#30D158] group-hover:translate-x-0.5 transition-transform shrink-0">
-                        <span>Open Routine</span>
-                        <ChevronRight className="w-4 h-4" />
+                      {/* Exercise icon strip + Open CTA */}
+                      <div className="flex items-center justify-between pt-1 border-t border-white/[0.04]">
+                        <div className="flex items-center gap-1 overflow-hidden">
+                          {routine.exercises.slice(0, 6).map((ex) => {
+                            const ytThumb = ex.youtube_id
+                              ? `https://img.youtube.com/vi/${ex.youtube_id}/default.jpg`
+                              : null;
+                            return (
+                              <div
+                                key={ex.id}
+                                className="w-8 h-8 rounded-lg overflow-hidden bg-black/60 border border-white/[0.08] shrink-0"
+                                title={ex.name}
+                              >
+                                {ytThumb ? (
+                                  <img
+                                    src={ytThumb}
+                                    alt={ex.name}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      const parent = (e.target as HTMLImageElement).parentElement;
+                                      if (parent) {
+                                        parent.innerHTML = `<img src="${ex.thumbnail_url}" class="w-full h-full object-contain p-1 opacity-70" />`;
+                                      }
+                                    }}
+                                  />
+                                ) : (
+                                  <img src={ex.thumbnail_url} alt={ex.name} className="w-full h-full object-contain p-1 opacity-70" />
+                                )}
+                              </div>
+                            );
+                          })}
+                          {routine.exercises.length > 6 && (
+                            <div className="w-8 h-8 rounded-lg bg-[#2C2C2E] border border-white/[0.08] shrink-0 flex items-center justify-center text-[10px] font-bold text-[#8E8E93]">
+                              +{routine.exercises.length - 6}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-1 text-xs font-semibold text-[#30D158] group-hover:translate-x-0.5 transition-transform shrink-0 ml-2">
+                          <span>Open</span>
+                          <ChevronRight className="w-4 h-4" />
+                        </div>
                       </div>
                     </div>
                   </div>
