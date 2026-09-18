@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { X, ExternalLink, Play, CheckCircle2, AlertCircle } from 'lucide-react';
 import { RoutineExercise } from '@/types/routine';
 import { PLAYLIST_ID, PLAYLIST_VIDEO_ID } from '@/lib/exercise-catalog';
+import { ExerciseThumbnail } from './ExerciseThumbnail';
 
 interface ExerciseVideoModalProps {
   exercise: RoutineExercise | null;
@@ -35,15 +36,12 @@ export function ExerciseVideoModal({
         {/* Modal Header */}
         <div className="p-4 sm:p-5 flex items-start justify-between border-b border-white/[0.08] bg-[#161618]">
           <div className="flex items-center gap-3 pr-2">
-            {exercise.thumbnail_url ? (
-              <img
-                src={exercise.thumbnail_url}
-                alt={exercise.name}
-                className="w-11 h-11 rounded-xl bg-black/40 p-1 object-contain border border-white/[0.08] shrink-0"
-              />
-            ) : (
-              <div className="w-11 h-11 rounded-xl bg-[#2C2C2E] flex items-center justify-center shrink-0" />
-            )}
+            <ExerciseThumbnail
+              exercise={exercise}
+              aspectRatio="1/1"
+              rounded="rounded-xl"
+              className="w-11 h-11 shrink-0"
+            />
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#30D158]/15 text-[#30D158] border border-[#30D158]/20">

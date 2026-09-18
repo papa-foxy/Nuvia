@@ -494,9 +494,9 @@ export function RoutineDetailView({
         <div className="space-y-3">
           {routine.exercises.map((ex, idx) => {
             const isExecuted = !!executedMap[ex.id];
-            // YouTube video thumbnail (maxresdefault or hqdefault)
+            // YouTube video thumbnail (mqdefault is 16:9 without black bars)
             const ytThumb = ex.youtube_id
-              ? `https://img.youtube.com/vi/${ex.youtube_id}/hqdefault.jpg`
+              ? `https://img.youtube.com/vi/${ex.youtube_id}/mqdefault.jpg`
               : ex.thumbnail_url;
 
             return (
@@ -516,11 +516,11 @@ export function RoutineDetailView({
                   <img
                     src={ytThumb}
                     alt={ex.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full object-cover scale-[1.03] group-hover:scale-105 transition-transform duration-300"
                     onError={(e) => {
-                      // Fallback to NASM icon thumbnail if YouTube thumb fails
+                      // Fallback to icon thumbnail if YouTube thumb fails
                       (e.target as HTMLImageElement).src = ex.thumbnail_url;
-                      (e.target as HTMLImageElement).className = 'w-full h-full object-contain p-4 opacity-60';
+                      (e.target as HTMLImageElement).className = 'w-full h-full object-cover p-0 opacity-80';
                     }}
                   />
                   {/* Dark gradient overlay */}

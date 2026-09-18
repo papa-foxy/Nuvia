@@ -20,7 +20,7 @@ export interface ExerciseMediaInput {
  */
 export function getExerciseThumbnail(
   exercise: ExerciseMediaInput | null | undefined,
-  quality: 'hq' | 'mq' | 'default' = 'hq'
+  quality: 'hq' | 'mq' | 'default' = 'mq'
 ): {
   primaryUrl: string;
   fallbackUrl: string;
@@ -47,8 +47,9 @@ export function getExerciseThumbnail(
   }
 
   if (ytId && ytId !== 'DEFAULT') {
-    // hqdefault is standard 4:3 (480x360), mqdefault is 16:9 (320x180)
-    const ytFile = quality === 'mq' ? 'mqdefault.jpg' : quality === 'default' ? 'default.jpg' : 'hqdefault.jpg';
+    // mqdefault is 16:9 (320x180) without top/bottom black letterboxing.
+    // hqdefault has 45px black bars baked into the image by YouTube.
+    const ytFile = quality === 'default' ? 'default.jpg' : quality === 'hq' ? 'hqdefault.jpg' : 'mqdefault.jpg';
     const primaryUrl = `https://img.youtube.com/vi/${ytId}/${ytFile}`;
     const fallbackUrl = exercise.thumbnail_url?.trim() || getFallbackSvg(exercise);
     return { primaryUrl, fallbackUrl, isYouTube: true };

@@ -47,7 +47,7 @@ export type EquipmentTag =
 
 export function makeSvgThumbnail(bgColor: string, accentColor: string, iconType: string, label: string): string {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
-    <rect width="96" height="96" rx="22" fill="${bgColor}"/>
+    <rect width="96" height="96" fill="${bgColor}"/>
     <circle cx="48" cy="42" r="24" fill="${accentColor}" fill-opacity="0.16"/>
     <g transform="translate(24, 18)" stroke="${accentColor}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none">
       ${getSvgIconPath(iconType)}

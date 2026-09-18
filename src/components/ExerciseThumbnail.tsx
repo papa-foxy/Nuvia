@@ -20,7 +20,7 @@ export function ExerciseThumbnail({
   alt,
   className = '',
   aspectRatio = '4/3',
-  quality = 'hq',
+  quality = 'mq',
   priority = false,
   showPlayOverlay = false,
   rounded = 'rounded-xl',
@@ -78,7 +78,9 @@ export function ExerciseThumbnail({
         decoding="async"
         onLoad={() => setIsLoaded(true)}
         onError={handleImageError}
-        className={`w-full h-full object-cover object-center transition-opacity duration-300 ${
+        className={`w-full h-full object-cover object-center ${
+          media.isYouTube ? 'scale-[1.06]' : ''
+        } transition-opacity duration-300 ${
           isLoaded ? 'opacity-100' : 'opacity-0'
         }`}
       />
