@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
-import { Camera, Image as ImageIcon, Video, RefreshCw, X, AlertCircle, Sparkles, FlipHorizontal, Check } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Camera, Image as ImageIcon, RefreshCw, X, AlertCircle, Sparkles } from 'lucide-react';
 import { AiService, MealAnalysisResult } from '@/lib/ai-service';
 import { MealType } from '@/types/database';
 import { MealResultModal } from './MealResultModal';
@@ -70,102 +70,11 @@ export function AddMealModal({
   const [errorMsg, setErrorMsg] = useState('');
   const [analysisResult, setAnalysisResult] = useState<MealAnalysisResult | null>(null);
 
-  // In-app live camera viewfinder state
-  const [isLiveCamera, setIsLiveCamera] = useState(false);
-  const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
-  const [cameraError, setCameraError] = useState<string | null>(null);
-
   // Hidden file inputs
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const libraryInputRef = useRef<HTMLInputElement>(null);
 
-  // Live camera stream refs
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-
-  // stopCameraStream must be defined BEFORE the useEffect that calls it
-  const stopCameraStream = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((t) => t.stop());
-      streamRef.current = null;
-    }
-    setIsLiveCamera(false);
-  };
-
-  // Clean up camera stream on close or unmount
-  useEffect(() => {
-    return () => {
-      stopCameraStream();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   if (!isOpen) return null;
-
-  const startLiveCamera = async (facing: 'environment' | 'user' = facingMode) => {
-    setErrorMsg('');
-    setCameraError(null);
-    stopCameraStream();
-
-    try {
-      if (!navigator?.mediaDevices?.getUserMedia) {
-        throw new Error('Camera access not supported in this browser. Please use Phone Camera button.');
-      }
-
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: { ideal: facing },
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-        },
-        audio: false,
-      });
-
-      streamRef.current = stream;
-      setIsLiveCamera(true);
-      setFacingMode(facing);
-
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.play().catch(() => {});
-      }
-    } catch (err: any) {
-      console.warn('Live camera error:', err);
-      setCameraError(err.message || 'Could not access device camera.');
-      setIsLiveCamera(false);
-    }
-  };
-
-  const flipCamera = () => {
-    const nextFacing = facingMode === 'environment' ? 'user' : 'environment';
-    startLiveCamera(nextFacing);
-  };
-
-  const captureLiveFrame = async () => {
-    if (!videoRef.current) return;
-    const video = videoRef.current;
-
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth || 640;
-    canvas.height = video.videoHeight || 480;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const rawData = canvas.toDataURL('image/jpeg', 0.9);
-
-    stopCameraStream();
-    setIsCompressing(true);
-    try {
-      const compressed = await compressImage(rawData);
-      setImagePreview(compressed);
-      setErrorMsg('');
-    } catch (e) {
-      setImagePreview(rawData);
-    } finally {
-      setIsCompressing(false);
-    }
-  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -217,7 +126,6 @@ export function AddMealModal({
   };
 
   const resetForm = () => {
-    stopCameraStream();
     setImagePreview(null);
     setDescription('');
     setAnalysisResult(null);
@@ -252,10 +160,7 @@ export function AddMealModal({
             <div className="grid grid-cols-2 gap-1 p-1 bg-[#121214] rounded-xl border border-white/[0.06]">
               <button
                 type="button"
-                onClick={() => {
-                  stopCameraStream();
-                  setActiveTab('photo');
-                }}
+                onClick={() => setActiveTab('photo')}
                 className={`py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-all ${
                   activeTab === 'photo' ? 'bg-[#2C2C2E] text-white shadow' : 'text-[#8E8E93]'
                 }`}
@@ -265,10 +170,7 @@ export function AddMealModal({
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  stopCameraStream();
-                  setActiveTab('text');
-                }}
+                onClick={() => setActiveTab('text')}
                 className={`py-2 text-xs font-semibold rounded-lg transition-all ${
                   activeTab === 'text' ? 'bg-[#2C2C2E] text-white shadow' : 'text-[#8E8E93]'
                 }`}
@@ -326,66 +228,8 @@ export function AddMealModal({
                   className="hidden"
                 />
 
-                {/* State 1: Live In-App Camera Viewfinder */}
-                {isLiveCamera && (
-                  <div className="relative rounded-2xl overflow-hidden bg-black border border-white/[0.15] aspect-[4/3] flex flex-col justify-between">
-                    <video
-                      ref={videoRef}
-                      autoPlay
-                      playsInline
-                      muted
-                      className="absolute inset-0 w-full h-full object-cover"
-                    />
-
-                    {/* Viewfinder Target Frame Overlay */}
-                    <div className="absolute inset-4 border-2 border-white/40 rounded-2xl pointer-events-none flex flex-col justify-between p-3">
-                      <div className="flex justify-between text-[10px] text-white/70 font-mono tracking-wider">
-                        <span>[ NUVIA AI LENS ]</span>
-                        <span>{facingMode.toUpperCase()}</span>
-                      </div>
-                      <p className="text-center text-xs text-white/90 bg-black/50 py-1 px-3 rounded-full mx-auto backdrop-blur-md">
-                        Center food plate in viewfinder
-                      </p>
-                    </div>
-
-                    {/* Live Camera Controls Header */}
-                    <div className="relative z-10 p-3 flex items-center justify-between bg-gradient-to-b from-black/70 to-transparent">
-                      <button
-                        type="button"
-                        onClick={stopCameraStream}
-                        className="px-2.5 py-1 rounded-lg bg-black/60 text-xs text-white backdrop-blur-md hover:bg-black/80"
-                      >
-                        Cancel
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={flipCamera}
-                        className="w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center backdrop-blur-md hover:bg-black/80"
-                        title="Flip Camera"
-                      >
-                        <FlipHorizontal className="w-4 h-4" />
-                      </button>
-                    </div>
-
-                    {/* Live Camera Shutter Button Footer */}
-                    <div className="relative z-10 p-4 flex items-center justify-center bg-gradient-to-t from-black/80 to-transparent">
-                      <button
-                        type="button"
-                        onClick={captureLiveFrame}
-                        className="w-16 h-16 rounded-full border-4 border-white bg-white/20 p-1 flex items-center justify-center hover:scale-105 active:scale-95 transition-transform shadow-2xl"
-                        title="Snap Food Picture"
-                      >
-                        <div className="w-full h-full rounded-full bg-white flex items-center justify-center">
-                          <Camera className="w-6 h-6 text-black" />
-                        </div>
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* State 2: Photo Preview */}
-                {!isLiveCamera && imagePreview && (
+                {/* State 1: Photo Preview (When image has been taken or selected) */}
+                {imagePreview ? (
                   <div className="relative rounded-2xl overflow-hidden h-52 border border-white/[0.08] bg-black shadow-lg">
                     <img src={imagePreview} alt="Captured Food" className="w-full h-full object-cover" />
 
@@ -420,22 +264,21 @@ export function AddMealModal({
                       </div>
                     )}
                   </div>
-                )}
-
-                {/* State 3: Capture Buttons (When no image preview and not in live camera) */}
-                {!isLiveCamera && !imagePreview && (
+                ) : (
+                  /* State 2: Capture / Select Options */
                   <div className="space-y-2.5">
-                    {/* Primary Option: Take Picture with Phone Camera */}
-                    <div
+                    {/* Primary Option: Take Photo with Phone Camera */}
+                    <button
+                      type="button"
                       onClick={() => cameraInputRef.current?.click()}
-                      className="group cursor-pointer p-4 rounded-2xl bg-gradient-to-r from-[#30D158]/15 via-[#1C1C1E] to-[#121214] border border-[#30D158]/30 hover:border-[#30D158] transition-all flex items-center gap-3.5 active:scale-[0.99]"
+                      className="w-full text-left p-4 rounded-2xl bg-gradient-to-r from-[#30D158]/15 via-[#1C1C1E] to-[#121214] border border-[#30D158]/30 hover:border-[#30D158] transition-all flex items-center gap-3.5 group active:scale-[0.99]"
                     >
                       <div className="w-12 h-12 rounded-xl bg-[#30D158] text-black flex items-center justify-center shrink-0 shadow-lg shadow-[#30D158]/20 group-hover:scale-105 transition-transform">
                         <Camera className="w-6 h-6 stroke-[2.5]" />
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-1.5">
-                          <p className="text-sm font-bold text-white">Take Picture with Phone</p>
+                          <p className="text-sm font-bold text-white">Take Photo</p>
                           <span className="text-[10px] uppercase font-extrabold px-1.5 py-0.5 rounded bg-[#30D158] text-black">
                             Camera
                           </span>
@@ -444,34 +287,24 @@ export function AddMealModal({
                           Direct phone camera capture & AI calorie calculation
                         </p>
                       </div>
-                    </div>
+                    </button>
 
-                    {/* Secondary Option: In-App Live Camera or Photo Library */}
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => startLiveCamera('environment')}
-                        className="p-3 rounded-xl bg-[#121214] hover:bg-[#2C2C2E] border border-white/[0.08] hover:border-white/[0.2] transition-colors flex flex-col items-center justify-center gap-1.5 text-center group"
-                      >
-                        <Video className="w-5 h-5 text-[#0A84FF] group-hover:scale-110 transition-transform" />
-                        <span className="text-xs font-semibold text-white">Live Viewfinder</span>
-                        <span className="text-[10px] text-[#8E8E93]">In-app shutter</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => libraryInputRef.current?.click()}
-                        className="p-3 rounded-xl bg-[#121214] hover:bg-[#2C2C2E] border border-white/[0.08] hover:border-white/[0.2] transition-colors flex flex-col items-center justify-center gap-1.5 text-center group"
-                      >
-                        <ImageIcon className="w-5 h-5 text-[#AF52DE] group-hover:scale-110 transition-transform" />
-                        <span className="text-xs font-semibold text-white">Photo Library</span>
-                        <span className="text-[10px] text-[#8E8E93]">From camera roll</span>
-                      </button>
-                    </div>
-
-                    {cameraError && (
-                      <p className="text-xs text-[#FF9500] px-1">{cameraError}</p>
-                    )}
+                    {/* Secondary Option: Photo Library */}
+                    <button
+                      type="button"
+                      onClick={() => libraryInputRef.current?.click()}
+                      className="w-full text-left p-3.5 rounded-2xl bg-[#121214] hover:bg-[#2C2C2E] border border-white/[0.08] hover:border-white/[0.2] transition-colors flex items-center gap-3.5 group active:scale-[0.99]"
+                    >
+                      <div className="w-11 h-11 rounded-xl bg-[#AF52DE]/15 text-[#AF52DE] border border-[#AF52DE]/20 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                        <ImageIcon className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold text-white">Choose from Photo Library</p>
+                        <p className="text-xs text-[#8E8E93] mt-0.5">
+                          Upload existing food photo from gallery
+                        </p>
+                      </div>
+                    </button>
                   </div>
                 )}
 
