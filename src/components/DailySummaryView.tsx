@@ -1,11 +1,17 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { DataService, getLocalDateString } from '@/lib/data-service';
 import { DailySummary, Meal, ExerciseLog } from '@/types/database';
 import { MacroDonutChart } from './MacroDonutChart';
+import {
+  NuviaCache,
+  todaySummaryKey,
+  todayMealsKey,
+  todayActivityKey,
+} from '@/lib/nuvia-cache';
 
 export function DailySummaryView({ refreshKey }: { refreshKey?: number } = {}) {
   const { user, goals } = useAuth();
@@ -13,18 +19,60 @@ export function DailySummaryView({ refreshKey }: { refreshKey?: number } = {}) {
   const [summary, setSummary] = useState<DailySummary | null>(null);
   const [meals, setMeals] = useState<Meal[]>([]);
   const [exercises, setExercises] = useState<ExerciseLog[]>([]);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
-  useEffect(() => {
-    async function loadDay() {
-      const s = await DataService.getDailySummary(user?.id, selectedDate);
-      const m = await DataService.getMeals(user?.id, selectedDate);
-      const e = await DataService.getExerciseLogs(user?.id, selectedDate);
+  const prevRefreshKey = useRef<number | undefined>(refreshKey);
+  const userId = user?.id;
+
+  const fetchAndCache = useCallback(
+    async (date: string, background = false) => {
+      const [s, m, e] = await Promise.all([
+        DataService.getDailySummary(userId, date),
+        DataService.getMeals(userId, date),
+        DataService.getExerciseLogs(userId, date),
+      ]);
+      const opts = { staleTime: 90_000, gcTime: 600_000 };
+      NuviaCache.set(todaySummaryKey(userId, date), s, opts);
+      NuviaCache.set(todayMealsKey(userId, date), m, opts);
+      NuviaCache.set(todayActivityKey(userId, date), e, opts);
       setSummary(s);
       setMeals(m);
       setExercises(e);
+      setIsInitialLoading(false);
+    },
+    [userId]
+  );
+
+  useEffect(() => {
+    const forcedRefresh =
+      prevRefreshKey.current !== undefined && refreshKey !== prevRefreshKey.current;
+    prevRefreshKey.current = refreshKey;
+
+    if (forcedRefresh) {
+      NuviaCache.invalidate(todaySummaryKey(userId, selectedDate));
+      NuviaCache.invalidate(todayMealsKey(userId, selectedDate));
+      NuviaCache.invalidate(todayActivityKey(userId, selectedDate));
+      fetchAndCache(selectedDate, false);
+      return;
     }
-    loadDay();
-  }, [user, selectedDate, refreshKey]);
+
+    const cachedSummary  = NuviaCache.get<DailySummary | null>(todaySummaryKey(userId, selectedDate));
+    const cachedMeals    = NuviaCache.get<Meal[]>(todayMealsKey(userId, selectedDate));
+    const cachedActivity = NuviaCache.get<ExerciseLog[]>(todayActivityKey(userId, selectedDate));
+
+    if (cachedSummary && cachedMeals && cachedActivity) {
+      setSummary(cachedSummary.data);
+      setMeals(cachedMeals.data);
+      setExercises(cachedActivity.data);
+      setIsInitialLoading(false);
+      if (cachedSummary.isStale || cachedMeals.isStale || cachedActivity.isStale) {
+        fetchAndCache(selectedDate, true);
+      }
+    } else {
+      setIsInitialLoading(true);
+      fetchAndCache(selectedDate, false);
+    }
+  }, [userId, selectedDate, refreshKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const changeDateBy = (days: number) => {
     const [y, m, d] = selectedDate.split('-').map(Number);

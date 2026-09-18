@@ -1,11 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Trash2, Utensils, ChevronRight, Sparkles, Camera, Plus, Calendar } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Trash2, Utensils, ChevronRight, Camera, Plus } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { DataService } from '@/lib/data-service';
 import { Meal } from '@/types/database';
 import { MealDetailsModal } from './MealDetailsModal';
+import { NuviaCache, allMealsKey, todaySummaryKey, todayMealsKey } from '@/lib/nuvia-cache';
+import { getLocalDateString } from '@/lib/data-service';
 
 interface MealsListViewProps {
   onOpenAddMeal: () => void;
@@ -16,24 +18,52 @@ export function MealsListView({ onOpenAddMeal, refreshKey }: MealsListViewProps)
   const { user } = useAuth();
   const [meals, setMeals] = useState<Meal[]>([]);
   const [filterType, setFilterType] = useState<string>('all');
-  const [loading, setLoading] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
-  const loadMeals = async () => {
-    setLoading(true);
-    const data = await DataService.getMeals(user?.id);
+  const prevRefreshKey = useRef<number | undefined>(refreshKey);
+  const userId = user?.id;
+  const todayStr = getLocalDateString();
+
+  const cacheKey = allMealsKey(userId);
+
+  const fetchAndCache = async (background = false) => {
+    const data = await DataService.getMeals(userId);
+    NuviaCache.set(cacheKey, data, { staleTime: 90_000, gcTime: 600_000 });
     setMeals(data);
-    setLoading(false);
+    if (!background) setIsInitialLoading(false);
+    else setIsInitialLoading(false);
   };
 
   useEffect(() => {
-    loadMeals();
-  }, [user, refreshKey]);
+    const forcedRefresh =
+      prevRefreshKey.current !== undefined && refreshKey !== prevRefreshKey.current;
+    prevRefreshKey.current = refreshKey;
+
+    if (forcedRefresh) {
+      NuviaCache.invalidate(cacheKey);
+      fetchAndCache(false);
+      return;
+    }
+
+    const cached = NuviaCache.get<Meal[]>(cacheKey);
+    if (cached) {
+      setMeals(cached.data);
+      setIsInitialLoading(false);
+      if (cached.isStale) fetchAndCache(true);
+    } else {
+      fetchAndCache(false);
+    }
+  }, [userId, refreshKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleDelete = async (mealId: string) => {
-    await DataService.deleteMeal(mealId, user?.id);
-    await loadMeals();
+    await DataService.deleteMeal(mealId, userId);
+    // Invalidate cache so Next visit gets fresh data
+    NuviaCache.invalidate(cacheKey);
+    NuviaCache.invalidate(todayMealsKey(userId, todayStr));
+    NuviaCache.invalidate(todaySummaryKey(userId, todayStr));
+    await fetchAndCache(false);
   };
 
   const filtered = filterType === 'all' ? meals : meals.filter((m) => m.meal_type === filterType);
@@ -80,7 +110,7 @@ export function MealsListView({ onOpenAddMeal, refreshKey }: MealsListViewProps)
 
       {/* Meals Table (iOS Inset Grouped List) */}
       <div className="w-full">
-        {loading ? (
+        {isInitialLoading ? (
           <div className="space-y-2.5 w-full">
             {[1, 2, 3].map((n) => (
               <div key={n} className="h-20 bg-[#1C1C1E] rounded-2xl animate-pulse w-full border border-white/5" />

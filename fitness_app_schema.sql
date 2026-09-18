@@ -305,6 +305,41 @@ create policy "routines_delete_own" on workout_routines
   for delete using (auth.uid() = user_id);
 
 
+-- ---------------------------------------------------------------------
+-- CUSTOM EXERCISES  (user-created exercises, private to each user)
+-- Never merged into the global exercise library automatically.
+-- ---------------------------------------------------------------------
+create table if not exists custom_exercises (
+  id text primary key,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  name text not null,
+  primary_muscles text[],
+  secondary_muscles text[],
+  equipment text,
+  instructions text,
+  thumbnail_url text,
+  youtube_id text,
+  created_at timestamptz not null default now()
+);
+
+create index idx_custom_exercises_user on custom_exercises (user_id, created_at desc);
+
+alter table custom_exercises enable row level security;
+
+create policy "custom_exercises_select_own" on custom_exercises
+  for select using (auth.uid() = user_id);
+
+create policy "custom_exercises_insert_own" on custom_exercises
+  for insert with check (auth.uid() = user_id);
+
+create policy "custom_exercises_update_own" on custom_exercises
+  for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create policy "custom_exercises_delete_own" on custom_exercises
+  for delete using (auth.uid() = user_id);
+
+
+
 -- =====================================================================
 -- IMPORTANT REMINDERS
 -- =====================================================================

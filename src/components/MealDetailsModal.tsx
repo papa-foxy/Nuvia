@@ -31,6 +31,7 @@ export function MealDetailsModal({
   const [dragY, setDragY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const [isEntering, setIsEntering] = useState(true);
   const [deleting, setDeleting] = useState(false);
   const startYRef = useRef(0);
   const currentDragYRef = useRef(0);
@@ -38,13 +39,19 @@ export function MealDetailsModal({
 
   currentDragYRef.current = dragY;
 
-  // Reset drag & closing states whenever modal opens/closes
+  // Trigger smooth entrance slide-up animation when modal opens
   useEffect(() => {
     if (isOpen) {
+      setIsEntering(true);
+      setIsClosing(false);
       setDragY(0);
       setIsDragging(false);
-      setIsClosing(false);
       setDeleting(false);
+
+      const timer = setTimeout(() => {
+        setIsEntering(false);
+      }, 20);
+      return () => clearTimeout(timer);
     }
   }, [isOpen]);
 
@@ -199,8 +206,8 @@ export function MealDetailsModal({
       <div
         className="fixed inset-0 bg-black/80 backdrop-blur-md transition-opacity"
         style={{
-          opacity: isClosing ? 0 : Math.max(0.1, 1 - dragY / 300),
-          transitionDuration: isDragging ? '0ms' : '220ms',
+          opacity: isClosing || isEntering ? 0 : Math.max(0.1, 1 - dragY / 300),
+          transitionDuration: isDragging ? '0ms' : isEntering ? '320ms' : '220ms',
         }}
         onClick={triggerClose}
       />
@@ -208,11 +215,13 @@ export function MealDetailsModal({
       {/* Sheet / Modal Container */}
       <div
         style={{
-          transform: isClosing
+          transform: isClosing || isEntering
             ? 'translateY(100%)'
             : `translateY(${dragY}px)`,
           transition: isDragging
             ? 'none'
+            : isEntering
+            ? 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)'
             : 'transform 0.24s cubic-bezier(0.2, 0.9, 0.3, 1)',
         }}
         className="relative w-full max-w-md bg-[#161618] border border-white/10 rounded-t-[28px] sm:rounded-[28px] max-h-[92vh] flex flex-col overflow-hidden shadow-2xl z-10 select-none sm:select-auto will-change-transform"

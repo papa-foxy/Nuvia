@@ -63,3 +63,39 @@
   width: 0px;
   height: 0px;
 }
+
+/* iOS Sheet & Modal Animations */
+@keyframes slideUp {
+  0% {
+    transform: translateY(100%);
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateY(0%);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.animate-slideUp {
+  animation: slideUp 0.34s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.25s ease-out forwards;
+}
+
+/* Background-refetch progress shimmer */
+@keyframes shimmer {
+  0%   { transform: translateX(-100%); opacity: 0.8; }
+  50%  { transform: translateX(0%);    opacity: 1; }
+  100% { transform: translateX(100%);  opacity: 0; }
+}

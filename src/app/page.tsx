@@ -16,15 +16,30 @@ import { AddMealModal } from '@/components/AddMealModal';
 import { AddExerciseModal } from '@/components/AddExerciseModal';
 import { PwaInstallBanner } from '@/components/PwaInstallBanner';
 import { DataService } from '@/lib/data-service';
+import {
+  NuviaCache,
+  todaySummaryKey,
+  todayMealsKey,
+  todayActivityKey,
+  allMealsKey,
+} from '@/lib/nuvia-cache';
+import { getLocalDateString } from '@/lib/data-service';
 import { Flame } from 'lucide-react';
 
 export default function HomePage() {
-  const { user, profile, goals, isLoading, hasCompletedOnboarding, refreshProfileAndGoals } = useAuth();
+  const { user, profile, goals, isLoading, hasCompletedOnboarding, refreshProfileAndGoals } =
+    useAuth();
 
   const [activeTab, setActiveTab] = useState<TabType>('home');
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [isAddMealOpen, setIsAddMealOpen] = useState(false);
   const [isAddExerciseOpen, setIsAddExerciseOpen] = useState(false);
+
+  /**
+   * refreshKey is incremented after a data mutation so DashboardView knows
+   * to bypass its cache and fetch fresh data.
+   * Using a separate counter per data type allows targeted invalidation.
+   */
   const [refreshKey, setRefreshKey] = useState(0);
 
   // Prefilled natural language inputs
@@ -44,7 +59,6 @@ export default function HomePage() {
     );
   }
 
-  // If no authenticated or demo user is active, show Landing
   if (!user) {
     return (
       <LandingView
@@ -54,7 +68,6 @@ export default function HomePage() {
     );
   }
 
-  // If user has not completed onboarding or explicitly opened it
   if (!hasCompletedOnboarding || showOnboarding) {
     return (
       <OnboardingWizard
@@ -70,19 +83,8 @@ export default function HomePage() {
   const handleNaturalLanguageInput = (input: string) => {
     const text = input.toLowerCase();
     const exerciseKeywords = [
-      'run',
-      'jog',
-      'walk',
-      'gym',
-      'workout',
-      'cardio',
-      'hiit',
-      'bench',
-      'lift',
-      'cycle',
-      'bike',
-      'swim',
-      'badminton',
+      'run', 'jog', 'walk', 'gym', 'workout', 'cardio',
+      'hiit', 'bench', 'lift', 'cycle', 'bike', 'swim', 'badminton',
     ];
     const isExercise = exerciseKeywords.some((k) => text.includes(k));
 
@@ -94,6 +96,8 @@ export default function HomePage() {
       setIsAddMealOpen(true);
     }
   };
+
+  const todayStr = getLocalDateString();
 
   const handleSaveMeal = async (mealData: any) => {
     await DataService.addMeal(
@@ -113,6 +117,12 @@ export default function HomePage() {
       },
       mealData.items || []
     );
+
+    // Targeted invalidation — only clear the keys that a meal addition affects
+    NuviaCache.invalidate(todaySummaryKey(user.id, todayStr));
+    NuviaCache.invalidate(todayMealsKey(user.id, todayStr));
+    NuviaCache.invalidate(allMealsKey(user.id));
+
     setRefreshKey((k) => k + 1);
     await refreshProfileAndGoals();
   };
@@ -130,21 +140,42 @@ export default function HomePage() {
       confidence: exerciseData.confidence || 'medium',
       ai_analysis: exerciseData.ai_analysis || null,
     });
+
+    // Targeted invalidation — only clear the keys that an exercise log affects
+    NuviaCache.invalidate(todaySummaryKey(user.id, todayStr));
+    NuviaCache.invalidate(todayActivityKey(user.id, todayStr));
+
     setRefreshKey((k) => k + 1);
     await refreshProfileAndGoals();
   };
 
   return (
-    // h-dvh = dynamic viewport height — handles iOS PWA safe area correctly
     <div className="h-dvh bg-black text-white flex items-center justify-center p-0 sm:py-6 relative overflow-hidden">
       {/* Main Mobile App Container */}
       <div className="w-full max-w-md h-full sm:h-[92vh] sm:max-h-[92vh] sm:rounded-[36px] bg-black sm:border sm:border-[#2C2C2E] shadow-2xl flex flex-col relative overflow-hidden">
         {/* PWA Install Banner */}
         <PwaInstallBanner />
 
-        {/* Main Tab Content — pb-20 keeps content above the fixed bottom nav */}
-        <main className="flex-1 flex flex-col overflow-y-auto pb-20 w-full" style={{ paddingTop: 'max(8px, env(safe-area-inset-top))' }}>
-          {activeTab === 'home' && (
+        {/*
+          ── TAB CONTENT STRATEGY ─────────────────────────────────────────────
+          All tab components are rendered once and kept mounted.
+          We toggle visibility with CSS display:none / display:contents
+          instead of conditional && rendering.
+
+          This means:
+          - React state inside each tab is preserved when you switch away
+          - useEffect does NOT re-fire when you return to a tab
+          - NuviaCache serves data immediately without a loading flash
+
+          display:contents is used so the child's flex/grid layout is
+          not broken by an extra wrapper div.
+          ─────────────────────────────────────────────────────────────────────
+        */}
+        <main
+          className="flex-1 flex flex-col overflow-y-auto pb-20 w-full"
+          style={{ paddingTop: 'max(8px, env(safe-area-inset-top))' }}
+        >
+          <div style={{ display: activeTab === 'home' ? 'contents' : 'none' }}>
             <DashboardView
               onOpenAddMeal={() => setIsAddMealOpen(true)}
               onOpenAddExercise={() => setIsAddExerciseOpen(true)}
@@ -152,36 +183,42 @@ export default function HomePage() {
               onNaturalLanguageInput={handleNaturalLanguageInput}
               refreshKey={refreshKey}
             />
-          )}
+          </div>
 
-          {activeTab === 'meals' && (
+          <div style={{ display: activeTab === 'meals' ? 'contents' : 'none' }}>
             <MealsListView
               onOpenAddMeal={() => setIsAddMealOpen(true)}
               refreshKey={refreshKey}
             />
-          )}
+          </div>
 
-          {activeTab === 'exercise' && (
+          <div style={{ display: activeTab === 'exercise' ? 'contents' : 'none' }}>
             <ExerciseListView
               onOpenAddExercise={() => setIsAddExerciseOpen(true)}
               onNavigateTab={setActiveTab}
             />
-          )}
+          </div>
 
-          {activeTab === 'coach' && <AiCoachView />}
+          <div style={{ display: activeTab === 'coach' ? 'contents' : 'none' }}>
+            <AiCoachView />
+          </div>
 
-          {activeTab === 'summary' && <DailySummaryView refreshKey={refreshKey} />}
+          <div style={{ display: activeTab === 'summary' ? 'contents' : 'none' }}>
+            <DailySummaryView refreshKey={refreshKey} />
+          </div>
 
-          {activeTab === 'goals' && <GoalsView />}
+          <div style={{ display: activeTab === 'goals' ? 'contents' : 'none' }}>
+            <GoalsView />
+          </div>
 
-          {activeTab === 'profile' && (
+          <div style={{ display: activeTab === 'profile' ? 'contents' : 'none' }}>
             <ProfileView
               onReplayOnboarding={() => setShowOnboarding(true)}
               onOpenAddMeal={() => setIsAddMealOpen(true)}
               onOpenAddExercise={() => setIsAddExerciseOpen(true)}
               onNavigateTab={(tab) => setActiveTab(tab as any)}
             />
-          )}
+          </div>
         </main>
 
         {/* Bottom Tab Navigation */}

@@ -1,18 +1,27 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { ChevronRight, ArrowUpRight, Sparkles, Send, Dumbbell, Flame, CheckCircle2, Activity, Camera } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { ChevronRight, Sparkles, Send, Dumbbell, Flame, CheckCircle2, Camera } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { DataService, getLocalDateString } from '@/lib/data-service';
 import { DailySummary, Meal, ExerciseLog } from '@/types/database';
 import { WorkoutRoutine } from '@/types/routine';
 import { TabType } from './Navigation';
+import {
+  NuviaCache,
+  todaySummaryKey,
+  todayMealsKey,
+  todayActivityKey,
+  workoutRoutinesKey,
+} from '@/lib/nuvia-cache';
+import { ExerciseThumbnail } from './ExerciseThumbnail';
 
 interface DashboardViewProps {
   onOpenAddMeal: () => void;
   onOpenAddExercise: () => void;
   onNavigateTab: (tab: TabType) => void;
   onNaturalLanguageInput: (text: string) => void;
+  /** @deprecated - no longer triggers a full reload; kept for API compatibility */
   refreshKey?: number;
 }
 
@@ -24,94 +33,220 @@ export function DashboardView({
   refreshKey,
 }: DashboardViewProps) {
   const { user, profile, goals } = useAuth();
+
   const [summary, setSummary] = useState<DailySummary | null>(null);
   const [recentMeals, setRecentMeals] = useState<Meal[]>([]);
   const [recentExercises, setRecentExercises] = useState<ExerciseLog[]>([]);
   const [routines, setRoutines] = useState<WorkoutRoutine[]>([]);
+
+  // Separate loading state for first-ever load vs background refetch
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isFetching, setIsFetching] = useState(false);
+
   const [quickInput, setQuickInput] = useState('');
   const [nuviaReply, setNuviaReply] = useState<string | null>(null);
 
   const today = new Date();
-  const dateFormatted = today.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'short',
-    day: 'numeric',
-  }).toUpperCase();
-
+  const dateFormatted = today
+    .toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
+    .toUpperCase();
   const todayDayName = today.toLocaleDateString('en-US', { weekday: 'long' });
   const todayStr = getLocalDateString(today);
 
-  useEffect(() => {
-    async function loadDashboardData() {
-      const [s, m, e, r] = await Promise.all([
-        DataService.getDailySummary(user?.id, todayStr),
-        DataService.getMeals(user?.id, todayStr),
-        DataService.getExerciseLogs(user?.id, todayStr),
-        DataService.getWorkoutRoutines(user?.id),
-      ]);
+  // Track the previous refreshKey to detect intentional invalidations
+  const prevRefreshKey = useRef<number | undefined>(refreshKey);
+
+  const userId = user?.id;
+
+  const applyData = useCallback(
+    (s: DailySummary | null, m: Meal[], e: ExerciseLog[], r: WorkoutRoutine[]) => {
       setSummary(s);
       setRecentMeals(m);
       setRecentExercises(e);
       setRoutines(r);
+    },
+    []
+  );
+
+  const fetchAndCache = useCallback(
+    async (background = false) => {
+      if (background) {
+        setIsFetching(true);
+      }
+      try {
+        const [s, m, e, r] = await Promise.all([
+          DataService.getDailySummary(userId, todayStr),
+          DataService.getMeals(userId, todayStr),
+          DataService.getExerciseLogs(userId, todayStr),
+          DataService.getWorkoutRoutines(userId),
+        ]);
+
+        // Write each result to the cache with a 90-second stale window
+        const opts = { staleTime: 90_000, gcTime: 600_000 };
+        NuviaCache.set(todaySummaryKey(userId, todayStr), s, opts);
+        NuviaCache.set(todayMealsKey(userId, todayStr), m, opts);
+        NuviaCache.set(todayActivityKey(userId, todayStr), e, opts);
+        NuviaCache.set(workoutRoutinesKey(userId), r, opts);
+
+        applyData(s, m, e, r);
+      } finally {
+        setIsInitialLoading(false);
+        setIsFetching(false);
+      }
+    },
+    [userId, todayStr, applyData]
+  );
+
+  // ── Main load effect ──────────────────────────────────────────────────────
+  useEffect(() => {
+    // Detect a forced refresh from the parent (meal/exercise saved)
+    const forcedRefresh =
+      prevRefreshKey.current !== undefined && refreshKey !== prevRefreshKey.current;
+    prevRefreshKey.current = refreshKey;
+
+    if (forcedRefresh) {
+      // Parent triggered a data mutation — invalidate and hard-refetch
+      NuviaCache.invalidate(todaySummaryKey(userId, todayStr));
+      NuviaCache.invalidate(todayMealsKey(userId, todayStr));
+      NuviaCache.invalidate(todayActivityKey(userId, todayStr));
+      fetchAndCache(false);
+      return;
     }
-    loadDashboardData();
-  }, [user, todayStr, refreshKey]);
 
-  const calorieTarget = goals?.calorie_target || 2200;
-  const proteinTarget = goals?.protein_target || 150;
-  const carbsTarget = goals?.carbohydrate_target || 250;
-  const fatTarget = goals?.fat_target || 70;
+    // Check what's in the cache
+    const cachedSummary  = NuviaCache.get<DailySummary | null>(todaySummaryKey(userId, todayStr));
+    const cachedMeals    = NuviaCache.get<Meal[]>(todayMealsKey(userId, todayStr));
+    const cachedActivity = NuviaCache.get<ExerciseLog[]>(todayActivityKey(userId, todayStr));
+    const cachedRoutines = NuviaCache.get<WorkoutRoutine[]>(workoutRoutinesKey(userId));
 
-  const caloriesConsumed = summary?.calories_consumed || 0;
-  const caloriesBurned = summary?.calories_burned || 0;
-  const proteinConsumed = summary?.protein_consumed || 0;
-  const carbsConsumed = summary?.carbohydrate_consumed || 0;
-  const fatConsumed = summary?.fat_consumed || 0;
-  const exerciseMinutes = summary?.exercise_minutes || 0;
+    const allCached =
+      cachedSummary !== null &&
+      cachedMeals !== null &&
+      cachedActivity !== null &&
+      cachedRoutines !== null;
+
+    if (allCached) {
+      // Render immediately from cache — no loading state shown
+      applyData(
+        cachedSummary.data,
+        cachedMeals.data,
+        cachedActivity.data,
+        cachedRoutines.data
+      );
+      setIsInitialLoading(false);
+
+      // If any entry is stale, refresh in the background
+      const anyStale =
+        cachedSummary.isStale ||
+        cachedMeals.isStale ||
+        cachedActivity.isStale ||
+        cachedRoutines.isStale;
+
+      if (anyStale) {
+        fetchAndCache(true); // background refresh — UI stays visible
+      }
+    } else {
+      // Nothing in cache — full load needed
+      fetchAndCache(false);
+    }
+  }, [userId, todayStr, refreshKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Computed values ───────────────────────────────────────────────────────
+  const calorieTarget   = goals?.calorie_target       || 2200;
+  const proteinTarget   = goals?.protein_target        || 150;
+  const carbsTarget     = goals?.carbohydrate_target   || 250;
+  const fatTarget       = goals?.fat_target            || 70;
+
+  const caloriesConsumed = summary?.calories_consumed   || 0;
+  const caloriesBurned   = summary?.calories_burned     || 0;
+  const proteinConsumed  = summary?.protein_consumed    || 0;
+  const carbsConsumed    = summary?.carbohydrate_consumed || 0;
+  const fatConsumed      = summary?.fat_consumed        || 0;
+  const exerciseMinutes  = summary?.exercise_minutes    || 0;
 
   const remainingCalories = Math.max(0, calorieTarget - caloriesConsumed);
-  const proteinGap = Math.max(0, proteinTarget - proteinConsumed);
+  const proteinGap        = Math.max(0, proteinTarget - proteinConsumed);
 
   const handleAskNuvia = (e: React.FormEvent) => {
     e.preventDefault();
     if (!quickInput.trim()) return;
 
     const query = quickInput.trim().toLowerCase();
-    // If it's a food or workout statement, route to natural language logging
-    if (query.includes('ate') || query.includes('had') || query.includes('ran') || query.includes('walked') || query.includes('workout')) {
+    if (
+      query.includes('ate') ||
+      query.includes('had') ||
+      query.includes('ran') ||
+      query.includes('walked') ||
+      query.includes('workout')
+    ) {
       onNaturalLanguageInput(quickInput.trim());
       setQuickInput('');
       return;
     }
 
-    // Otherwise, generate direct contextual Nuvia response
     if (proteinGap > 20) {
-      setNuviaReply(`You need ${proteinGap}g more protein today to hit your ${proteinTarget}g target. For your next meal: grilled chicken breast (180g) or tofu scramble with brown rice (≈520 kcal, ≈42g protein).`);
+      setNuviaReply(
+        `You need ${proteinGap}g more protein today to hit your ${proteinTarget}g target. For your next meal: grilled chicken breast (180g) or tofu scramble with brown rice (≈520 kcal, ≈42g protein).`
+      );
     } else if (remainingCalories > 300) {
-      setNuviaReply(`You have ${remainingCalories} kcal remaining. A balanced option around 400 kcal like salmon with vegetables fits comfortably within your goal.`);
+      setNuviaReply(
+        `You have ${remainingCalories} kcal remaining. A balanced option around 400 kcal like salmon with vegetables fits comfortably within your goal.`
+      );
     } else {
-      setNuviaReply(`You're right on target today (${caloriesConsumed} of ${calorieTarget} kcal). Focus on hydration and restful sleep.`);
+      setNuviaReply(
+        `You're right on target today (${caloriesConsumed} of ${calorieTarget} kcal). Focus on hydration and restful sleep.`
+      );
     }
     setQuickInput('');
   };
 
+  // ── First-load skeleton ───────────────────────────────────────────────────
+  if (isInitialLoading) {
+    return (
+      <div className="flex-1 flex flex-col pb-20 px-5 pt-4 w-full max-w-md mx-auto space-y-6 animate-pulse">
+        <div className="pt-2">
+          <div className="h-3 w-32 bg-[#2C2C2E] rounded-full mb-2" />
+          <div className="h-8 w-20 bg-[#2C2C2E] rounded-xl" />
+        </div>
+        <div className="space-y-2">
+          <div className="h-12 w-40 bg-[#2C2C2E] rounded-xl" />
+          <div className="h-3 w-48 bg-[#2C2C2E] rounded-full" />
+          <div className="h-1.5 w-full bg-[#2C2C2E] rounded-full" />
+        </div>
+        <div className="grid grid-cols-3 gap-4">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="space-y-1.5">
+              <div className="h-3 w-12 bg-[#2C2C2E] rounded-full" />
+              <div className="h-6 w-16 bg-[#2C2C2E] rounded-lg" />
+              <div className="h-1 w-full bg-[#2C2C2E] rounded-full" />
+            </div>
+          ))}
+        </div>
+        <div className="h-20 w-full bg-[#2C2C2E] rounded-2xl" />
+      </div>
+    );
+  }
+
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="flex-1 flex flex-col pb-20 px-5 pt-4 w-full max-w-md mx-auto space-y-6">
+      {/* Subtle background-refresh indicator */}
+      {isFetching && (
+        <div className="fixed top-0 left-0 right-0 z-50 h-0.5">
+          <div className="h-full bg-[#30D158] animate-[shimmer_1.5s_ease-in-out_infinite]" style={{ width: '60%', marginLeft: 'auto', marginRight: 'auto' }} />
+        </div>
+      )}
+
       {/* Large Page Title (Apple Health Style) */}
       <div className="pt-2">
         <p className="text-[11px] font-semibold tracking-wider text-[#8E8E93]">
           {dateFormatted}
         </p>
-        <h1 className="text-3xl font-bold tracking-tight text-white mt-0.5">
-          Today
-        </h1>
+        <h1 className="text-3xl font-bold tracking-tight text-white mt-0.5">Today</h1>
       </div>
 
-      {/* SECTION 1: CALORIES (Primary Metric with Typography Hierarchy) */}
-      <div 
-        onClick={() => onNavigateTab('summary')}
-        className="cursor-pointer group"
-      >
+      {/* SECTION 1: CALORIES */}
+      <div onClick={() => onNavigateTab('summary')} className="cursor-pointer group">
         <div className="flex items-center justify-between pb-1">
           <span className="text-xs font-semibold text-[#8E8E93] uppercase tracking-wider">
             Calories
@@ -122,7 +257,6 @@ export function DashboardView({
           </span>
         </div>
 
-        {/* Big 48px Stat */}
         <div className="flex items-baseline gap-2 mt-1">
           <span className="text-[44px] font-semibold tracking-tight text-white leading-none">
             {caloriesConsumed.toLocaleString()}
@@ -132,7 +266,6 @@ export function DashboardView({
           </span>
         </div>
 
-        {/* Supporting Detail */}
         <p className="text-xs text-[#8E8E93] mt-1.5 font-normal">
           {remainingCalories > 0 ? (
             <span>
@@ -143,7 +276,6 @@ export function DashboardView({
           )}
         </p>
 
-        {/* Minimal Progress Line */}
         <div className="w-full bg-[#2C2C2E] h-1.5 rounded-full overflow-hidden mt-3">
           <div
             className="bg-[#30D158] h-full rounded-full transition-all duration-500"
@@ -151,7 +283,6 @@ export function DashboardView({
           />
         </div>
 
-        {/* Quick Action Button to Snap Food Picture */}
         <div className="pt-3">
           <button
             type="button"
@@ -177,11 +308,8 @@ export function DashboardView({
 
       <div className="ios-divider" />
 
-      {/* SECTION 2: MACRONUTRIENTS (Subtle Grouping, Tap to Drill Down) */}
-      <div 
-        onClick={() => onNavigateTab('goals')}
-        className="cursor-pointer group"
-      >
+      {/* SECTION 2: MACRONUTRIENTS */}
+      <div onClick={() => onNavigateTab('goals')} className="cursor-pointer group">
         <div className="flex items-center justify-between pb-2">
           <span className="text-xs font-semibold text-[#8E8E93] uppercase tracking-wider">
             Nutrition Targets
@@ -197,7 +325,8 @@ export function DashboardView({
           <div>
             <p className="text-[11px] text-[#8E8E93] font-medium">Protein</p>
             <p className="text-xl font-semibold text-white tracking-tight mt-0.5">
-              {proteinConsumed} <span className="text-xs text-[#8E8E93] font-normal">/ {proteinTarget}g</span>
+              {proteinConsumed}{' '}
+              <span className="text-xs text-[#8E8E93] font-normal">/ {proteinTarget}g</span>
             </p>
             <div className="w-full bg-[#2C2C2E] h-1 rounded-full overflow-hidden mt-1.5">
               <div
@@ -211,7 +340,8 @@ export function DashboardView({
           <div>
             <p className="text-[11px] text-[#8E8E93] font-medium">Carbohydrates</p>
             <p className="text-xl font-semibold text-white tracking-tight mt-0.5">
-              {carbsConsumed} <span className="text-xs text-[#8E8E93] font-normal">/ {carbsTarget}g</span>
+              {carbsConsumed}{' '}
+              <span className="text-xs text-[#8E8E93] font-normal">/ {carbsTarget}g</span>
             </p>
             <div className="w-full bg-[#2C2C2E] h-1 rounded-full overflow-hidden mt-1.5">
               <div
@@ -225,7 +355,8 @@ export function DashboardView({
           <div>
             <p className="text-[11px] text-[#8E8E93] font-medium">Fat</p>
             <p className="text-xl font-semibold text-white tracking-tight mt-0.5">
-              {fatConsumed} <span className="text-xs text-[#8E8E93] font-normal">/ {fatTarget}g</span>
+              {fatConsumed}{' '}
+              <span className="text-xs text-[#8E8E93] font-normal">/ {fatTarget}g</span>
             </p>
             <div className="w-full bg-[#2C2C2E] h-1 rounded-full overflow-hidden mt-1.5">
               <div
@@ -240,10 +371,7 @@ export function DashboardView({
       <div className="ios-divider" />
 
       {/* SECTION 3: ACTIVITY SUMMARY */}
-      <div 
-        onClick={() => onNavigateTab('exercise')}
-        className="cursor-pointer group"
-      >
+      <div onClick={() => onNavigateTab('exercise')} className="cursor-pointer group">
         <div className="flex items-center justify-between pb-1">
           <span className="text-xs font-semibold text-[#8E8E93] uppercase tracking-wider">
             Activity
@@ -257,20 +385,20 @@ export function DashboardView({
         <div className="flex items-baseline justify-between mt-1">
           <div>
             <span className="text-2xl font-semibold text-white tracking-tight">
-              {caloriesBurned} <span className="text-sm text-[#8E8E93] font-normal">kcal burned</span>
+              {caloriesBurned}{' '}
+              <span className="text-sm text-[#8E8E93] font-normal">kcal burned</span>
             </span>
           </div>
-          <span className="text-sm font-medium text-[#8E8E93]">
-            {exerciseMinutes} min active
-          </span>
+          <span className="text-sm font-medium text-[#8E8E93]">{exerciseMinutes} min active</span>
         </div>
       </div>
 
       {/* SECTION 3B: WORKOUT ROUTINE PREVIEW */}
       {(() => {
-        const todayRoutine = routines.find((r) =>
-          r.days.some((d) => d.toLowerCase() === todayDayName.toLowerCase())
-        ) || routines[0];
+        const todayRoutine =
+          routines.find((r) =>
+            r.days.some((d) => d.toLowerCase() === todayDayName.toLowerCase())
+          ) || routines[0];
 
         if (!todayRoutine) return null;
 
@@ -293,9 +421,13 @@ export function DashboardView({
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${
-                  matchingExecutedLog ? 'bg-[#30D158]/20 text-[#30D158]' : 'bg-[#30D158]/15 text-[#30D158]'
-                }`}>
+                <div
+                  className={`w-6 h-6 rounded-lg flex items-center justify-center ${
+                    matchingExecutedLog
+                      ? 'bg-[#30D158]/20 text-[#30D158]'
+                      : 'bg-[#30D158]/15 text-[#30D158]'
+                  }`}
+                >
                   <Dumbbell className="w-3.5 h-3.5" />
                 </div>
                 <span className="text-xs font-bold uppercase tracking-wider text-white">
@@ -323,7 +455,6 @@ export function DashboardView({
               </p>
             </div>
 
-            {/* Exercise thumbnails strip */}
             <div className="flex items-center gap-2 overflow-x-auto pt-1 no-scrollbar">
               {todayRoutine.exercises.slice(0, 5).map((ex) => (
                 <div
@@ -346,7 +477,7 @@ export function DashboardView({
 
       <div className="ios-divider" />
 
-      {/* SECTION 4: INTEGRATED NUVIA (Short, Direct Contextual Block) */}
+      {/* SECTION 4: NUVIA QUICK INSIGHT */}
       <div className="bg-[#1C1C1E] rounded-2xl p-4 border border-white/[0.06] space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-white">
@@ -357,19 +488,17 @@ export function DashboardView({
             onClick={() => onNavigateTab('coach')}
             className="text-[11px] text-[#8E8E93] hover:text-white transition-colors"
           >
-            Insights & Chat →
+            Insights &amp; Chat →
           </button>
         </div>
 
         <p className="text-xs text-[#D1D1D6] leading-relaxed">
-          {nuviaReply || (
-            proteinGap > 20
+          {nuviaReply ||
+            (proteinGap > 20
               ? `You're ${proteinGap}g short of your protein target. For your next meal: grilled chicken, fish, tofu, or Greek yogurt (≈40g protein) will keep you on track.`
-              : `You've maintained your calorie and macronutrient balance well today. Stay hydrated and prioritize recovery.`
-          )}
+              : `You've maintained your calorie and macronutrient balance well today. Stay hydrated and prioritize recovery.`)}
         </p>
 
-        {/* Clean Inline "Ask Nuvia" Field */}
         <form onSubmit={handleAskNuvia} className="flex items-center gap-2 pt-1">
           <input
             type="text"
@@ -388,7 +517,7 @@ export function DashboardView({
         </form>
       </div>
 
-      {/* SECTION 5: TODAY'S LOGS (Workouts & Meals) */}
+      {/* SECTION 5: TODAY'S LOGS */}
       <div className="space-y-4 pt-1">
         {/* Completed Workouts */}
         {recentExercises.length > 0 && (
@@ -426,7 +555,8 @@ export function DashboardView({
                   </div>
                   <div className="text-right shrink-0">
                     <span className="text-sm font-extrabold text-[#30D158] flex items-center gap-0.5">
-                      +{e.calories_burned} <span className="text-xs font-medium text-[#8E8E93]">kcal</span>
+                      +{e.calories_burned}{' '}
+                      <span className="text-xs font-medium text-[#8E8E93]">kcal</span>
                     </span>
                     <span className="text-[10px] text-[#8E8E93] font-medium block">burned</span>
                   </div>

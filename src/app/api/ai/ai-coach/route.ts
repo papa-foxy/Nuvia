@@ -2,12 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
   try {
-    const { todaySummary, goals, profile, recentMeals, chatMessage } = await req.json();
+    const { todaySummary, goals, profile, recentMeals, recentExercises, chatMessage } = await req.json();
     const apiKey = process.env.GEMINI_API_KEY;
 
     const remainingCals = Math.max(0, (goals?.calorie_target || 2000) - (todaySummary?.calories_consumed || 0));
     const remainingProtein = Math.max(0, (goals?.protein_target || 140) - (todaySummary?.protein_consumed || 0));
     const remainingExercise = Math.max(0, (goals?.exercise_minutes_target || 30) - (todaySummary?.exercise_minutes || 0));
+
+    const exerciseContext = (recentExercises || []).length > 0
+      ? `- Completed exercises today: ${(recentExercises as string[]).join(', ')}`
+      : '- No exercises logged yet today';
 
     if (apiKey) {
       const userContext = `
@@ -18,8 +22,10 @@ USER CONTEXT:
 - Calorie Goal: ${goals?.calorie_target || 2000} kcal (Consumed: ${todaySummary?.calories_consumed || 0} kcal, Remaining: ${remainingCals} kcal)
 - Protein Goal: ${goals?.protein_target || 140} g (Consumed: ${todaySummary?.protein_consumed || 0} g, Remaining: ${remainingProtein} g)
 - Exercise: ${todaySummary?.exercise_minutes || 0} min / Target ${goals?.exercise_minutes_target || 30} min (Burned: ${todaySummary?.calories_burned || 0} kcal)
+${exerciseContext}
 - Recent meals: ${(recentMeals || []).map((m: any) => `${m.meal_type}: ${m.description}`).join('; ')}
 `;
+
 
       if (chatMessage) {
         const systemPrompt = `You are Nuvia's intelligent AI Coach.

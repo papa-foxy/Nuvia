@@ -6,6 +6,7 @@ import {
   ExerciseLog,
   DailySummary,
   AiRecommendation,
+  CustomExercise,
 } from '@/types/database';
 import { WorkoutRoutine } from '@/types/routine';
 import { StreakData, StreakDay, MilestoneBadge } from '@/types/streak';
@@ -127,6 +128,7 @@ interface LocalState {
   workoutRoutines: WorkoutRoutine[];
   dailySummaries: Record<string, DailySummary>;
   recommendations: AiRecommendation[];
+  customExercises: CustomExercise[];
 }
 
 function getLocalState(): LocalState {
@@ -139,6 +141,7 @@ function getLocalState(): LocalState {
       workoutRoutines: DEFAULT_ROUTINES,
       dailySummaries: {},
       recommendations: [],
+      customExercises: [],
     };
   }
 
@@ -164,6 +167,7 @@ function getLocalState(): LocalState {
     exerciseLogs: [],
     dailySummaries: {},
     recommendations: [],
+    customExercises: [],
   };
 
   saveLocalState(initial);
@@ -1299,5 +1303,69 @@ export const DataService = {
 
   getDemoUserId() {
     return DEMO_USER_ID;
+  },
+
+  // =========================================================================
+  // CUSTOM EXERCISES (user-owned, never global)
+  // =========================================================================
+  async getCustomExercises(userId?: string): Promise<CustomExercise[]> {
+    if (isSupabaseConfigured() && userId && userId !== DEMO_USER_ID) {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from('custom_exercises')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false });
+        if (!error && data) return data as CustomExercise[];
+      } catch (err) {
+        console.warn('Supabase getCustomExercises error:', err);
+      }
+    }
+    const state = getLocalState();
+    return (state.customExercises || []).filter(
+      (e) => !userId || e.user_id === userId,
+    );
+  },
+
+  async saveCustomExercise(exercise: Omit<CustomExercise, 'id' | 'created_at'>): Promise<CustomExercise> {
+    const newExercise: CustomExercise = {
+      ...exercise,
+      id: `custom-ex-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      created_at: new Date().toISOString(),
+    };
+
+    if (isSupabaseConfigured() && exercise.user_id && exercise.user_id !== DEMO_USER_ID) {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from('custom_exercises')
+          .insert(newExercise)
+          .select()
+          .single();
+        if (!error && data) return data as CustomExercise;
+      } catch (err) {
+        console.warn('Supabase saveCustomExercise error:', err);
+      }
+    }
+
+    const state = getLocalState();
+    state.customExercises = [...(state.customExercises || []), newExercise];
+    saveLocalState(state);
+    return newExercise;
+  },
+
+  async deleteCustomExercise(id: string, userId?: string): Promise<void> {
+    if (isSupabaseConfigured() && userId && userId !== DEMO_USER_ID) {
+      try {
+        const supabase = createClient();
+        await supabase.from('custom_exercises').delete().eq('id', id).eq('user_id', userId);
+      } catch (err) {
+        console.warn('Supabase deleteCustomExercise error:', err);
+      }
+    }
+    const state = getLocalState();
+    state.customExercises = (state.customExercises || []).filter((e) => e.id !== id);
+    saveLocalState(state);
   },
 };

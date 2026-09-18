@@ -1,5 +1,7 @@
 export interface RoutineExercise {
   id: string;
+  /** Reference to the catalog exercise ID this was built from */
+  catalog_id?: string;
   name: string;
   target_muscle: string; // e.g. 'Chest', 'Back', 'Shoulders', 'Biceps', 'Triceps', 'Abs', 'Legs', 'Full Body'
   sets: number;
@@ -9,6 +11,9 @@ export interface RoutineExercise {
   thumbnail_url: string; // SVG data URI or image URL
   youtube_id: string; // YouTube Video ID for direct embedded player
   youtube_url: string; // Direct YouTube watch link
+  image_url?: string; // Optional custom photo or uploaded image
+  video_thumbnail_url?: string; // Optional direct video thumbnail
+  thumbnail_type?: 'youtube' | 'custom' | 'svg' | 'placeholder';
   completed?: boolean;
 }
 

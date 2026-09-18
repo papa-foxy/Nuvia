@@ -115,3 +115,21 @@ export interface AiRecommendation {
   priority: number;
   created_at?: string;
 }
+
+/**
+ * User-owned custom exercise.
+ * Belongs strictly to one user; never added to the global catalog automatically.
+ */
+export interface CustomExercise {
+  id: string;
+  user_id: string;
+  name: string;
+  primary_muscles?: string[];
+  secondary_muscles?: string[];
+  equipment?: string;
+  instructions?: string;
+  thumbnail_url?: string;
+  youtube_id?: string;
+  image_url?: string;
+  created_at?: string;
+}

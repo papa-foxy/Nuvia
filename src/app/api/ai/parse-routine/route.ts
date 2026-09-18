@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { matchExercise, PLAYLIST_ID } from '@/lib/exercise-catalog';
+import { matchExercise, matchExerciseSafe, getCatalogNamesForPrompt, PLAYLIST_ID } from '@/lib/exercise-catalog';
 import { WorkoutRoutine, RoutineExercise } from '@/types/routine';
 
 interface ParsedRawRoutine {
@@ -10,6 +10,7 @@ interface ParsedRawRoutine {
     name: string;
     sets: number;
     reps: string;
+    rest_seconds?: number;
     target_muscle?: string;
     notes?: string;
   }[];
@@ -29,33 +30,44 @@ export async function POST(req: NextRequest) {
     const apiKey = process.env.GEMINI_API_KEY;
     let parsedRoutines: ParsedRawRoutine[] = [];
 
+    // Provide Gemini with the first 80 catalog exercise names so it can map user
+    // text to existing exercises rather than inventing new ones.
+    const catalogNames = getCatalogNamesForPrompt(80);
+    const catalogHint = `EXERCISE LIBRARY (map user text to the closest name from this list when possible):\n${catalogNames.map((n, i) => `${i + 1}. ${n}`).join('\n')}`;
+
     // Attempt Gemini parsing if API key is present
     if (apiKey) {
       try {
         const systemPrompt = `You are an elite fitness routine parser for Nuvia.
 Given raw text from a user's fitness consultation with an AI (which may contain multiple day splits or single day routines), extract all distinct workout routines into structured JSON.
 
+CRITICAL RULE: When naming exercises, prefer the exact name from the provided EXERCISE LIBRARY below. Only use names not in the library if the exercise clearly doesn't exist there.
+
+${catalogHint}
+
 Return strictly valid JSON matching this schema:
 {
   "routines": [
     {
-      "title": "Full title line e.g. Monday & Wednesday - Upper Body (Push-up Board + Dumbbells)",
+      "title": "Full title line e.g. Monday & Wednesday - Upper Body",
       "days": ["Monday", "Wednesday"],
       "focus": "Upper Body",
       "exercises": [
         {
-          "name": "Push-ups (Blue/Chest position)",
+          "name": "Dumbbell bicep curls",
           "sets": 4,
           "reps": "10-12",
-          "target_muscle": "Chest",
-          "notes": "Blue/Chest position"
+          "rest_seconds": 90,
+          "target_muscle": "Biceps",
+          "notes": "optional notes"
         }
       ]
     }
   ]
 }
 Normalize reps to strings like "10-12", "15", "40-60 sec", "20 per side".
-Ensure sets is an integer.`;
+Ensure sets is an integer.
+Include rest_seconds if mentioned (e.g. "Rest 90 seconds" -> 90).`;
 
         const res = await fetch(
           `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`,
@@ -106,17 +118,29 @@ Ensure sets is an integer.`;
       );
     }
 
-    // Enrich all exercises with catalog thumbnails and YouTube verified video links
+    // Enrich all exercises with catalog thumbnails and YouTube verified video links.
+    // Use matchExerciseSafe() — exercises that don't match are flagged as unmatched
+    // instead of silently getting the wrong video/thumbnail.
+    const unmatchedExerciseNames: string[] = [];
+
     const finalRoutines: WorkoutRoutine[] = parsedRoutines.map((r, rIdx) => {
       const routineId = `routine-${Date.now()}-${rIdx}`;
       const enrichedExercises: RoutineExercise[] = r.exercises.map((ex, eIdx) => {
-        const matched = matchExercise(ex.name);
+        const safeMatch = matchExerciseSafe(ex.name);
+        const matched = safeMatch ?? matchExercise(ex.name); // fallback for enrichment
+
+        if (!safeMatch) {
+          unmatchedExerciseNames.push(ex.name);
+        }
+
         return {
           id: `ex-${routineId}-${eIdx}`,
+          catalog_id: safeMatch?.id, // undefined if unmatched
           name: ex.name.trim(),
           target_muscle: ex.target_muscle || matched.target_muscle,
           sets: Number(ex.sets) || matched.default_sets || 3,
           reps: ex.reps || matched.default_reps || '10-12',
+          rest_seconds: ex.rest_seconds ?? 90,
           notes: ex.notes || '',
           thumbnail_url: matched.thumbnail_url,
           youtube_id: matched.youtube_id,
@@ -139,6 +163,8 @@ Ensure sets is an integer.`;
       success: true,
       routines: finalRoutines,
       count: finalRoutines.length,
+      // Surface unmatched exercises so the UI can warn the user
+      unmatched_exercises: [...new Set(unmatchedExerciseNames)],
     });
   } catch (err: any) {
     return NextResponse.json(
@@ -162,7 +188,6 @@ function parseRoutineWithRegex(rawText: string): ParsedRawRoutine[] {
     const lower = line.toLowerCase();
     const matchedDays = dayNames.filter((d) => lower.includes(d));
 
-    // Check if this line is a routine header (e.g. "Monday & Wednesday - Upper Body", "Tuesday & Friday - Abs")
     const isHeader =
       matchedDays.length > 0 ||
       lower.includes('routine') ||
@@ -172,7 +197,6 @@ function parseRoutineWithRegex(rawText: string): ParsedRawRoutine[] {
       lower.includes('day 1') ||
       lower.includes('day 2');
 
-    // Bullet point / exercise line detection
     const isBullet = /^[•\-*\d.]+\s*/.test(line);
 
     if (isHeader && !isBullet) {
@@ -180,7 +204,6 @@ function parseRoutineWithRegex(rawText: string): ParsedRawRoutine[] {
         routines.push(currentRoutine);
       }
 
-      // Determine focus
       let focus = 'Workout';
       if (lower.includes('upper')) focus = 'Upper Body';
       else if (lower.includes('abs') || lower.includes('core')) focus = 'Abs & Core';
@@ -197,24 +220,33 @@ function parseRoutineWithRegex(rawText: string): ParsedRawRoutine[] {
       continue;
     }
 
-    // Parse exercise line
-    // e.g. "• Push-ups (Blue/Chest position) - 4x10-12"
-    // e.g. "• Plank - 3x40-60 sec"
-    // e.g. "• Russian twists (with dumbbell) - 4x15 per side"
     const cleaned = line.replace(/^[•\-*\d.]+\s*/, '').trim();
     if (!cleaned) continue;
 
-    // Split on dash / hyphen separating exercise name and sets/reps
+    // Detect rest lines like "Rest 90 seconds between sets"
+    const restLineMatch = cleaned.toLowerCase().match(/rest\s+(\d+)\s*(sec|second|min|minute)/i);
+    if (restLineMatch) {
+      const val = parseInt(restLineMatch[1], 10);
+      const unit = restLineMatch[2].toLowerCase();
+      const restSeconds = unit.startsWith('min') ? val * 60 : val;
+      if (currentRoutine && currentRoutine.exercises.length > 0) {
+        // Apply rest to the last added exercise
+        const lastEx = currentRoutine.exercises[currentRoutine.exercises.length - 1];
+        lastEx.rest_seconds = restSeconds;
+      }
+      continue;
+    }
+
     const parts = cleaned.split(/\s*[-–—]\s*(?=\d+\s*[x×])/i);
     let name = cleaned;
     let sets = 3;
     let reps = '10-12';
     let notes = '';
+    let rest_seconds: number | undefined;
 
     if (parts.length >= 2) {
       name = parts[0].trim();
       const setRepPart = parts.slice(1).join(' - ').trim();
-      // Match 4x10-12 or 4×10-12
       const setRepMatch = setRepPart.match(/(\d+)\s*[x×]\s*([^\s,]+(?:\s+sec|\s+per\s+side|\s+seconds)?)/i);
       if (setRepMatch) {
         sets = parseInt(setRepMatch[1], 10);
@@ -222,8 +254,13 @@ function parseRoutineWithRegex(rawText: string): ParsedRawRoutine[] {
       } else {
         reps = setRepPart;
       }
+
+      // Extract rest from the same line e.g. "3x10 (90s rest)"
+      const inlineRest = setRepPart.match(/(\d+)\s*s\s+rest|\brest\s+(\d+)\s*s/i);
+      if (inlineRest) {
+        rest_seconds = parseInt(inlineRest[1] || inlineRest[2], 10);
+      }
     } else {
-      // Check if "4x12" is at the end of the line
       const inlineMatch = cleaned.match(/(.+?)\s*[-–—]?\s*(\d+)\s*[x×]\s*([^\s,]+(?:\s+sec|\s+per\s+side|\s+seconds)?)$/i);
       if (inlineMatch) {
         name = inlineMatch[1].trim();
@@ -232,7 +269,6 @@ function parseRoutineWithRegex(rawText: string): ParsedRawRoutine[] {
       }
     }
 
-    // Extract any parenthetical notes
     const noteMatch = name.match(/\(([^)]+)\)/);
     if (noteMatch) {
       notes = noteMatch[1];
@@ -247,12 +283,7 @@ function parseRoutineWithRegex(rawText: string): ParsedRawRoutine[] {
       };
     }
 
-    currentRoutine.exercises.push({
-      name,
-      sets,
-      reps,
-      notes,
-    });
+    currentRoutine.exercises.push({ name, sets, reps, rest_seconds, notes });
   }
 
   if (currentRoutine && currentRoutine.exercises.length > 0) {

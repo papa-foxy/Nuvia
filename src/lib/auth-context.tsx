@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Profile, Goal } from '@/types/database';
 import { createClient, isSupabaseConfigured } from './supabase/client';
 import { DataService } from './data-service';
+import { NuviaCache } from './nuvia-cache';
 
 interface User {
   id: string;
@@ -325,6 +326,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('nuvia_is_demo');
     }
+    // Clear all cached data so a new login doesn't see stale user data
+    NuviaCache.clear();
     setUser(null);
     setProfile(null);
     setGoals(null);

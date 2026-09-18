@@ -47,6 +47,7 @@ export function DayDetailsModal({
   const [dragY, setDragY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const [isEntering, setIsEntering] = useState(true);
   const startYRef = React.useRef(0);
   const currentDragYRef = React.useRef(0);
   const scrollRef = React.useRef<HTMLDivElement>(null);
@@ -54,12 +55,18 @@ export function DayDetailsModal({
   // Keep ref synchronized with state for event handlers
   currentDragYRef.current = dragY;
 
-  // Reset state when modal opens
+  // Trigger smooth entrance slide-up animation when modal opens
   React.useEffect(() => {
     if (isOpen) {
+      setIsEntering(true);
+      setIsClosing(false);
       setDragY(0);
       setIsDragging(false);
-      setIsClosing(false);
+
+      const timer = setTimeout(() => {
+        setIsEntering(false);
+      }, 20);
+      return () => clearTimeout(timer);
     }
   }, [isOpen]);
 
@@ -195,8 +202,8 @@ export function DayDetailsModal({
       <div
         className="fixed inset-0 bg-black/80 backdrop-blur-md transition-opacity"
         style={{
-          opacity: isClosing ? 0 : Math.max(0.1, 1 - dragY / 300),
-          transitionDuration: isDragging ? '0ms' : '220ms',
+          opacity: isClosing || isEntering ? 0 : Math.max(0.1, 1 - dragY / 300),
+          transitionDuration: isDragging ? '0ms' : isEntering ? '320ms' : '220ms',
         }}
         onClick={triggerClose}
       />
@@ -204,11 +211,13 @@ export function DayDetailsModal({
       {/* Modal Sheet */}
       <div
         style={{
-          transform: isClosing
+          transform: isClosing || isEntering
             ? 'translateY(100%)'
             : `translateY(${dragY}px)`,
           transition: isDragging
             ? 'none'
+            : isEntering
+            ? 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)'
             : 'transform 0.24s cubic-bezier(0.2, 0.9, 0.3, 1)',
         }}
         className="relative w-full max-w-md bg-[#161618] border border-white/10 rounded-t-[28px] sm:rounded-[28px] max-h-[92vh] flex flex-col overflow-hidden shadow-2xl z-10 select-none sm:select-auto will-change-transform"

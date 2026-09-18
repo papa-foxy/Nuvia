@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { DataService } from '@/lib/data-service';
 import { ExerciseLog } from '@/types/database';
@@ -9,14 +9,17 @@ import {
   Play,
   Plus,
   Sparkles,
-  Calendar,
   Dumbbell,
   Trash2,
   ChevronRight,
   CheckCircle2,
   Activity,
   Flame,
-  ExternalLink,
+  Clock,
+  Zap,
+  Calendar,
+  Timer,
+  ArrowRight,
 } from 'lucide-react';
 import { ExerciseVideoModal } from './ExerciseVideoModal';
 import { PasteAiRoutineModal } from './PasteAiRoutineModal';
@@ -30,9 +33,24 @@ interface ExerciseListViewProps {
   onNavigateTab?: (tab: TabType) => void;
 }
 
+// ─── Intensity dot color ─────────────────────────────────────────────────────
+function intensityColor(intensity: string) {
+  if (intensity === 'high') return '#FF453A';
+  if (intensity === 'low') return '#30D158';
+  return '#FF9F0A';
+}
+
+// ─── Format duration ──────────────────────────────────────────────────────────
+function fmtDuration(mins: number) {
+  if (mins < 60) return `${mins}m`;
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return m > 0 ? `${h}h ${m}m` : `${h}h`;
+}
+
 export function ExerciseListView({ onOpenAddExercise, onNavigateTab }: ExerciseListViewProps) {
   const { user } = useAuth();
-  const [viewMode, setViewMode] = useState<'routines' | 'logs'>('routines');
+  const [viewMode, setViewMode] = useState<'today' | 'plans'>('today');
 
   // Routines State
   const [routines, setRoutines] = useState<WorkoutRoutine[]>([]);
@@ -102,7 +120,6 @@ export function ExerciseListView({ onOpenAddExercise, onNavigateTab }: ExerciseL
   };
 
   const handleCompleteExerciseFromVideo = async (ex: RoutineExercise) => {
-    // Log as completed exercise in activity log
     await DataService.addExerciseLog({
       user_id: user?.id || 'demo-user-001',
       exercise_type: `${ex.name} (${ex.sets} sets × ${ex.reps})`,
@@ -127,13 +144,23 @@ export function ExerciseListView({ onOpenAddExercise, onNavigateTab }: ExerciseL
     }
   };
 
-  const totalBurned = exercises.reduce((sum, e) => sum + (Number(e.calories_burned) || 0), 0);
-  const totalMinutes = exercises.reduce((sum, e) => sum + (Number(e.duration_minutes) || 0), 0);
-
-  // Check today's day of week
+  // ─── Derived values ───────────────────────────────────────────────────────
   const todayName = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+  const todayDate = new Date().toDateString();
 
-  // If a specific routine is open, render its dedicated execution and exercises view
+  // Filter to today's exercises only for the Today view
+  const todayExercises = exercises.filter(
+    (e) => new Date(e.created_at || new Date()).toDateString() === todayDate
+  );
+  const totalBurned = todayExercises.reduce((sum, e) => sum + (Number(e.calories_burned) || 0), 0);
+  const totalMinutes = todayExercises.reduce((sum, e) => sum + (Number(e.duration_minutes) || 0), 0);
+
+  // Find today's scheduled routine (first one that matches today)
+  const todayRoutine = routines.find((r) =>
+    r.days.some((d) => d.toLowerCase() === todayName.toLowerCase())
+  );
+
+  // ─── If a specific routine is open, render it ─────────────────────────────
   if (selectedRoutine) {
     return (
       <RoutineDetailView
@@ -161,29 +188,35 @@ export function ExerciseListView({ onOpenAddExercise, onNavigateTab }: ExerciseL
 
   return (
     <div className="flex-1 flex flex-col pb-24 px-5 pt-4 w-full max-w-md mx-auto space-y-5">
-      {/* Top Header */}
+      {/* ── Header ── */}
       <div className="flex items-end justify-between pt-2">
         <div>
           <p className="text-[11px] font-semibold tracking-wider text-[#8E8E93] uppercase">
             Fitness & Training
           </p>
-          <h1 className="text-3xl font-bold tracking-tight text-white mt-0.5">
-            Workout & Movement
-          </h1>
+          <h1 className="text-3xl font-bold tracking-tight text-white mt-0.5">Activity</h1>
         </div>
 
-        {viewMode === 'logs' ? (
-          <span className="text-sm font-semibold text-white mb-1">
-            {totalMinutes} <span className="text-xs text-[#8E8E93] font-normal">min active</span>
-          </span>
+        {/* Contextual stat in header */}
+        {viewMode === 'today' ? (
+          <div className="text-right mb-1">
+            {totalBurned > 0 ? (
+              <>
+                <span className="text-sm font-bold text-white">{totalBurned}</span>
+                <span className="text-xs text-[#8E8E93] font-normal ml-1">kcal today</span>
+              </>
+            ) : (
+              <span className="text-xs text-[#8E8E93]">No activity yet</span>
+            )}
+          </div>
         ) : (
           <span className="text-xs text-[#8E8E93] mb-1 font-medium">
-            {routines.length} Saved Splits
+            {routines.length} {routines.length === 1 ? 'Routine' : 'Routines'}
           </span>
         )}
       </div>
 
-      {/* Notification Toast */}
+      {/* ── Notification Toast ── */}
       {successBanner && (
         <div className="p-3 rounded-2xl bg-[#30D158]/15 border border-[#30D158]/30 text-[#30D158] text-xs font-semibold flex items-center gap-2 animate-fadeIn">
           <CheckCircle2 className="w-4 h-4 shrink-0" />
@@ -191,39 +224,227 @@ export function ExerciseListView({ onOpenAddExercise, onNavigateTab }: ExerciseL
         </div>
       )}
 
-      {/* iOS Segmented Control: [ Workout Routines | Activity Logs ] */}
+      {/* ── iOS Segmented Control: [ Today | Plans ] ── */}
       <div className="p-1 bg-[#1C1C1E] border border-white/[0.08] rounded-2xl flex items-center">
         <button
           type="button"
-          onClick={() => setViewMode('routines')}
+          onClick={() => setViewMode('today')}
           className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5 ${
-            viewMode === 'routines'
+            viewMode === 'today'
               ? 'bg-[#2C2C2E] text-white shadow-sm'
               : 'text-[#8E8E93] hover:text-white'
           }`}
         >
-          <Dumbbell className="w-3.5 h-3.5 text-[#30D158]" />
-          <span>Workout Routines</span>
+          <Zap className="w-3.5 h-3.5 text-[#FF9F0A]" />
+          <span>Today</span>
         </button>
 
         <button
           type="button"
-          onClick={() => setViewMode('logs')}
+          onClick={() => setViewMode('plans')}
           className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5 ${
-            viewMode === 'logs'
+            viewMode === 'plans'
               ? 'bg-[#2C2C2E] text-white shadow-sm'
               : 'text-[#8E8E93] hover:text-white'
           }`}
         >
-          <Activity className="w-3.5 h-3.5 text-[#0A84FF]" />
-          <span>Today's Log ({exercises.length})</span>
+          <Dumbbell className="w-3.5 h-3.5 text-[#0A84FF]" />
+          <span>Plans</span>
         </button>
       </div>
 
       {/* ============================================================ */}
-      {/* 1. WORKOUT ROUTINES VIEW                                    */}
+      {/* TODAY VIEW — Execution-first                                  */}
       {/* ============================================================ */}
-      {viewMode === 'routines' && (
+      {viewMode === 'today' && (
+        <div className="space-y-4">
+
+          {/* ── Daily Stats Strip ── */}
+          {totalMinutes > 0 && (
+            <div className="grid grid-cols-3 gap-2">
+              <div className="ios-card p-3 flex flex-col items-center gap-1">
+                <Flame className="w-4 h-4 text-[#FF9F0A]" />
+                <span className="text-sm font-bold text-white">{totalBurned}</span>
+                <span className="text-[10px] text-[#8E8E93]">kcal</span>
+              </div>
+              <div className="ios-card p-3 flex flex-col items-center gap-1">
+                <Clock className="w-4 h-4 text-[#0A84FF]" />
+                <span className="text-sm font-bold text-white">{fmtDuration(totalMinutes)}</span>
+                <span className="text-[10px] text-[#8E8E93]">active</span>
+              </div>
+              <div className="ios-card p-3 flex flex-col items-center gap-1">
+                <Activity className="w-4 h-4 text-[#30D158]" />
+                <span className="text-sm font-bold text-white">{todayExercises.length}</span>
+                <span className="text-[10px] text-[#8E8E93]">sessions</span>
+              </div>
+            </div>
+          )}
+
+          {/* ── Up Next: Today's Scheduled Routine ── */}
+          {!loadingRoutines && todayRoutine && (
+            <div>
+              <p className="text-[11px] font-semibold tracking-wider text-[#8E8E93] uppercase mb-2">
+                Up Next
+              </p>
+              <button
+                type="button"
+                onClick={() => setSelectedRoutine(todayRoutine)}
+                className="w-full ios-card p-4 text-left hover:border-[#30D158]/40 transition-all group"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-[#30D158]/15 flex items-center justify-center shrink-0">
+                      <Play className="w-5 h-5 text-[#30D158] fill-[#30D158]" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[#30D158] text-black">
+                          Today
+                        </span>
+                        <span className="text-[10px] text-[#8E8E93]">
+                          {todayRoutine.exercises.length} exercises
+                        </span>
+                      </div>
+                      <h3 className="text-sm font-bold text-white group-hover:text-[#30D158] transition-colors">
+                        {todayRoutine.title}
+                      </h3>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-[#8E8E93] group-hover:text-[#30D158] transition-colors shrink-0" />
+                </div>
+              </button>
+            </div>
+          )}
+
+          {/* ── Log Activity CTA (shown when no logs yet or always) ── */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[11px] font-semibold tracking-wider text-[#8E8E93] uppercase">
+                Today's Activity
+              </p>
+              <button
+                type="button"
+                onClick={onOpenAddExercise}
+                className="text-xs text-[#30D158] font-semibold hover:underline flex items-center gap-1"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Log</span>
+              </button>
+            </div>
+
+            {loadingLogs ? (
+              <div className="space-y-2">
+                {[1, 2].map((n) => (
+                  <div key={n} className="h-16 bg-[#1C1C1E] rounded-2xl animate-pulse" />
+                ))}
+              </div>
+            ) : todayExercises.length === 0 ? (
+              <div className="ios-card p-6 text-center space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-[#1C1C1E] flex items-center justify-center mx-auto">
+                  <Activity className="w-6 h-6 text-[#3A3A3C]" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-white">No Activity Yet</p>
+                  <p className="text-xs text-[#8E8E93] mt-1 max-w-xs mx-auto">
+                    {todayRoutine
+                      ? `Start "${todayRoutine.title}" or log a manual activity.`
+                      : 'Log a run, workout, or any movement to get started.'}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={onOpenAddExercise}
+                  className="px-5 py-2.5 rounded-full bg-[#30D158] text-black font-semibold text-xs inline-flex items-center gap-1.5"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Log Activity</span>
+                </button>
+              </div>
+            ) : (
+              <div className="ios-card divide-y divide-white/[0.06] overflow-hidden">
+                {todayExercises.map((ex) => {
+                  const exDate = new Date(ex.created_at || new Date());
+                  const timeLabel = exDate.toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  });
+
+                  return (
+                    <div
+                      key={ex.id}
+                      className="p-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        {/* Intensity indicator dot */}
+                        <div
+                          className="w-2 h-2 rounded-full shrink-0"
+                          style={{ backgroundColor: intensityColor(ex.intensity || 'moderate') }}
+                        />
+                        <div>
+                          <h3 className="text-sm font-semibold text-white">{ex.exercise_type}</h3>
+                          <p className="text-xs text-[#8E8E93] mt-0.5">
+                            {fmtDuration(Number(ex.duration_minutes))}
+                            {ex.distance_km ? ` · ${ex.distance_km} km` : ''}
+                            <span className="text-[#636366]"> · {timeLabel}</span>
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <div className="text-right shrink-0">
+                          <span className="text-sm font-semibold text-white">
+                            ~{ex.calories_burned}
+                          </span>
+                          <span className="text-xs text-[#8E8E93] ml-1">kcal</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteExercise(ex.id)}
+                          className="p-1.5 text-[#8E8E93] hover:text-[#FF453A] transition-colors"
+                          title="Delete exercise entry"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* ── Nudge to Plans if no routine scheduled today ── */}
+          {!loadingRoutines && !todayRoutine && (
+            <button
+              type="button"
+              onClick={() => setViewMode('plans')}
+              className="w-full ios-card p-4 text-left hover:border-white/20 transition-all group"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-[#0A84FF]/10 flex items-center justify-center shrink-0">
+                    <Dumbbell className="w-4.5 h-4.5 text-[#0A84FF]" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-white">Browse your Plans</p>
+                    <p className="text-[11px] text-[#8E8E93] mt-0.5">
+                      {routines.length > 0
+                        ? `${routines.length} routine${routines.length > 1 ? 's' : ''} saved`
+                        : 'Create or import a workout routine'}
+                    </p>
+                  </div>
+                </div>
+                <ArrowRight className="w-4 h-4 text-[#8E8E93] group-hover:text-white transition-colors shrink-0" />
+              </div>
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* ============================================================ */}
+      {/* PLANS VIEW — Preparation-first                               */}
+      {/* ============================================================ */}
+      {viewMode === 'plans' && (
         <div className="space-y-4">
           {/* Action Row: Paste from AI & Manual Builder */}
           <div className="grid grid-cols-2 gap-2.5">
@@ -253,7 +474,7 @@ export function ExerciseListView({ onOpenAddExercise, onNavigateTab }: ExerciseL
               </div>
               <div>
                 <p className="text-xs font-bold text-white group-hover:text-white transition-colors">
-                  Manual Routine
+                  Build Routine
                 </p>
                 <p className="text-[10px] text-[#8E8E93] mt-0.5">Pick specific exercises</p>
               </div>
@@ -268,11 +489,12 @@ export function ExerciseListView({ onOpenAddExercise, onNavigateTab }: ExerciseL
               ))}
             </div>
           ) : routines.length === 0 ? (
-            <div className="py-12 text-center text-xs text-[#8E8E93] bg-[#1C1C1E] rounded-3xl border border-white/[0.06] p-6 space-y-2">
+            <div className="py-12 text-center ios-card p-6 space-y-2">
               <Dumbbell className="w-8 h-8 text-[#8E8E93] mx-auto mb-1" />
-              <p className="text-sm font-semibold text-white">No Workout Routines Yet</p>
+              <p className="text-sm font-semibold text-white">No Routines Yet</p>
               <p className="text-xs text-[#8E8E93] max-w-xs mx-auto">
-                Paste the consultation text from your AI coach above or build a routine manually.
+                Paste the consultation text from your AI coach or build a routine manually to get
+                started.
               </p>
             </div>
           ) : (
@@ -281,7 +503,6 @@ export function ExerciseListView({ onOpenAddExercise, onNavigateTab }: ExerciseL
                 const isScheduledToday = routine.days.some(
                   (d) => d.toLowerCase() === todayName.toLowerCase()
                 );
-                // Use first exercise's YouTube ID for the banner thumbnail
                 const firstEx = routine.exercises[0];
                 const bannerThumb = firstEx?.youtube_id
                   ? `https://img.youtube.com/vi/${firstEx.youtube_id}/hqdefault.jpg`
@@ -307,7 +528,7 @@ export function ExerciseListView({ onOpenAddExercise, onNavigateTab }: ExerciseL
                         {/* Gradient overlay */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
 
-                        {/* Today badge top-left */}
+                        {/* Today badge */}
                         {isScheduledToday && (
                           <div className="absolute top-2.5 left-2.5">
                             <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#30D158] text-black shadow">
@@ -316,7 +537,7 @@ export function ExerciseListView({ onOpenAddExercise, onNavigateTab }: ExerciseL
                           </div>
                         )}
 
-                        {/* Delete top-right */}
+                        {/* Delete */}
                         <button
                           type="button"
                           onClick={(e) => handleDeleteRoutine(routine.id, e)}
@@ -326,7 +547,7 @@ export function ExerciseListView({ onOpenAddExercise, onNavigateTab }: ExerciseL
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
 
-                        {/* Routine title + focus overlaid at bottom */}
+                        {/* Title overlay */}
                         <div className="absolute bottom-0 left-0 right-0 p-3">
                           <div className="flex items-center gap-1.5 mb-1">
                             <span className="text-[10px] font-semibold uppercase tracking-wider text-[#0A84FF] bg-[#0A84FF]/20 px-2 py-0.5 rounded-full backdrop-blur-sm border border-[#0A84FF]/20">
@@ -345,7 +566,7 @@ export function ExerciseListView({ onOpenAddExercise, onNavigateTab }: ExerciseL
 
                     {/* ── Card Body ── */}
                     <div className="p-3 space-y-2.5">
-                      {/* If no banner (no exercises yet), show title here */}
+                      {/* If no banner, show title here */}
                       {!bannerThumb && (
                         <div className="flex items-start justify-between gap-3">
                           <div>
@@ -389,7 +610,7 @@ export function ExerciseListView({ onOpenAddExercise, onNavigateTab }: ExerciseL
                         ))}
                       </div>
 
-                      {/* Exercise icon strip + Open CTA */}
+                      {/* Exercise thumbnails + Open CTA */}
                       <div className="flex items-center justify-between pt-1 border-t border-white/[0.04]">
                         <div className="flex items-center gap-1 overflow-hidden">
                           {routine.exercises.slice(0, 6).map((ex) => {
@@ -415,7 +636,11 @@ export function ExerciseListView({ onOpenAddExercise, onNavigateTab }: ExerciseL
                                     }}
                                   />
                                 ) : (
-                                  <img src={ex.thumbnail_url} alt={ex.name} className="w-full h-full object-contain p-1 opacity-70" />
+                                  <img
+                                    src={ex.thumbnail_url}
+                                    alt={ex.name}
+                                    className="w-full h-full object-contain p-1 opacity-70"
+                                  />
                                 )}
                               </div>
                             );
@@ -442,102 +667,7 @@ export function ExerciseListView({ onOpenAddExercise, onNavigateTab }: ExerciseL
       )}
 
       {/* ============================================================ */}
-      {/* 2. ACTIVITY LOGS VIEW                                       */}
-      {/* ============================================================ */}
-      {viewMode === 'logs' && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between pb-1">
-            <span className="text-xs font-semibold uppercase tracking-wider text-[#8E8E93]">
-              Today's Logged Movement
-            </span>
-            <button
-              type="button"
-              onClick={onOpenAddExercise}
-              className="text-xs text-[#30D158] font-semibold hover:underline flex items-center gap-1"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Log Activity</span>
-            </button>
-          </div>
-
-          {loadingLogs ? (
-            <div className="space-y-2">
-              {[1, 2].map((n) => (
-                <div key={n} className="h-16 bg-[#1C1C1E] rounded-2xl animate-pulse" />
-              ))}
-            </div>
-          ) : exercises.length === 0 ? (
-            <div className="py-12 text-center text-xs text-[#8E8E93] bg-[#1C1C1E] rounded-3xl border border-white/[0.06] p-6 space-y-2">
-              <Activity className="w-8 h-8 text-[#8E8E93] mx-auto mb-1" />
-              <p className="text-sm font-semibold text-white">No Activity Logged Today</p>
-              <p className="text-xs text-[#8E8E93]">
-                Start a routine or tap below to record your run, workout, or sports.
-              </p>
-              <button
-                type="button"
-                onClick={onOpenAddExercise}
-                className="mt-2 px-4 py-2 rounded-full bg-[#30D158] text-black font-semibold text-xs inline-flex items-center gap-1"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Log Movement</span>
-              </button>
-            </div>
-          ) : (
-            <div className="ios-card divide-y divide-white/[0.06] overflow-hidden">
-              {exercises.map((ex) => {
-                const exDate = new Date(ex.created_at || new Date());
-                const isToday = exDate.toDateString() === new Date().toDateString();
-                const timeLabel = isToday
-                  ? exDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                  : `${exDate.toLocaleDateString([], { month: 'short', day: 'numeric' })}, ${exDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-
-                return (
-                  <div
-                    key={ex.id}
-                    className="p-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
-                  >
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-[#636366]">
-                          {timeLabel}
-                        </span>
-                      </div>
-                      <h3 className="text-sm font-semibold text-white mt-0.5">{ex.exercise_type}</h3>
-                      <p className="text-xs text-[#8E8E93] mt-0.5">
-                        {ex.duration_minutes} min {ex.distance_km ? `· ${ex.distance_km} km` : ''} ·{' '}
-                        <span className="capitalize">{ex.intensity || 'moderate'} intensity</span>
-                      </p>
-                      {ex.ai_analysis?.ai_tip && (
-                        <p className="text-[11px] text-[#A1A1A6] mt-1 italic">
-                          Nuvia: {ex.ai_analysis.ai_tip}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <div className="text-right shrink-0">
-                        <span className="text-sm font-semibold text-white">~{ex.calories_burned}</span>
-                        <span className="text-xs text-[#8E8E93] ml-1">kcal</span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteExercise(ex.id)}
-                        className="p-1.5 text-[#8E8E93] hover:text-[#FF453A] transition-colors"
-                        title="Delete exercise entry"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ============================================================ */}
-      {/* MODALS: Video Player, AI Import, Manual Builder              */}
+      {/* MODALS                                                        */}
       {/* ============================================================ */}
       <ExerciseVideoModal
         exercise={selectedVideoExercise}

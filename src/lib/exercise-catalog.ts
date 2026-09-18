@@ -15,13 +15,35 @@ export interface CatalogExercise {
   target_muscle: 'Chest' | 'Back' | 'Shoulders' | 'Biceps' | 'Triceps' | 'Abs' | 'Legs' | 'Full Body' | 'Forearms';
   category: 'Strength' | 'Calisthenics' | 'Cardio' | 'Core';
   equipment: string;
+  /** Normalized equipment tags for filtering */
+  equipment_tags?: EquipmentTag[];
   default_sets: number;
   default_reps: string;
   youtube_id: string;
   thumbnail_url: string;
   description: string;
   keywords: string[];
+  /** Primary muscles targeted by this exercise */
+  primary_muscles?: string[];
+  /** Secondary / stabiliser muscles involved */
+  secondary_muscles?: string[];
+  /** Step-by-step instructions */
+  instructions?: string[];
 }
+
+export type EquipmentTag =
+  | 'bodyweight'
+  | 'dumbbell'
+  | 'barbell'
+  | 'cable'
+  | 'machine'
+  | 'kettlebell'
+  | 'resistance_band'
+  | 'bench'
+  | 'pull_up_bar'
+  | 'smith_machine'
+  | 'mat'
+  | 'other';
 
 export function makeSvgThumbnail(bgColor: string, accentColor: string, iconType: string, label: string): string {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
@@ -1446,11 +1468,26 @@ export function extractYoutubeId(input: string): string {
   return match ? match[1] : PLAYLIST_DEFAULT_VIDEO_ID;
 }
 
-export function searchExercises(query: string, category?: string): CatalogExercise[] {
+export function searchExercises(
+  query: string,
+  category?: string,
+  equipment?: string,
+): CatalogExercise[] {
   let list = EXERCISE_CATALOG;
+
   if (category && category !== 'All') {
     list = list.filter((e) => e.target_muscle === category || e.category === category);
   }
+
+  if (equipment && equipment !== 'All') {
+    const eq = equipment.toLowerCase();
+    list = list.filter(
+      (e) =>
+        e.equipment.toLowerCase().includes(eq) ||
+        (e.equipment_tags || []).some((t) => t.includes(eq)),
+    );
+  }
+
   if (!query.trim()) return list;
 
   const q = query.toLowerCase();
@@ -1459,6 +1496,47 @@ export function searchExercises(query: string, category?: string): CatalogExerci
       e.name.toLowerCase().includes(q) ||
       e.target_muscle.toLowerCase().includes(q) ||
       e.equipment.toLowerCase().includes(q) ||
-      e.keywords.some((k) => k.includes(q))
+      (e.primary_muscles || []).some((m) => m.toLowerCase().includes(q)) ||
+      (e.secondary_muscles || []).some((m) => m.toLowerCase().includes(q)) ||
+      e.keywords.some((k) => k.includes(q)),
   );
+}
+
+/**
+ * Safe version of matchExercise — returns null when no confident match is found.
+ * Use this in AI pipelines to properly handle unknown exercises instead of
+ * silently assigning the wrong video/thumbnail.
+ */
+export function matchExerciseSafe(rawText: string): CatalogExercise | null {
+  if (!rawText?.trim()) return null;
+  const clean = rawText.toLowerCase().trim();
+
+  // Try all the same priority logic as matchExercise but without the fallback generator
+  const result = matchExercise(rawText);
+
+  // If the result is the default fallback (index 0) AND the input doesn't clearly
+  // match that exercise's name or keywords, consider it unmatched.
+  const fallback = EXERCISE_CATALOG[0];
+  if (result.id === fallback.id) {
+    const isRealMatch =
+      clean.includes(fallback.name.toLowerCase()) ||
+      fallback.keywords.some((k) => clean.includes(k)) ||
+      clean.includes('push-up') ||
+      clean.includes('pushup') ||
+      clean.includes('push up');
+    if (!isRealMatch) return null;
+  }
+
+  // Additional check: if it's a custom-generated fallback id, it's unmatched
+  if (result.id.startsWith('custom-')) return null;
+
+  return result;
+}
+
+/**
+ * Returns a compact list of exercise names for injecting into AI prompts.
+ * Limits size to avoid bloating the context window.
+ */
+export function getCatalogNamesForPrompt(limit = 100): string[] {
+  return EXERCISE_CATALOG.slice(0, limit).map((e) => e.name);
 }

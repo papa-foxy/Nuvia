@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { X, Sparkles, Wand2, Check, ArrowRight, Play, AlertCircle } from 'lucide-react';
 import { WorkoutRoutine } from '@/types/routine';
 import { useAuth } from '@/lib/auth-context';
+import { ExerciseThumbnail } from './ExerciseThumbnail';
 
 interface PasteAiRoutineModalProps {
   isOpen: boolean;
@@ -39,6 +40,7 @@ export function PasteAiRoutineModal({
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [parsedPreview, setParsedPreview] = useState<WorkoutRoutine[] | null>(null);
+  const [unmatchedExercises, setUnmatchedExercises] = useState<string[]>([]);
 
   if (!isOpen) return null;
 
@@ -73,6 +75,7 @@ export function PasteAiRoutineModal({
       }
 
       setParsedPreview(json.routines);
+      setUnmatchedExercises(json.unmatched_exercises || []);
     } catch (err: any) {
       setErrorMsg(err?.message || 'Error analyzing routine. Please check format.');
     } finally {
@@ -86,6 +89,7 @@ export function PasteAiRoutineModal({
       onClose();
       setText('');
       setParsedPreview(null);
+      setUnmatchedExercises([]);
     }
   };
 
@@ -182,12 +186,23 @@ export function PasteAiRoutineModal({
                 </span>
                 <button
                   type="button"
-                  onClick={() => setParsedPreview(null)}
+                  onClick={() => { setParsedPreview(null); setUnmatchedExercises([]); }}
                   className="text-xs text-[#8E8E93] hover:text-white"
                 >
                   Edit Input Text
                 </button>
               </div>
+
+              {/* Warn about unmatched exercises */}
+              {unmatchedExercises.length > 0 && (
+                <div className="p-3 rounded-xl bg-[#FF9F0A]/10 border border-[#FF9F0A]/20 text-[#FF9F0A] text-xs space-y-1">
+                  <p className="font-semibold">⚠ {unmatchedExercises.length} exercise(s) not found in catalog:</p>
+                  {unmatchedExercises.map((name) => (
+                    <p key={name} className="text-[11px] opacity-80">• {name}</p>
+                  ))}
+                  <p className="text-[11px] opacity-60 mt-1">A generic video was assigned. You can edit these in the routine builder.</p>
+                </div>
+              )}
 
               <div className="space-y-3">
                 {parsedPreview.map((routine, rIdx) => (
@@ -219,10 +234,12 @@ export function PasteAiRoutineModal({
                       {routine.exercises.map((ex) => (
                         <div key={ex.id} className="py-2 flex items-center justify-between gap-3">
                           <div className="flex items-center gap-2.5 overflow-hidden">
-                            <img
-                              src={ex.thumbnail_url}
-                              alt={ex.name}
-                              className="w-8 h-8 rounded-lg bg-black/40 p-0.5 border border-white/[0.06] shrink-0 object-contain"
+                            <ExerciseThumbnail
+                              exercise={ex}
+                              aspectRatio="4/3"
+                              className="w-12 h-9 rounded-lg"
+                              rounded="rounded-lg"
+                              quality="mq"
                             />
                             <div className="truncate">
                               <p className="text-xs font-semibold text-white truncate">{ex.name}</p>
