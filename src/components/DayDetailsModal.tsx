@@ -44,6 +44,104 @@ export function DayDetailsModal({
   onOpenAddExercise,
 }: DayDetailsModalProps) {
   const [expandedMealId, setExpandedMealId] = useState<string | null>(null);
+  const [dragY, setDragY] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+  const startYRef = React.useRef(0);
+  const currentDragYRef = React.useRef(0);
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+
+  // Keep ref synchronized with state for event handlers
+  currentDragYRef.current = dragY;
+
+  // Reset state when modal opens
+  React.useEffect(() => {
+    if (isOpen) {
+      setDragY(0);
+      setIsDragging(false);
+      setIsClosing(false);
+    }
+  }, [isOpen]);
+
+  const triggerClose = () => {
+    setIsClosing(true);
+    setIsDragging(false);
+    setTimeout(() => {
+      onClose();
+      setIsClosing(false);
+      setDragY(0);
+    }, 220);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent, fromHeader = false) => {
+    // Only allow drag-down if content is at top or if initiating from header/handle
+    if (!fromHeader && scrollRef.current && scrollRef.current.scrollTop > 5) return;
+    startYRef.current = e.touches[0].clientY;
+    setIsDragging(true);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent, fromHeader = false) => {
+    if (!isDragging) return;
+    const currentY = e.touches[0].clientY;
+    const delta = currentY - startYRef.current;
+
+    if (delta > 0) {
+      setDragY(delta);
+    } else {
+      // If user is swiping up inside scrollable content, cancel sheet drag to allow native scrolling
+      if (!fromHeader) {
+        setIsDragging(false);
+        setDragY(0);
+      } else {
+        setDragY(0);
+      }
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (!isDragging) return;
+    setIsDragging(false);
+    if (currentDragYRef.current > 80) {
+      triggerClose();
+    } else {
+      setDragY(0);
+    }
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    startYRef.current = e.clientY;
+    setIsDragging(true);
+  };
+
+  // Window-level mouse listener for smooth desktop drag-down
+  React.useEffect(() => {
+    if (!isDragging) return;
+
+    const onMouseMove = (e: MouseEvent) => {
+      const delta = e.clientY - startYRef.current;
+      if (delta > 0) {
+        setDragY(delta);
+      } else {
+        setDragY(0);
+      }
+    };
+
+    const onMouseUp = () => {
+      setIsDragging(false);
+      if (currentDragYRef.current > 80) {
+        triggerClose();
+      } else {
+        setDragY(0);
+      }
+    };
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+  }, [isDragging]);
 
   if (!isOpen) return null;
 
@@ -95,19 +193,45 @@ export function DayDetailsModal({
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/80 backdrop-blur-md"
-        onClick={onClose}
+        className="fixed inset-0 bg-black/80 backdrop-blur-md transition-opacity"
+        style={{
+          opacity: isClosing ? 0 : Math.max(0.1, 1 - dragY / 300),
+          transitionDuration: isDragging ? '0ms' : '220ms',
+        }}
+        onClick={triggerClose}
       />
 
       {/* Modal Sheet */}
-      <div className="relative w-full max-w-md bg-[#161618] border border-white/10 rounded-t-[28px] sm:rounded-[28px] max-h-[92vh] flex flex-col overflow-hidden shadow-2xl z-10">
+      <div
+        style={{
+          transform: isClosing
+            ? 'translateY(100%)'
+            : `translateY(${dragY}px)`,
+          transition: isDragging
+            ? 'none'
+            : 'transform 0.24s cubic-bezier(0.2, 0.9, 0.3, 1)',
+        }}
+        className="relative w-full max-w-md bg-[#161618] border border-white/10 rounded-t-[28px] sm:rounded-[28px] max-h-[92vh] flex flex-col overflow-hidden shadow-2xl z-10 select-none sm:select-auto will-change-transform"
+      >
         {/* Grab Handle */}
-        <div className="flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 rounded-full bg-white/20" />
+        <div
+          onTouchStart={(e) => handleTouchStart(e, true)}
+          onTouchMove={(e) => handleTouchMove(e, true)}
+          onTouchEnd={handleTouchEnd}
+          onMouseDown={handleMouseDown}
+          className="flex flex-col items-center justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing w-full touch-none select-none hover:bg-white/[0.02] transition-colors"
+        >
+          <div className="w-12 h-1.5 rounded-full bg-white/30 hover:bg-white/50 transition-colors" />
         </div>
 
         {/* Modal Top Header */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-white/5">
+        <div
+          onTouchStart={(e) => handleTouchStart(e, true)}
+          onTouchMove={(e) => handleTouchMove(e, true)}
+          onTouchEnd={handleTouchEnd}
+          onMouseDown={handleMouseDown}
+          className="flex items-center justify-between px-5 py-2.5 border-b border-white/5 cursor-grab active:cursor-grabbing touch-none select-none"
+        >
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white">
               <Calendar className="w-4 h-4 text-[#30D158]" />
@@ -118,15 +242,22 @@ export function DayDetailsModal({
             </div>
           </div>
           <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/15 flex items-center justify-center text-zinc-300 hover:text-white transition-colors"
+            onClick={triggerClose}
+            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/15 flex items-center justify-center text-zinc-300 hover:text-white transition-colors cursor-pointer"
+            aria-label="Close"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Modal Scrollable Body */}
-        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+        <div
+          ref={scrollRef}
+          onTouchStart={(e) => handleTouchStart(e, false)}
+          onTouchMove={(e) => handleTouchMove(e, false)}
+          onTouchEnd={handleTouchEnd}
+          className="flex-1 overflow-y-auto px-5 py-4 space-y-4 overscroll-contain"
+        >
           {/* Status Banner */}
           <div className="ios-card p-4 space-y-3 border border-white/10 bg-gradient-to-br from-white/[0.05] to-transparent">
             <div className="flex items-center justify-between">
