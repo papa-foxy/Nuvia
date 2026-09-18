@@ -7,6 +7,8 @@ import { DataService, getLocalDateString } from '@/lib/data-service';
 import { DailySummary, Meal, ExerciseLog } from '@/types/database';
 import { WorkoutRoutine } from '@/types/routine';
 import { TabType } from './Navigation';
+import { StreakCalendarModal } from './StreakCalendarModal';
+import { StreakData } from '@/types/streak';
 
 interface DashboardViewProps {
   onOpenAddMeal: () => void;
@@ -28,6 +30,8 @@ export function DashboardView({
   const [recentMeals, setRecentMeals] = useState<Meal[]>([]);
   const [recentExercises, setRecentExercises] = useState<ExerciseLog[]>([]);
   const [routines, setRoutines] = useState<WorkoutRoutine[]>([]);
+  const [streakData, setStreakData] = useState<StreakData | null>(null);
+  const [isStreakModalOpen, setIsStreakModalOpen] = useState(false);
   const [quickInput, setQuickInput] = useState('');
   const [nuviaReply, setNuviaReply] = useState<string | null>(null);
 
@@ -43,14 +47,18 @@ export function DashboardView({
 
   useEffect(() => {
     async function loadDashboardData() {
-      const s = await DataService.getDailySummary(user?.id, todayStr);
-      const m = await DataService.getMeals(user?.id, todayStr);
-      const e = await DataService.getExerciseLogs(user?.id, todayStr);
-      const r = await DataService.getWorkoutRoutines(user?.id);
+      const [s, m, e, r, st] = await Promise.all([
+        DataService.getDailySummary(user?.id, todayStr),
+        DataService.getMeals(user?.id, todayStr),
+        DataService.getExerciseLogs(user?.id, todayStr),
+        DataService.getWorkoutRoutines(user?.id),
+        DataService.getStreakData(user?.id),
+      ]);
       setSummary(s);
       setRecentMeals(m);
       setRecentExercises(e);
       setRoutines(r);
+      setStreakData(st);
     }
     loadDashboardData();
   }, [user, todayStr, refreshKey]);
@@ -103,6 +111,73 @@ export function DashboardView({
         <h1 className="text-3xl font-bold tracking-tight text-white mt-0.5">
           Today
         </h1>
+      </div>
+
+      {/* Interactive Weekly Streak Strip (Apple Fitness Style) */}
+      <div
+        onClick={() => setIsStreakModalOpen(true)}
+        className="group relative overflow-hidden rounded-2xl bg-[#1C1C1E] border border-white/5 p-3.5 cursor-pointer hover:border-white/15 hover:bg-white/[0.04] active:scale-[0.99] transition-all shadow-lg"
+      >
+        <div className="flex items-center justify-between pb-2.5">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#FF9500] to-[#FF3B30] flex items-center justify-center shadow-md shadow-orange-500/20">
+              <Flame className="w-4 h-4 text-white fill-white" />
+            </div>
+            <div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-bold text-white tracking-tight">
+                  {streakData?.currentStreak ? `${streakData.currentStreak} Day Streak` : 'Start Your Streak'}
+                </span>
+                {streakData && streakData.currentStreak > 0 && (
+                  <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-[#FF9500]/20 text-[#FF9500] font-semibold">
+                    Active
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-1 text-[11px] text-[#8E8E93] group-hover:text-white transition-colors">
+            <span>Calendar</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </div>
+        </div>
+
+        {/* 7-Day Bubble Strip (Mon - Sun) */}
+        <div className="grid grid-cols-7 gap-1.5 pt-1">
+          {streakData?.weeklyDays.map((day) => (
+            <div
+              key={day.dateStr}
+              className={`flex flex-col items-center justify-center py-1.5 rounded-xl transition-all ${
+                day.isToday
+                  ? 'bg-white/10 ring-1 ring-white/20'
+                  : 'bg-white/[0.03]'
+              }`}
+            >
+              <span className={`text-[10px] font-semibold mb-1 ${day.isToday ? 'text-white' : 'text-zinc-500'}`}>
+                {day.dayName}
+              </span>
+
+              {/* Status Ring / Dot */}
+              <div
+                className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-transform ${
+                  day.isLogged
+                    ? 'bg-gradient-to-tr from-[#FF9500] to-[#FF3B30] text-white shadow-sm shadow-orange-500/30 group-hover:scale-105'
+                    : day.isToday
+                    ? 'border-2 border-[#FF9500] text-white'
+                    : day.isFuture
+                    ? 'text-zinc-600'
+                    : 'text-zinc-500'
+                }`}
+              >
+                {day.isLogged ? (
+                  <Flame className="w-3.5 h-3.5 text-white fill-white" />
+                ) : (
+                  <span>{day.dayNumber}</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* SECTION 1: CALORIES (Primary Metric with Typography Hierarchy) */}
@@ -472,6 +547,14 @@ export function DashboardView({
           )}
         </div>
       </div>
+
+      {/* Streak & Achievements Modal */}
+      <StreakCalendarModal
+        isOpen={isStreakModalOpen}
+        onClose={() => setIsStreakModalOpen(false)}
+        streakData={streakData}
+        onLogActivity={onOpenAddMeal}
+      />
     </div>
   );
 }

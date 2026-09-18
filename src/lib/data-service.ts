@@ -8,6 +8,7 @@ import {
   AiRecommendation,
 } from '@/types/database';
 import { WorkoutRoutine } from '@/types/routine';
+import { StreakData, StreakDay, MilestoneBadge } from '@/types/streak';
 import { matchExercise, PLAYLIST_ID } from './exercise-catalog';
 import { createClient, isSupabaseConfigured } from './supabase/client';
 import { calculateTargets } from './calculator';
@@ -911,6 +912,323 @@ export const DataService = {
       state.workoutRoutines = state.workoutRoutines.filter((r) => r.id !== routineId);
       saveLocalState(state);
     }
+  },
+
+  // =========================================================================
+  // STREAK & ACHIEVEMENTS
+  // =========================================================================
+  async getStreakData(userId?: string): Promise<StreakData> {
+    const isRemoteUser = isSupabaseConfigured() && userId && userId !== DEMO_USER_ID;
+    const now = new Date();
+    const todayStr = getLocalDateString(now);
+
+    const activityMap = new Map<string, {
+      hasMeal: boolean;
+      hasWorkout: boolean;
+      calories: number;
+      burned: number;
+      protein: number;
+    }>();
+
+    const recordActivity = (dateStr: string, opts: { meal?: boolean; workout?: boolean; calories?: number; burned?: number; protein?: number }) => {
+      if (!dateStr) return;
+      const current = activityMap.get(dateStr) || {
+        hasMeal: false,
+        hasWorkout: false,
+        calories: 0,
+        burned: 0,
+        protein: 0,
+      };
+      if (opts.meal) current.hasMeal = true;
+      if (opts.workout) current.hasWorkout = true;
+      if (opts.calories) current.calories += opts.calories;
+      if (opts.burned) current.burned += opts.burned;
+      if (opts.protein) current.protein += opts.protein;
+      activityMap.set(dateStr, current);
+    };
+
+    if (isRemoteUser) {
+      try {
+        const supabase = createClient();
+        const [mealsRes, exRes, sumRes] = await Promise.all([
+          supabase.from('meals').select('meal_time, calories, protein_g').eq('user_id', userId),
+          supabase.from('exercise_logs').select('created_at, calories_burned').eq('user_id', userId),
+          supabase.from('daily_summaries').select('date, calories_consumed, calories_burned, protein_consumed').eq('user_id', userId),
+        ]);
+
+        if (mealsRes.data) {
+          for (const m of mealsRes.data) {
+            const d = getLocalDateString(new Date(m.meal_time));
+            recordActivity(d, {
+              meal: true,
+              calories: Number(m.calories) || 0,
+              protein: Number(m.protein_g) || 0,
+            });
+          }
+        }
+
+        if (exRes.data) {
+          for (const e of exRes.data) {
+            const d = getLocalDateString(new Date(e.created_at));
+            recordActivity(d, {
+              workout: true,
+              burned: Number(e.calories_burned) || 0,
+            });
+          }
+        }
+
+        if (sumRes.data) {
+          for (const s of sumRes.data) {
+            if ((s.calories_consumed || 0) > 0 || (s.calories_burned || 0) > 0) {
+              recordActivity(s.date, {
+                meal: (s.calories_consumed || 0) > 0,
+                workout: (s.calories_burned || 0) > 0,
+                calories: Number(s.calories_consumed) || 0,
+                burned: Number(s.calories_burned) || 0,
+                protein: Number(s.protein_consumed) || 0,
+              });
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Supabase getStreakData error, falling back:', err);
+      }
+    } else {
+      const state = getLocalState();
+      for (const m of state.meals) {
+        if (!userId || m.user_id === userId) {
+          const d = getLocalDateString(new Date(m.meal_time));
+          recordActivity(d, {
+            meal: true,
+            calories: Number(m.calories) || 0,
+            protein: Number(m.protein_g) || 0,
+          });
+        }
+      }
+      for (const e of state.exerciseLogs) {
+        if (!userId || e.user_id === userId) {
+          const d = getLocalDateString(new Date(e.created_at || new Date()));
+          recordActivity(d, {
+            workout: true,
+            burned: Number(e.calories_burned) || 0,
+          });
+        }
+      }
+    }
+
+    const activeDates = Array.from(activityMap.keys()).sort();
+    const totalActiveDays = activeDates.length;
+
+    // Calculate Current Streak
+    let currentStreak = 0;
+    const checkDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const isTodayActive = activityMap.has(todayStr);
+
+    if (isTodayActive) {
+      currentStreak = 1;
+      // Step backwards from yesterday
+      checkDate.setDate(checkDate.getDate() - 1);
+      while (true) {
+        const ds = getLocalDateString(checkDate);
+        if (activityMap.has(ds)) {
+          currentStreak++;
+          checkDate.setDate(checkDate.getDate() - 1);
+        } else {
+          break;
+        }
+      }
+    } else {
+      // Check if yesterday was active (streak is pending today)
+      checkDate.setDate(checkDate.getDate() - 1);
+      const yesterdayStr = getLocalDateString(checkDate);
+      if (activityMap.has(yesterdayStr)) {
+        currentStreak = 1;
+        checkDate.setDate(checkDate.getDate() - 1);
+        while (true) {
+          const ds = getLocalDateString(checkDate);
+          if (activityMap.has(ds)) {
+            currentStreak++;
+            checkDate.setDate(checkDate.getDate() - 1);
+          } else {
+            break;
+          }
+        }
+      } else {
+        currentStreak = 0;
+      }
+    }
+
+    // Calculate Longest Streak
+    let longestStreak = 0;
+    if (activeDates.length > 0) {
+      let run = 1;
+      longestStreak = 1;
+      for (let i = 1; i < activeDates.length; i++) {
+        const prev = new Date(activeDates[i - 1] + 'T00:00:00');
+        const curr = new Date(activeDates[i] + 'T00:00:00');
+        const diffDays = Math.round((curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24));
+        if (diffDays === 1) {
+          run++;
+          if (run > longestStreak) longestStreak = run;
+        } else if (diffDays > 1) {
+          run = 1;
+        }
+      }
+    }
+    if (currentStreak > longestStreak) {
+      longestStreak = currentStreak;
+    }
+
+    // Monthly Consistency %
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+    const daysSoFarInMonth = now.getDate();
+    let monthActiveCount = 0;
+    for (const dStr of activeDates) {
+      const [y, m] = dStr.split('-').map(Number);
+      if (y === currentYear && m === currentMonth + 1) {
+        monthActiveCount++;
+      }
+    }
+    const monthlyConsistencyPct = Math.min(100, Math.round((monthActiveCount / Math.max(1, daysSoFarInMonth)) * 100));
+
+    // Weekly strip (Monday to Sunday)
+    const dayOfWeek = now.getDay(); // 0 is Sunday, 1 is Monday...
+    const distanceToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + distanceToMonday);
+
+    const weekLetters = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+    const weeklyDays: StreakDay[] = [];
+
+    const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).getTime();
+
+    for (let i = 0; i < 7; i++) {
+      const dayDate = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i);
+      const ds = getLocalDateString(dayDate);
+      const isToday = ds === todayStr;
+      const isFuture = dayDate.getTime() > endOfToday;
+      const act = activityMap.get(ds);
+
+      weeklyDays.push({
+        dateStr: ds,
+        dayName: weekLetters[i],
+        dayNumber: dayDate.getDate(),
+        isToday,
+        isLogged: Boolean(act && (act.hasMeal || act.hasWorkout || act.calories > 0 || act.burned > 0)),
+        isFuture,
+        hasMeal: Boolean(act?.hasMeal),
+        hasWorkout: Boolean(act?.hasWorkout),
+        calories: act?.calories || 0,
+        burned: act?.burned || 0,
+      });
+    }
+
+    // Weekend Warrior check
+    let hasWeekendWarrior = false;
+    for (let i = 0; i < activeDates.length; i++) {
+      const d = new Date(activeDates[i] + 'T00:00:00');
+      if (d.getDay() === 6) { // Saturday
+        const sun = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
+        const sunStr = getLocalDateString(sun);
+        if (activityMap.has(sunStr)) {
+          hasWeekendWarrior = true;
+          break;
+        }
+      }
+    }
+
+    // Protein Master check (any day with >= 100g protein logged)
+    let hasHighProteinDay = false;
+    for (const act of Array.from(activityMap.values())) {
+      if (act.protein >= 100) {
+        hasHighProteinDay = true;
+        break;
+      }
+    }
+
+    // Milestone Badges
+    const badges: MilestoneBadge[] = [
+      {
+        id: 'first-step',
+        title: 'First Ignition',
+        description: 'Log your first meal or workout session',
+        icon: 'zap',
+        category: 'streak',
+        unlocked: totalActiveDays >= 1,
+        progress: Math.min(totalActiveDays, 1),
+        maxProgress: 1,
+      },
+      {
+        id: '3-day-streak',
+        title: '3-Day Momentum',
+        description: 'Maintain an unbroken 3-day active streak',
+        icon: 'flame',
+        category: 'streak',
+        unlocked: longestStreak >= 3,
+        progress: Math.min(longestStreak, 3),
+        maxProgress: 3,
+      },
+      {
+        id: '7-day-iron',
+        title: '7-Day Iron Will',
+        description: 'Achieve a continuous 7-day fitness streak',
+        icon: 'shield',
+        category: 'streak',
+        unlocked: longestStreak >= 7,
+        progress: Math.min(longestStreak, 7),
+        maxProgress: 7,
+      },
+      {
+        id: '14-day-master',
+        title: '14-Day Habit Master',
+        description: 'Lock in a 2-week consistent lifestyle',
+        icon: 'trophy',
+        category: 'streak',
+        unlocked: longestStreak >= 14,
+        progress: Math.min(longestStreak, 14),
+        maxProgress: 14,
+      },
+      {
+        id: 'weekend-warrior',
+        title: 'Weekend Warrior',
+        description: 'Log workouts or meals on both Saturday and Sunday',
+        icon: 'star',
+        category: 'fitness',
+        unlocked: hasWeekendWarrior,
+        progress: hasWeekendWarrior ? 1 : 0,
+        maxProgress: 1,
+      },
+      {
+        id: '10-days-total',
+        title: 'Century Club Starter',
+        description: 'Log activity across 10 distinct days',
+        icon: 'award',
+        category: 'streak',
+        unlocked: totalActiveDays >= 10,
+        progress: Math.min(totalActiveDays, 10),
+        maxProgress: 10,
+      },
+      {
+        id: 'protein-champion',
+        title: 'Protein Champion',
+        description: 'Hit 100g+ protein in a single day',
+        icon: 'target',
+        category: 'nutrition',
+        unlocked: hasHighProteinDay,
+        progress: hasHighProteinDay ? 1 : 0,
+        maxProgress: 1,
+      },
+    ];
+
+    return {
+      currentStreak,
+      longestStreak,
+      totalActiveDays,
+      weeklyDays,
+      activeDates,
+      badges,
+      monthlyConsistencyPct,
+    };
   },
 
   getDemoUserId() {
