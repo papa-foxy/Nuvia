@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Utensils, ChevronRight, Sparkles, Camera, Plus, Calendar } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { DataService } from '@/lib/data-service';
 import { Meal } from '@/types/database';
+import { MealDetailsModal } from './MealDetailsModal';
 
 interface MealsListViewProps {
   onOpenAddMeal: () => void;
@@ -16,6 +17,8 @@ export function MealsListView({ onOpenAddMeal, refreshKey }: MealsListViewProps)
   const [meals, setMeals] = useState<Meal[]>([]);
   const [filterType, setFilterType] = useState<string>('all');
   const [loading, setLoading] = useState(true);
+  const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   const loadMeals = async () => {
     setLoading(true);
@@ -29,30 +32,46 @@ export function MealsListView({ onOpenAddMeal, refreshKey }: MealsListViewProps)
   }, [user, refreshKey]);
 
   const handleDelete = async (mealId: string) => {
-    if (confirm('Delete this meal entry?')) {
-      await DataService.deleteMeal(mealId, user?.id);
-      loadMeals();
-    }
+    await DataService.deleteMeal(mealId, user?.id);
+    await loadMeals();
   };
 
   const filtered = filterType === 'all' ? meals : meals.filter((m) => m.meal_type === filterType);
   const totalCals = filtered.reduce((sum, m) => sum + (Number(m.calories) || 0), 0);
 
+  const getMealTypeBadgeStyle = (type: string) => {
+    switch (type) {
+      case 'breakfast':
+        return 'bg-[#FF9500]/15 text-[#FF9500] border-[#FF9500]/30';
+      case 'lunch':
+        return 'bg-[#30D158]/15 text-[#30D158] border-[#30D158]/30';
+      case 'dinner':
+        return 'bg-[#0A84FF]/15 text-[#0A84FF] border-[#0A84FF]/30';
+      default:
+        return 'bg-[#BF5AF2]/15 text-[#BF5AF2] border-[#BF5AF2]/30';
+    }
+  };
+
   return (
-    <div className="flex-1 flex flex-col pb-20 px-5 pt-4 w-full max-w-md mx-auto space-y-6">
-      {/* Title */}
+    <div className="flex-1 flex flex-col pb-24 px-5 pt-4 w-full max-w-md mx-auto space-y-6">
+      {/* Title Header */}
       <div className="flex items-end justify-between pt-2">
         <div>
           <p className="text-[11px] font-semibold tracking-wider text-[#8E8E93] uppercase">
-            Nutrition
+            Nutrition & Diet
           </p>
           <h1 className="text-3xl font-bold tracking-tight text-white mt-0.5">
             Meals
           </h1>
         </div>
-        <span className="text-sm font-semibold text-white mb-1 whitespace-nowrap">
-          {totalCals.toLocaleString()} <span className="text-xs text-[#8E8E93] font-normal">kcal</span>
-        </span>
+        <div className="text-right">
+          <span className="text-sm font-semibold text-white whitespace-nowrap">
+            {totalCals.toLocaleString()} <span className="text-xs text-[#8E8E93] font-normal">kcal</span>
+          </span>
+          <p className="text-[10px] text-[#8E8E93]">
+            {filtered.length} {filtered.length === 1 ? 'logged meal' : 'logged meals'}
+          </p>
+        </div>
       </div>
 
       {/* Segmented Filter Pills */}
@@ -63,8 +82,8 @@ export function MealsListView({ onOpenAddMeal, refreshKey }: MealsListViewProps)
             onClick={() => setFilterType(tab)}
             className={`px-3.5 py-1.5 rounded-full text-xs font-medium capitalize transition-colors whitespace-nowrap shrink-0 ${
               filterType === tab
-                ? 'bg-white text-black font-semibold'
-                : 'bg-[#1C1C1E] text-[#8E8E93] hover:text-white'
+                ? 'bg-white text-black font-semibold shadow-sm'
+                : 'bg-[#1C1C1E] text-[#8E8E93] hover:text-white border border-white/5'
             }`}
           >
             {tab}
@@ -75,17 +94,34 @@ export function MealsListView({ onOpenAddMeal, refreshKey }: MealsListViewProps)
       {/* Meals Table (iOS Inset Grouped List) */}
       <div className="w-full">
         {loading ? (
-          <div className="space-y-2 w-full">
+          <div className="space-y-2.5 w-full">
             {[1, 2, 3].map((n) => (
-              <div key={n} className="h-16 bg-[#1C1C1E] rounded-2xl animate-pulse w-full" />
+              <div key={n} className="h-20 bg-[#1C1C1E] rounded-2xl animate-pulse w-full border border-white/5" />
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="py-12 text-center text-xs text-[#8E8E93] w-full bg-[#1C1C1E]/40 rounded-2xl border border-white/[0.04]">
-            No meals logged for this filter.
+          <div className="py-14 text-center space-y-3 w-full bg-[#1C1C1E]/40 rounded-2xl border border-white/[0.04] p-6">
+            <div className="w-12 h-12 rounded-full bg-white/5 mx-auto flex items-center justify-center text-zinc-500">
+              <Utensils className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-white">No meals recorded</p>
+              <p className="text-xs text-[#8E8E93] mt-1">
+                {filterType === 'all'
+                  ? 'Start by logging your breakfast, lunch, or dinner.'
+                  : `No ${filterType} logged yet.`}
+              </p>
+            </div>
+            <button
+              onClick={onOpenAddMeal}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white text-black text-xs font-semibold hover:bg-zinc-200 transition-colors cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Log A Meal Now
+            </button>
           </div>
         ) : (
-          <div className="ios-card w-full divide-y divide-white/[0.06] overflow-hidden">
+          <div className="ios-card w-full divide-y divide-white/[0.06] overflow-hidden border border-white/10 shadow-lg">
             {filtered.map((meal) => {
               const mealDate = new Date(meal.meal_time);
               const isToday = mealDate.toDateString() === new Date().toDateString();
@@ -96,38 +132,97 @@ export function MealsListView({ onOpenAddMeal, refreshKey }: MealsListViewProps)
               return (
                 <div
                   key={meal.id}
-                  className="p-4 flex items-center justify-between gap-3 hover:bg-white/[0.02] transition-colors w-full"
+                  onClick={() => {
+                    setSelectedMeal(meal);
+                    setIsDetailsOpen(true);
+                  }}
+                  className="p-3.5 flex items-center justify-between gap-3 hover:bg-white/[0.04] active:bg-white/[0.06] transition-colors w-full cursor-pointer group"
                 >
+                  {/* Left Meal Thumbnail / Icon */}
+                  <div className="relative shrink-0">
+                    {meal.image_url ? (
+                      <img
+                        src={meal.image_url}
+                        alt={meal.description || 'Meal photo'}
+                        className="w-12 h-12 rounded-xl object-cover border border-white/10 group-hover:border-white/25 transition-colors"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-[#FF9500] group-hover:bg-white/10 transition-colors">
+                        <Utensils className="w-5 h-5" />
+                      </div>
+                    )}
+                    {meal.source === 'photo' && (
+                      <span
+                        title="AI Camera Scan"
+                        className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-[#1C1C1E] border border-white/20 flex items-center justify-center text-[#30D158]"
+                      >
+                        <Camera className="w-2.5 h-2.5" />
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Center Meal Info */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-semibold text-[#8E8E93] uppercase tracking-wider">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span
+                        className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border ${getMealTypeBadgeStyle(
+                          meal.meal_type
+                        )}`}
+                      >
                         {meal.meal_type}
                       </span>
                       <span className="text-[10px] text-[#636366]">
                         {timeLabel}
                       </span>
+                      {meal.items && meal.items.length > 0 && (
+                        <span className="text-[9px] text-zinc-400 bg-white/5 px-1.5 py-0.2 rounded">
+                          {meal.items.length} {meal.items.length === 1 ? 'item' : 'items'}
+                        </span>
+                      )}
                     </div>
-                    <h3 className="text-sm font-semibold text-white mt-0.5 truncate" title={meal.description || undefined}>
-                      {meal.description}
+
+                    <h3
+                      className="text-sm font-semibold text-white mt-1 truncate group-hover:text-[#30D158] transition-colors"
+                      title={meal.description || undefined}
+                    >
+                      {meal.description || 'Logged Meal'}
                     </h3>
-                    <p className="text-xs text-[#8E8E93] mt-0.5 truncate">
-                      {meal.protein_g}g protein · {meal.carbs_g}g carbs · {meal.fat_g}g fat
+
+                    <p className="text-xs text-[#8E8E93] mt-0.5 truncate flex items-center gap-1">
+                      <span className="text-[#30D158] font-medium">{meal.protein_g || 0}g P</span>
+                      <span>·</span>
+                      <span className="text-[#FF9500] font-medium">{meal.carbs_g || 0}g C</span>
+                      <span>·</span>
+                      <span className="text-[#FF375F] font-medium">{meal.fat_g || 0}g F</span>
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-3 shrink-0 ml-2">
+                  {/* Right Calories & Arrow */}
+                  <div className="flex items-center gap-2 shrink-0 ml-1">
                     <div className="text-right whitespace-nowrap">
-                      <span className="text-sm font-semibold text-white">{meal.calories}</span>
-                      <span className="text-xs text-[#8E8E93] ml-1">kcal</span>
+                      <span className="text-sm font-bold text-white block">
+                        {meal.calories || 0}
+                      </span>
+                      <span className="text-[10px] text-[#8E8E93] block">
+                        kcal
+                      </span>
                     </div>
+
                     <button
                       type="button"
-                      onClick={() => handleDelete(meal.id)}
-                      className="p-1.5 text-[#8E8E93] hover:text-[#FF453A] transition-colors rounded-lg hover:bg-white/[0.05]"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (confirm(`Delete "${meal.description || 'this meal'}"?`)) {
+                          handleDelete(meal.id);
+                        }
+                      }}
+                      className="p-1.5 text-[#8E8E93] hover:text-[#FF453A] transition-colors rounded-lg hover:bg-white/[0.05] cursor-pointer"
                       title="Delete meal"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
+
+                    <ChevronRight className="w-4 h-4 text-zinc-600 group-hover:text-white transition-colors" />
                   </div>
                 </div>
               );
@@ -135,6 +230,14 @@ export function MealsListView({ onOpenAddMeal, refreshKey }: MealsListViewProps)
           </div>
         )}
       </div>
+
+      {/* DEDICATED MEAL DETAILS SHEET WITH SLIDE-DOWN GESTURE */}
+      <MealDetailsModal
+        meal={selectedMeal}
+        isOpen={isDetailsOpen}
+        onClose={() => setIsDetailsOpen(false)}
+        onDelete={handleDelete}
+      />
     </div>
   );
 }
