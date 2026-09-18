@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    /* Apple Health Dark Mode Palette */
+    --bg-base: #000000;
+    --bg-secondary: #121214;
+    --bg-tertiary: #1c1c1e;
+    --bg-card: #1c1c1e;
+    --bg-elevated: #2c2c2e;
+    
+    --separator: rgba(255, 255, 255, 0.1);
+    --separator-subtle: rgba(255, 255, 255, 0.05);
+
+    --text-primary: #ffffff;
+    --text-secondary: #8e8e93;
+    --text-tertiary: #636366;
+    
+    /* Semantic Apple Health Accents */
+    --accent-green: #30d158;
+    --accent-orange: #ff9f0a;
+    --accent-blue: #0a84ff;
+    --accent-red: #ff453a;
+  }
+
+  body {
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-tap-highlight-color: transparent;
+    letter-spacing: -0.015em;
+  }
+}
+
+/* Inset Grouped Cell (iOS style) */
+.ios-card {
+  background-color: #1c1c1e;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ios-divider {
+  border-bottom: 0.5px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Apple Blur Navigation */
+.ios-blur {
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+.ios-sheet {
+  background: rgba(28, 28, 30, 0.95);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+}
+
+/* Minimal subtle scrollbar */
+::-webkit-scrollbar {
+  width: 0px;
+  height: 0px;
+}
