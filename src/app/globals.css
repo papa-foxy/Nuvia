@@ -23,6 +23,10 @@
     --accent-red: #ff453a;
   }
 
+  html {
+    overscroll-behavior-y: auto;
+  }
+
   body {
     background-color: var(--bg-base);
     color: var(--text-primary);
@@ -31,6 +35,13 @@
     -moz-osx-font-smoothing: grayscale;
     -webkit-tap-highlight-color: transparent;
     letter-spacing: -0.015em;
+    overscroll-behavior-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  main {
+    overscroll-behavior-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }
 

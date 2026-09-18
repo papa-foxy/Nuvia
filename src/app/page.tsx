@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { BottomNav, TabType } from '@/components/Navigation';
 import { LandingView } from '@/components/LandingView';
@@ -24,7 +24,7 @@ import {
   allMealsKey,
 } from '@/lib/nuvia-cache';
 import { getLocalDateString } from '@/lib/data-service';
-import { Flame } from 'lucide-react';
+import { Flame, RefreshCw } from 'lucide-react';
 
 export default function HomePage() {
   const { user, profile, goals, isLoading, hasCompletedOnboarding, refreshProfileAndGoals } =
@@ -41,6 +41,61 @@ export default function HomePage() {
    * Using a separate counter per data type allows targeted invalidation.
    */
   const [refreshKey, setRefreshKey] = useState(0);
+
+  // ── Overscroll / Pull-down at Top Handling ──
+  const mainScrollRef = useRef<HTMLElement>(null);
+  const [pullDistance, setPullDistance] = useState(0);
+  const [isTouching, setIsTouching] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const touchStartY = useRef(0);
+  const isPullingRef = useRef(false);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (mainScrollRef.current && mainScrollRef.current.scrollTop <= 0) {
+      touchStartY.current = e.touches[0].clientY;
+      isPullingRef.current = true;
+      setIsTouching(true);
+    } else {
+      isPullingRef.current = false;
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isPullingRef.current) return;
+    if (mainScrollRef.current && mainScrollRef.current.scrollTop > 0) {
+      isPullingRef.current = false;
+      setPullDistance(0);
+      return;
+    }
+
+    const currentY = e.touches[0].clientY;
+    const dy = currentY - touchStartY.current;
+
+    if (dy > 0) {
+      // Elastic resistance curve for smooth iOS-style rubber-banding
+      const damped = Math.min(85, Math.pow(dy, 0.78) * 1.5);
+      setPullDistance(damped);
+    } else {
+      setPullDistance(0);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (!isPullingRef.current && pullDistance === 0) return;
+    setIsTouching(false);
+    isPullingRef.current = false;
+
+    if (pullDistance > 55) {
+      setIsRefreshing(true);
+      setRefreshKey((k) => k + 1);
+      setTimeout(() => {
+        setIsRefreshing(false);
+        setPullDistance(0);
+      }, 500);
+    } else {
+      setPullDistance(0);
+    }
+  };
 
   // Prefilled natural language inputs
   const [prefilledMealPrompt, setPrefilledMealPrompt] = useState('');
@@ -150,9 +205,9 @@ export default function HomePage() {
   };
 
   return (
-    <div className="h-dvh bg-black text-white flex items-center justify-center p-0 sm:py-6 relative overflow-hidden">
+    <div className="h-dvh bg-black text-white flex items-center justify-center p-0 sm:py-6 relative overscroll-y-auto sm:overflow-hidden">
       {/* Main Mobile App Container */}
-      <div className="w-full max-w-md h-full sm:h-[92vh] sm:max-h-[92vh] sm:rounded-[36px] bg-black sm:border sm:border-[#2C2C2E] shadow-2xl flex flex-col relative overflow-hidden">
+      <div className="w-full max-w-md h-full sm:h-[92vh] sm:max-h-[92vh] sm:rounded-[36px] bg-black sm:border sm:border-[#2C2C2E] shadow-2xl flex flex-col relative overscroll-y-auto sm:overflow-hidden">
         {/* PWA Install Banner */}
         <PwaInstallBanner />
 
@@ -172,52 +227,93 @@ export default function HomePage() {
           ─────────────────────────────────────────────────────────────────────
         */}
         <main
-          className="flex-1 flex flex-col overflow-y-auto pb-20 w-full"
-          style={{ paddingTop: 'max(8px, env(safe-area-inset-top))' }}
+          ref={mainScrollRef}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          className="flex-1 flex flex-col overflow-y-auto pb-20 w-full relative"
+          style={{
+            paddingTop: 'max(8px, env(safe-area-inset-top))',
+            WebkitOverflowScrolling: 'touch',
+            overscrollBehaviorY: 'auto',
+          }}
         >
-          <div style={{ display: activeTab === 'home' ? 'contents' : 'none' }}>
-            <DashboardView
-              onOpenAddMeal={() => setIsAddMealOpen(true)}
-              onOpenAddExercise={() => setIsAddExerciseOpen(true)}
-              onNavigateTab={setActiveTab}
-              onNaturalLanguageInput={handleNaturalLanguageInput}
-              refreshKey={refreshKey}
-            />
-          </div>
+          {/* Elastic Overscroll Pull-Down Indicator at Top */}
+          {pullDistance > 0 && (
+            <div
+              className="w-full flex items-center justify-center pointer-events-none overflow-hidden transition-opacity shrink-0"
+              style={{
+                height: `${pullDistance}px`,
+                opacity: Math.min(1, pullDistance / 35),
+              }}
+            >
+              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#1C1C1E] border border-white/10 text-xs text-[#8E8E93] shadow-lg">
+                <RefreshCw
+                  className={`w-3.5 h-3.5 text-[#30D158] transition-transform ${
+                    isRefreshing ? 'animate-spin' : ''
+                  }`}
+                  style={{
+                    transform: `rotate(${pullDistance * 4}deg)`,
+                  }}
+                />
+                <span className="text-[11px] font-medium text-white">
+                  {pullDistance > 55 ? 'Release to refresh' : 'Pull to overscroll'}
+                </span>
+              </div>
+            </div>
+          )}
 
-          <div style={{ display: activeTab === 'meals' ? 'contents' : 'none' }}>
-            <MealsListView
-              onOpenAddMeal={() => setIsAddMealOpen(true)}
-              refreshKey={refreshKey}
-            />
-          </div>
+          <div
+            style={{
+              transform: pullDistance > 0 ? `translateY(${pullDistance * 0.4}px)` : 'none',
+              transition: isTouching ? 'none' : 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
+            }}
+            className="flex-1 flex flex-col w-full"
+          >
+            <div style={{ display: activeTab === 'home' ? 'contents' : 'none' }}>
+              <DashboardView
+                onOpenAddMeal={() => setIsAddMealOpen(true)}
+                onOpenAddExercise={() => setIsAddExerciseOpen(true)}
+                onNavigateTab={setActiveTab}
+                onNaturalLanguageInput={handleNaturalLanguageInput}
+                refreshKey={refreshKey}
+              />
+            </div>
 
-          <div style={{ display: activeTab === 'exercise' ? 'contents' : 'none' }}>
-            <ExerciseListView
-              onOpenAddExercise={() => setIsAddExerciseOpen(true)}
-              onNavigateTab={setActiveTab}
-            />
-          </div>
+            <div style={{ display: activeTab === 'meals' ? 'contents' : 'none' }}>
+              <MealsListView
+                onOpenAddMeal={() => setIsAddMealOpen(true)}
+                refreshKey={refreshKey}
+              />
+            </div>
 
-          <div style={{ display: activeTab === 'coach' ? 'contents' : 'none' }}>
-            <AiCoachView />
-          </div>
+            <div style={{ display: activeTab === 'exercise' ? 'contents' : 'none' }}>
+              <ExerciseListView
+                onOpenAddExercise={() => setIsAddExerciseOpen(true)}
+                onNavigateTab={setActiveTab}
+              />
+            </div>
 
-          <div style={{ display: activeTab === 'summary' ? 'contents' : 'none' }}>
-            <DailySummaryView refreshKey={refreshKey} />
-          </div>
+            <div style={{ display: activeTab === 'coach' ? 'contents' : 'none' }}>
+              <AiCoachView />
+            </div>
 
-          <div style={{ display: activeTab === 'goals' ? 'contents' : 'none' }}>
-            <GoalsView />
-          </div>
+            <div style={{ display: activeTab === 'summary' ? 'contents' : 'none' }}>
+              <DailySummaryView refreshKey={refreshKey} />
+            </div>
 
-          <div style={{ display: activeTab === 'profile' ? 'contents' : 'none' }}>
-            <ProfileView
-              onReplayOnboarding={() => setShowOnboarding(true)}
-              onOpenAddMeal={() => setIsAddMealOpen(true)}
-              onOpenAddExercise={() => setIsAddExerciseOpen(true)}
-              onNavigateTab={(tab) => setActiveTab(tab as any)}
-            />
+            <div style={{ display: activeTab === 'goals' ? 'contents' : 'none' }}>
+              <GoalsView />
+            </div>
+
+            <div style={{ display: activeTab === 'profile' ? 'contents' : 'none' }}>
+              <ProfileView
+                onReplayOnboarding={() => setShowOnboarding(true)}
+                onOpenAddMeal={() => setIsAddMealOpen(true)}
+                onOpenAddExercise={() => setIsAddExerciseOpen(true)}
+                onNavigateTab={(tab) => setActiveTab(tab as any)}
+              />
+            </div>
           </div>
         </main>
 
