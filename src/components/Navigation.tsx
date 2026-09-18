@@ -67,7 +67,7 @@ export function BottomNav({
 
   return (
     <>
-      <nav className="sticky bottom-0 left-0 right-0 z-40 w-full ios-blur border-t border-white/[0.08] px-4 py-2 flex items-center justify-between shrink-0">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 w-full ios-blur border-t border-white/[0.08] px-4 pt-2 flex items-center justify-between shrink-0" style={{ paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }}>
         {/* Destination 1: Today */}
         <button
           onClick={() => setActiveTab('home')}

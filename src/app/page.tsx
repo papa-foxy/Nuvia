@@ -135,17 +135,18 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex items-center justify-center p-0 sm:py-6 relative overflow-x-hidden">
+    // h-dvh = dynamic viewport height — handles iOS PWA safe area correctly
+    <div className="h-dvh bg-black text-white flex items-center justify-center p-0 sm:py-6 relative overflow-hidden">
       {/* Main Mobile App Container */}
-      <div className="w-full max-w-md min-h-screen sm:min-h-[880px] sm:max-h-[92vh] sm:rounded-[36px] bg-black sm:border sm:border-[#2C2C2E] shadow-2xl flex flex-col justify-between relative overflow-hidden">
+      <div className="w-full max-w-md h-full sm:h-[92vh] sm:max-h-[92vh] sm:rounded-[36px] bg-black sm:border sm:border-[#2C2C2E] shadow-2xl flex flex-col relative overflow-hidden">
         {/* PWA Install Banner */}
         <PwaInstallBanner />
 
         {/* Fixed Top Bar */}
         <TopBar activeTab={activeTab} setActiveTab={setActiveTab} />
 
-        {/* Main Tab Content */}
-        <main className="flex-1 flex flex-col overflow-y-auto">
+        {/* Main Tab Content — pb-20 keeps content above the fixed bottom nav */}
+        <main className="flex-1 flex flex-col overflow-y-auto pb-20">
           {activeTab === 'home' && (
             <DashboardView
               onOpenAddMeal={() => setIsAddMealOpen(true)}

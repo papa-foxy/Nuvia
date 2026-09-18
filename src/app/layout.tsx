@@ -23,6 +23,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({
@@ -32,7 +33,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="h-full bg-black">
-      <body className="min-h-full bg-black text-white antialiased selection:bg-[#30D158] selection:text-black">
+      <body className="h-full bg-black text-white antialiased selection:bg-[#30D158] selection:text-black">
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
