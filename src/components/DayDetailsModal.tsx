@@ -392,8 +392,8 @@ export function DayDetailsModal({
                               className="w-9 h-9 rounded-xl object-cover border border-white/10"
                             />
                           ) : (
-                            <div className="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center text-white">
-                              <Utensils className="w-3.5 h-3.5 text-[#FF9500]" />
+                            <div className="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center text-zinc-400">
+                              <Utensils className="w-3.5 h-3.5 text-zinc-400" />
                             </div>
                           )}
 
@@ -417,7 +417,7 @@ export function DayDetailsModal({
                             <span className="text-xs font-bold text-white block">
                               {m.calories} <span className="text-[9px] text-zinc-400 font-normal">kcal</span>
                             </span>
-                            <span className="text-[10px] text-[#30D158] font-medium block">
+                            <span className="text-[10px] text-zinc-400 font-medium block">
                               {m.protein_g}g protein
                             </span>
                           </div>
@@ -435,15 +435,15 @@ export function DayDetailsModal({
                           <div className="grid grid-cols-3 gap-1 text-center">
                             <div className="bg-white/5 p-1 rounded-lg">
                               <span className="text-[9px] text-zinc-400 block">Carbs</span>
-                              <span className="text-xs font-bold text-[#FF9500]">{m.carbs_g}g</span>
+                              <span className="text-xs font-semibold text-white">{m.carbs_g}g</span>
                             </div>
                             <div className="bg-white/5 p-1 rounded-lg">
                               <span className="text-[9px] text-zinc-400 block">Protein</span>
-                              <span className="text-xs font-bold text-[#30D158]">{m.protein_g}g</span>
+                              <span className="text-xs font-semibold text-white">{m.protein_g}g</span>
                             </div>
                             <div className="bg-white/5 p-1 rounded-lg">
                               <span className="text-[9px] text-zinc-400 block">Fat</span>
-                              <span className="text-xs font-bold text-[#FF375F]">{m.fat_g}g</span>
+                              <span className="text-xs font-semibold text-white">{m.fat_g}g</span>
                             </div>
                           </div>
 

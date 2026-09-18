@@ -39,19 +39,6 @@ export function MealsListView({ onOpenAddMeal, refreshKey }: MealsListViewProps)
   const filtered = filterType === 'all' ? meals : meals.filter((m) => m.meal_type === filterType);
   const totalCals = filtered.reduce((sum, m) => sum + (Number(m.calories) || 0), 0);
 
-  const getMealTypeBadgeStyle = (type: string) => {
-    switch (type) {
-      case 'breakfast':
-        return 'bg-[#FF9500]/15 text-[#FF9500] border-[#FF9500]/30';
-      case 'lunch':
-        return 'bg-[#30D158]/15 text-[#30D158] border-[#30D158]/30';
-      case 'dinner':
-        return 'bg-[#0A84FF]/15 text-[#0A84FF] border-[#0A84FF]/30';
-      default:
-        return 'bg-[#BF5AF2]/15 text-[#BF5AF2] border-[#BF5AF2]/30';
-    }
-  };
-
   return (
     <div className="flex-1 flex flex-col pb-24 px-5 pt-4 w-full max-w-md mx-auto space-y-6">
       {/* Title Header */}
@@ -147,14 +134,14 @@ export function MealsListView({ onOpenAddMeal, refreshKey }: MealsListViewProps)
                         className="w-12 h-12 rounded-xl object-cover border border-white/10 group-hover:border-white/25 transition-colors"
                       />
                     ) : (
-                      <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-[#FF9500] group-hover:bg-white/10 transition-colors">
+                      <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-zinc-400 group-hover:bg-white/10 transition-colors">
                         <Utensils className="w-5 h-5" />
                       </div>
                     )}
                     {meal.source === 'photo' && (
                       <span
                         title="AI Camera Scan"
-                        className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-[#1C1C1E] border border-white/20 flex items-center justify-center text-[#30D158]"
+                        className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-[#1C1C1E] border border-white/20 flex items-center justify-center text-zinc-300"
                       >
                         <Camera className="w-2.5 h-2.5" />
                       </span>
@@ -163,37 +150,29 @@ export function MealsListView({ onOpenAddMeal, refreshKey }: MealsListViewProps)
 
                   {/* Center Meal Info */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span
-                        className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border ${getMealTypeBadgeStyle(
-                          meal.meal_type
-                        )}`}
-                      >
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-semibold text-[#8E8E93] uppercase tracking-wider">
                         {meal.meal_type}
                       </span>
                       <span className="text-[10px] text-[#636366]">
                         {timeLabel}
                       </span>
                       {meal.items && meal.items.length > 0 && (
-                        <span className="text-[9px] text-zinc-400 bg-white/5 px-1.5 py-0.2 rounded">
+                        <span className="text-[9px] text-[#8E8E93] bg-white/[0.04] px-1.5 py-0.5 rounded">
                           {meal.items.length} {meal.items.length === 1 ? 'item' : 'items'}
                         </span>
                       )}
                     </div>
 
                     <h3
-                      className="text-sm font-semibold text-white mt-1 truncate group-hover:text-[#30D158] transition-colors"
+                      className="text-sm font-semibold text-white mt-1 truncate transition-colors"
                       title={meal.description || undefined}
                     >
                       {meal.description || 'Logged Meal'}
                     </h3>
 
-                    <p className="text-xs text-[#8E8E93] mt-0.5 truncate flex items-center gap-1">
-                      <span className="text-[#30D158] font-medium">{meal.protein_g || 0}g P</span>
-                      <span>·</span>
-                      <span className="text-[#FF9500] font-medium">{meal.carbs_g || 0}g C</span>
-                      <span>·</span>
-                      <span className="text-[#FF375F] font-medium">{meal.fat_g || 0}g F</span>
+                    <p className="text-xs text-[#8E8E93] mt-0.5 truncate">
+                      {meal.protein_g || 0}g protein · {meal.carbs_g || 0}g carbs · {meal.fat_g || 0}g fat
                     </p>
                   </div>
 
