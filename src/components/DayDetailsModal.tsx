@@ -190,7 +190,7 @@ export function DayDetailsModal({
   const exerciseNames = exercises.map((e) => e.exercise_type || e.description || 'Exercise');
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/80 backdrop-blur-md transition-opacity"
@@ -256,7 +256,7 @@ export function DayDetailsModal({
           onTouchStart={(e) => handleTouchStart(e, false)}
           onTouchMove={(e) => handleTouchMove(e, false)}
           onTouchEnd={handleTouchEnd}
-          className="flex-1 overflow-y-auto px-5 py-4 space-y-4 overscroll-contain"
+          className="flex-1 overflow-y-auto px-5 py-4 pb-8 sm:pb-6 space-y-4 overscroll-contain"
         >
           {/* Status Banner */}
           <div className="ios-card p-4 space-y-3 border border-white/10 bg-gradient-to-br from-white/[0.05] to-transparent">
