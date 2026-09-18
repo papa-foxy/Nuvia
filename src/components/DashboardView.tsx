@@ -484,21 +484,16 @@ export function DashboardView({
             </div>
 
             {/* Exercise Movements Strip with Individual Thumbnails */}
-            <div className="flex items-center gap-2 overflow-x-auto pt-0.5 no-scrollbar">
-              {todayRoutine.exercises.slice(0, 5).map((ex) => (
+            <div className="flex items-center gap-2 overflow-x-auto pt-0.5 no-scrollbar scroll-smooth">
+              {todayRoutine.exercises.map((ex, idx) => (
                 <div
-                  key={ex.id}
+                  key={ex.id || idx}
                   className="w-10 h-10 rounded-xl overflow-hidden bg-black/40 border border-white/[0.08] shrink-0 relative group-hover:border-[#30D158]/30 transition-colors"
                   title={ex.name}
                 >
                   <ExerciseThumbnail exercise={ex} aspectRatio="1/1" className="w-full h-full" />
                 </div>
               ))}
-              {todayRoutine.exercises.length > 5 && (
-                <div className="w-10 h-10 rounded-xl bg-[#2C2C2E] border border-white/[0.08] shrink-0 flex items-center justify-center text-[10px] font-bold text-[#8E8E93]">
-                  +{todayRoutine.exercises.length - 5}
-                </div>
-              )}
             </div>
           </div>
         );

@@ -601,46 +601,45 @@ export function ExerciseListView({ onOpenAddExercise, onNavigateTab }: ExerciseL
                         </div>
                       )}
 
-                      {/* Scheduled Days */}
-                      <div className="flex flex-wrap gap-1">
-                        {routine.days.map((day) => (
-                          <span
-                            key={day}
-                            className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
-                              day.toLowerCase() === todayName.toLowerCase()
-                                ? 'bg-[#30D158]/20 text-[#30D158] border border-[#30D158]/30 font-semibold'
-                                : 'bg-white/[0.05] text-[#8E8E93]'
-                            }`}
-                          >
-                            {day}
-                          </span>
-                        ))}
-                      </div>
-
-                      {/* Exercise thumbnails + Open CTA */}
-                      <div className="flex items-center justify-between pt-1 border-t border-white/[0.04]">
-                        <div className="flex items-center gap-1.5 overflow-hidden">
-                          {routine.exercises.slice(0, 6).map((ex) => (
-                            <div
-                              key={ex.id}
-                              className="w-9 h-9 rounded-xl overflow-hidden bg-black/60 border border-white/[0.08] shrink-0 relative"
-                              title={ex.name}
+                      {/* Scheduled Days & Open CTA */}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex flex-wrap items-center gap-1">
+                          {routine.days.map((day) => (
+                            <span
+                              key={day}
+                              className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                                day.toLowerCase() === todayName.toLowerCase()
+                                  ? 'bg-[#30D158]/20 text-[#30D158] border border-[#30D158]/30 font-semibold'
+                                  : 'bg-white/[0.05] text-[#8E8E93]'
+                              }`}
                             >
-                              <ExerciseThumbnail exercise={ex} aspectRatio="1/1" className="w-full h-full" />
-                            </div>
+                              {day}
+                            </span>
                           ))}
-                          {routine.exercises.length > 6 && (
-                            <div className="w-9 h-9 rounded-xl bg-[#2C2C2E] border border-white/[0.08] shrink-0 flex items-center justify-center text-[10px] font-bold text-[#8E8E93]">
-                              +{routine.exercises.length - 6}
-                            </div>
-                          )}
                         </div>
 
-                        <div className="flex items-center gap-1 text-xs font-semibold text-[#30D158] group-hover:translate-x-0.5 transition-transform shrink-0 ml-2">
+                        <div className="flex items-center gap-1 text-xs font-semibold text-[#30D158] group-hover:translate-x-0.5 transition-transform shrink-0">
                           <span>Open</span>
                           <ChevronRight className="w-4 h-4" />
                         </div>
                       </div>
+
+                      {/* Exercise Movements Visual Strip */}
+                      {routine.exercises.length > 0 && (
+                        <div className="pt-2 border-t border-white/[0.04]">
+                          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth">
+                            {routine.exercises.map((ex, idx) => (
+                              <div
+                                key={ex.id || idx}
+                                className="w-10 h-10 rounded-xl overflow-hidden bg-black/60 border border-white/[0.08] shrink-0 relative group-hover:border-[#30D158]/30 transition-colors"
+                                title={ex.name}
+                              >
+                                <ExerciseThumbnail exercise={ex} aspectRatio="1/1" className="w-full h-full" />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
