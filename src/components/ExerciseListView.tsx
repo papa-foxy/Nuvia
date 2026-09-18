@@ -160,7 +160,7 @@ export function ExerciseListView({ onOpenAddExercise, onNavigateTab }: ExerciseL
   }
 
   return (
-    <div className="flex-1 flex flex-col pb-24 px-5 pt-4 max-w-md mx-auto space-y-5">
+    <div className="flex-1 flex flex-col pb-24 px-5 pt-4 w-full max-w-md mx-auto space-y-5">
       {/* Top Header */}
       <div className="flex items-end justify-between pt-2">
         <div>

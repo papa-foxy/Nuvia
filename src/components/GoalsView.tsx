@@ -41,7 +41,7 @@ export function GoalsView() {
   };
 
   return (
-    <div className="flex-1 flex flex-col pb-20 px-5 pt-4 max-w-md mx-auto space-y-6">
+    <div className="flex-1 flex flex-col pb-20 px-5 pt-4 w-full max-w-md mx-auto space-y-6">
       {/* Title */}
       <div className="flex items-end justify-between pt-2">
         <div>

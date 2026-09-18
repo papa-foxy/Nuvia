@@ -208,7 +208,7 @@ export function RoutineDetailView({
   };
 
   return (
-    <div className="flex-1 flex flex-col pb-28 px-4 pt-3 max-w-md mx-auto space-y-4 animate-fadeIn">
+    <div className="flex-1 flex flex-col pb-28 px-4 pt-3 w-full max-w-md mx-auto space-y-4 animate-fadeIn">
       {/* Top Header with Back Navigation */}
       <div className="flex items-center justify-between pt-1">
         <button

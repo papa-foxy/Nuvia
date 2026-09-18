@@ -50,7 +50,7 @@ export function DailySummaryView({ refreshKey }: { refreshKey?: number } = {}) {
   });
 
   return (
-    <div className="flex-1 flex flex-col pb-20 px-5 pt-4 max-w-md mx-auto space-y-6">
+    <div className="flex-1 flex flex-col pb-20 px-5 pt-4 w-full max-w-md mx-auto space-y-6">
       {/* Date Header */}
       <div className="flex items-center justify-between pt-2">
         <div>

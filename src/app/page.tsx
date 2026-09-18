@@ -143,7 +143,7 @@ export default function HomePage() {
         <PwaInstallBanner />
 
         {/* Main Tab Content — pb-20 keeps content above the fixed bottom nav */}
-        <main className="flex-1 flex flex-col overflow-y-auto pb-20" style={{ paddingTop: 'max(8px, env(safe-area-inset-top))' }}>
+        <main className="flex-1 flex flex-col overflow-y-auto pb-20 w-full" style={{ paddingTop: 'max(8px, env(safe-area-inset-top))' }}>
           {activeTab === 'home' && (
             <DashboardView
               onOpenAddMeal={() => setIsAddMealOpen(true)}

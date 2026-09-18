@@ -94,7 +94,7 @@ export function DashboardView({
   };
 
   return (
-    <div className="flex-1 flex flex-col pb-20 px-5 pt-4 max-w-md mx-auto space-y-6">
+    <div className="flex-1 flex flex-col pb-20 px-5 pt-4 w-full max-w-md mx-auto space-y-6">
       {/* Large Page Title (Apple Health Style) */}
       <div className="pt-2">
         <p className="text-[11px] font-semibold tracking-wider text-[#8E8E93]">
