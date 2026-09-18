@@ -8,6 +8,8 @@ import { DataService } from './data-service';
 interface User {
   id: string;
   email: string;
+  avatar_url?: string | null;
+  full_name?: string | null;
 }
 
 interface AuthContextType {
@@ -76,7 +78,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const session = sessionResult.data.session;
 
           if (session?.user) {
-            setUser({ id: session.user.id, email: session.user.email || '' });
+            const avatar = session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture || null;
+            const fullName = session.user.user_metadata?.full_name || session.user.user_metadata?.name || null;
+            setUser({
+              id: session.user.id,
+              email: session.user.email || '',
+              avatar_url: avatar,
+              full_name: fullName,
+            });
             const [p, g] = await Promise.all([
               DataService.getProfile(session.user.id),
               DataService.getGoals(session.user.id),
@@ -92,7 +101,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Listen to real-time auth changes
           const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
             if (session?.user) {
-              setUser({ id: session.user.id, email: session.user.email || '' });
+              const avatar = session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture || null;
+              const fullName = session.user.user_metadata?.full_name || session.user.user_metadata?.name || null;
+              setUser({
+                id: session.user.id,
+                email: session.user.email || '',
+                avatar_url: avatar,
+                full_name: fullName,
+              });
               const [p, g] = await Promise.all([
                 DataService.getProfile(session.user.id),
                 DataService.getGoals(session.user.id),

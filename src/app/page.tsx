@@ -175,7 +175,12 @@ export default function HomePage() {
           {activeTab === 'goals' && <GoalsView />}
 
           {activeTab === 'profile' && (
-            <ProfileView onReplayOnboarding={() => setShowOnboarding(true)} />
+            <ProfileView
+              onReplayOnboarding={() => setShowOnboarding(true)}
+              onOpenAddMeal={() => setIsAddMealOpen(true)}
+              onOpenAddExercise={() => setIsAddExerciseOpen(true)}
+              onNavigateTab={(tab) => setActiveTab(tab as any)}
+            />
           )}
         </main>
 
