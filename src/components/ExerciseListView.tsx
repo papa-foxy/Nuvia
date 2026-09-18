@@ -25,6 +25,7 @@ import { ExerciseVideoModal } from './ExerciseVideoModal';
 import { PasteAiRoutineModal } from './PasteAiRoutineModal';
 import { ManualRoutineModal } from './ManualRoutineModal';
 import { RoutineDetailView } from './RoutineDetailView';
+import { ExerciseThumbnail } from './ExerciseThumbnail';
 
 import { TabType } from './Navigation';
 
@@ -293,8 +294,14 @@ export function ExerciseListView({ onOpenAddExercise, onNavigateTab }: ExerciseL
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-[#30D158]/15 flex items-center justify-center shrink-0">
-                      <Play className="w-5 h-5 text-[#30D158] fill-[#30D158]" />
+                    <div className="w-12 h-12 rounded-2xl overflow-hidden bg-black/60 border border-white/[0.1] shrink-0 relative group-hover:border-[#30D158]/40 transition-colors shadow-sm">
+                      {todayRoutine.exercises[0] ? (
+                        <ExerciseThumbnail exercise={todayRoutine.exercises[0]} aspectRatio="1/1" className="w-full h-full" />
+                      ) : (
+                        <div className="w-full h-full bg-[#30D158]/15 flex items-center justify-center">
+                          <Play className="w-5 h-5 text-[#30D158] fill-[#30D158]" />
+                        </div>
+                      )}
                     </div>
                     <div>
                       <div className="flex items-center gap-1.5 mb-0.5">
@@ -612,41 +619,18 @@ export function ExerciseListView({ onOpenAddExercise, onNavigateTab }: ExerciseL
 
                       {/* Exercise thumbnails + Open CTA */}
                       <div className="flex items-center justify-between pt-1 border-t border-white/[0.04]">
-                        <div className="flex items-center gap-1 overflow-hidden">
-                          {routine.exercises.slice(0, 6).map((ex) => {
-                            const ytThumb = ex.youtube_id
-                              ? `https://img.youtube.com/vi/${ex.youtube_id}/default.jpg`
-                              : null;
-                            return (
-                              <div
-                                key={ex.id}
-                                className="w-8 h-8 rounded-lg overflow-hidden bg-black/60 border border-white/[0.08] shrink-0"
-                                title={ex.name}
-                              >
-                                {ytThumb ? (
-                                  <img
-                                    src={ytThumb}
-                                    alt={ex.name}
-                                    className="w-full h-full object-cover"
-                                    onError={(e) => {
-                                      const parent = (e.target as HTMLImageElement).parentElement;
-                                      if (parent) {
-                                        parent.innerHTML = `<img src="${ex.thumbnail_url}" class="w-full h-full object-contain p-1 opacity-70" />`;
-                                      }
-                                    }}
-                                  />
-                                ) : (
-                                  <img
-                                    src={ex.thumbnail_url}
-                                    alt={ex.name}
-                                    className="w-full h-full object-contain p-1 opacity-70"
-                                  />
-                                )}
-                              </div>
-                            );
-                          })}
+                        <div className="flex items-center gap-1.5 overflow-hidden">
+                          {routine.exercises.slice(0, 6).map((ex) => (
+                            <div
+                              key={ex.id}
+                              className="w-9 h-9 rounded-xl overflow-hidden bg-black/60 border border-white/[0.08] shrink-0 relative"
+                              title={ex.name}
+                            >
+                              <ExerciseThumbnail exercise={ex} aspectRatio="1/1" className="w-full h-full" />
+                            </div>
+                          ))}
                           {routine.exercises.length > 6 && (
-                            <div className="w-8 h-8 rounded-lg bg-[#2C2C2E] border border-white/[0.08] shrink-0 flex items-center justify-center text-[10px] font-bold text-[#8E8E93]">
+                            <div className="w-9 h-9 rounded-xl bg-[#2C2C2E] border border-white/[0.08] shrink-0 flex items-center justify-center text-[10px] font-bold text-[#8E8E93]">
                               +{routine.exercises.length - 6}
                             </div>
                           )}

@@ -413,12 +413,13 @@ export function DashboardView({
         return (
           <div
             onClick={() => onNavigateTab('exercise')}
-            className={`rounded-2xl p-4 border transition-all cursor-pointer space-y-3 group ${
+            className={`rounded-2xl p-4 border transition-all cursor-pointer space-y-3.5 group ${
               matchingExecutedLog
                 ? 'bg-[#1C1C1E] border-[#30D158]/40 shadow-sm'
                 : 'bg-[#1C1C1E] border-white/[0.08] hover:border-[#30D158]/40'
             }`}
           >
+            {/* Top Bar: Routine Header & Status Badge */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div
@@ -446,27 +447,55 @@ export function DashboardView({
               </span>
             </div>
 
-            <div>
-              <h4 className="text-sm font-semibold text-white group-hover:text-[#30D158] transition-colors">
-                {todayRoutine.title}
-              </h4>
-              <p className="text-[11px] text-[#8E8E93] mt-0.5">
-                {todayRoutine.exercises.length} movements · {todayRoutine.focus || 'Training'}
-              </p>
+            {/* Main Routine Row with Hero Visual Thumbnail */}
+            <div className="flex items-center gap-3.5">
+              <div className="w-16 h-16 rounded-2xl overflow-hidden bg-black/60 border border-white/[0.1] shrink-0 relative shadow-md group-hover:border-[#30D158]/40 transition-colors">
+                <ExerciseThumbnail
+                  exercise={todayRoutine.exercises[0]}
+                  aspectRatio="1/1"
+                  className="w-full h-full"
+                />
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <h4 className="text-sm font-bold text-white group-hover:text-[#30D158] transition-colors truncate">
+                  {todayRoutine.title}
+                </h4>
+                <p className="text-[11px] text-[#8E8E93] mt-0.5">
+                  {todayRoutine.exercises.length} movements · {todayRoutine.focus || 'Training'}
+                </p>
+                {todayRoutine.days && todayRoutine.days.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-1.5">
+                    {todayRoutine.days.map((day) => (
+                      <span
+                        key={day}
+                        className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${
+                          day.toLowerCase() === todayDayName.toLowerCase()
+                            ? 'bg-[#30D158]/20 text-[#30D158] border border-[#30D158]/30 font-semibold'
+                            : 'bg-white/[0.05] text-[#8E8E93]'
+                        }`}
+                      >
+                        {day}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
-            <div className="flex items-center gap-2 overflow-x-auto pt-1 no-scrollbar">
+            {/* Exercise Movements Strip with Individual Thumbnails */}
+            <div className="flex items-center gap-2 overflow-x-auto pt-0.5 no-scrollbar">
               {todayRoutine.exercises.slice(0, 5).map((ex) => (
                 <div
                   key={ex.id}
-                  className="w-10 h-10 rounded-xl bg-black/40 p-1 border border-white/[0.06] shrink-0 relative group-hover:border-[#30D158]/30 transition-colors"
+                  className="w-10 h-10 rounded-xl overflow-hidden bg-black/40 border border-white/[0.08] shrink-0 relative group-hover:border-[#30D158]/30 transition-colors"
                   title={ex.name}
                 >
-                  <img src={ex.thumbnail_url} alt={ex.name} className="w-full h-full object-contain" />
+                  <ExerciseThumbnail exercise={ex} aspectRatio="1/1" className="w-full h-full" />
                 </div>
               ))}
               {todayRoutine.exercises.length > 5 && (
-                <div className="w-10 h-10 rounded-xl bg-[#2C2C2E] border border-white/[0.06] shrink-0 flex items-center justify-center text-[10px] font-bold text-[#8E8E93]">
+                <div className="w-10 h-10 rounded-xl bg-[#2C2C2E] border border-white/[0.08] shrink-0 flex items-center justify-center text-[10px] font-bold text-[#8E8E93]">
                   +{todayRoutine.exercises.length - 5}
                 </div>
               )}

@@ -38,7 +38,14 @@ export function getExerciseThumbnail(
   }
 
   // 2. YouTube thumbnail (if valid youtube_id exists)
-  const ytId = exercise.youtube_id?.trim() || extractYoutubeId(exercise.youtube_url);
+  let ytId = exercise.youtube_id?.trim() || extractYoutubeId(exercise.youtube_url);
+  const cleanName = (exercise.name || '').toLowerCase();
+  if (!ytId || ytId === 'DEFAULT' || ytId === 'k0cTJCfxa0Y' || ytId === 'LJeqLAmJLfs') {
+    if (cleanName.includes('pushup') || cleanName.includes('push up') || cleanName.includes('push-up')) {
+      ytId = 'WDIpL0pjun0';
+    }
+  }
+
   if (ytId && ytId !== 'DEFAULT') {
     // hqdefault is standard 4:3 (480x360), mqdefault is 16:9 (320x180)
     const ytFile = quality === 'mq' ? 'mqdefault.jpg' : quality === 'default' ? 'default.jpg' : 'hqdefault.jpg';

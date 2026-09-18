@@ -99,10 +99,10 @@ export const EXERCISE_CATALOG: CatalogExercise[] = [
     equipment: 'Push-up Board / Floor',
     default_sets: 4,
     default_reps: '10-12',
-    youtube_id: 'k0cTJCfxa0Y', // Seated Machine Row: Close Grip (Back tutorial in playlist)
+    youtube_id: 'WDIpL0pjun0', // Standard Push-Up form tutorial
     thumbnail_url: makeSvgThumbnail('#1E1B4B', '#FBBF24', 'pushup', 'BACK'),
-    description: 'Push-ups targeted for lat activation using yellow angle grips.',
-    keywords: ['push-ups (yellow/back position)', 'yellow', 'lats', 'back pushup', 'seated machine row'],
+    description: 'Push-ups targeted for lat activation using yellow angle grips or wide floor placement.',
+    keywords: ['push-ups (yellow/back position)', 'yellow', 'lats', 'back pushup', 'wide pushup', 'push-up'],
   },
   {
     id: 'pushup-shoulders',
@@ -112,7 +112,7 @@ export const EXERCISE_CATALOG: CatalogExercise[] = [
     equipment: 'Push-up Board / Floor',
     default_sets: 3,
     default_reps: '10-12',
-    youtube_id: '2b5t0Cu2nQI', // How to do a Pike Push-Up (Shoulder push-up in playlist)
+    youtube_id: '2b5t0Cu2nQI', // How to do a Pike Push-Up (Shoulder push-up)
     thumbnail_url: makeSvgThumbnail('#2A1215', '#F87171', 'pushup', 'SHOULDERS'),
     description: 'Pike-angled push-ups emphasizing anterior deltoids and clavicular head.',
     keywords: ['push-ups (red/shoulder position)', 'red', 'pike push up', 'pike push-up', 'shoulder pushup'],
@@ -125,10 +125,10 @@ export const EXERCISE_CATALOG: CatalogExercise[] = [
     equipment: 'Push-up Board / Floor',
     default_sets: 3,
     default_reps: '12',
-    youtube_id: 'LJeqLAmJLfs', // How to do a Close Grip Bench Press (Triceps emphasis in playlist)
+    youtube_id: 'WDIpL0pjun0', // Close grip / tricep push-up form tutorial
     thumbnail_url: makeSvgThumbnail('#052E16', '#34D399', 'pushup', 'TRICEPS'),
     description: 'Narrow grip push-ups emphasizing triceps brachii long and lateral heads.',
-    keywords: ['push-ups (green/triceps position)', 'green', 'tricep', 'close grip', 'close grip pushup'],
+    keywords: ['push-ups (green/triceps position)', 'green', 'tricep', 'close grip', 'close grip pushup', 'diamond pushup'],
   },
   {
     id: 'db-shoulder-press',
@@ -138,7 +138,7 @@ export const EXERCISE_CATALOG: CatalogExercise[] = [
     equipment: 'Dumbbells',
     default_sets: 3,
     default_reps: '10-12',
-    youtube_id: '2b5t0Cu2nQI', // How to do a Pike Push-Up / Shoulder Press tutorial
+    youtube_id: 'B-aVuyhvLHU', // How to do a Dumbbell Overhead Shoulder Press
     thumbnail_url: makeSvgThumbnail('#2A1215', '#F87171', 'dumbbell', 'SHOULDERS'),
     description: 'Overhead pressing movement targeting deltoids and upper pectorals.',
     keywords: ['dumbbell shoulder press', 'shoulder press', 'overhead press', 'dumbbell press shoulders'],
@@ -216,10 +216,10 @@ export const EXERCISE_CATALOG: CatalogExercise[] = [
     equipment: 'Mat',
     default_sets: 3,
     default_reps: '20',
-    youtube_id: 'bxn9FBrt4-A', // How to do a Dead Bug / Alternating Core
+    youtube_id: '9FGilxCbdz8', // How to do Bicycle Crunches
     thumbnail_url: makeSvgThumbnail('#0F2A1D', '#2DD4BF', 'core', 'ABS'),
     description: 'Alternating contralateral elbow-to-knee rotational crunch.',
-    keywords: ['bicycle crunches', 'bicycle crunch', 'dead bug', 'deadbug'],
+    keywords: ['bicycle crunches', 'bicycle crunch', 'crunches', 'abs bicycle'],
   },
   {
     id: 'abs-plank',
@@ -255,10 +255,10 @@ export const EXERCISE_CATALOG: CatalogExercise[] = [
     equipment: 'Floor / Mat',
     default_sets: 3,
     default_reps: '20 per side',
-    youtube_id: '6Tv4xTRPtUc', // How to do a Plank Walkup (dynamic plank / climbers)
+    youtube_id: 'nmwgirgXLYM', // How to do Mountain Climbers
     thumbnail_url: makeSvgThumbnail('#0F2A1D', '#2DD4BF', 'core', 'CARDIO'),
     description: 'Dynamic plank drive alternating knees toward chest with cadence.',
-    keywords: ['mountain climbers', 'mountain climber', 'plank walkup', 'climbers'],
+    keywords: ['mountain climbers', 'mountain climber', 'climbers', 'mountain climbers core'],
   },
 
   // Full NASM Playlist Video Library (77 exercises)
@@ -1273,7 +1273,30 @@ export function matchExercise(rawText: string): CatalogExercise {
   if (!rawText) return EXERCISE_CATALOG[0];
   const clean = rawText.toLowerCase().trim();
 
-  // 1. Direct high-priority matches to specific playlist videos
+  // 1. Push-up movements (standard, custom equipment, board, handles, books, chairs, etc.)
+  // If user enters push-up with rare/self equipment, always show the regular push-up tutorial!
+  if (
+    clean.includes('pushup') ||
+    clean.includes('push up') ||
+    clean.includes('push-up') ||
+    clean.includes('pushups') ||
+    clean.includes('press up') ||
+    clean.includes('press-up')
+  ) {
+    if (clean.includes('pike') || clean.includes('handstand')) {
+      return EXERCISE_CATALOG.find(e => e.id === 'pushup-shoulders') || EXERCISE_CATALOG[0];
+    }
+    if (clean.includes('green') || clean.includes('tricep') || clean.includes('diamond') || clean.includes('close grip')) {
+      return EXERCISE_CATALOG.find(e => e.id === 'pushup-triceps') || EXERCISE_CATALOG[0];
+    }
+    if (clean.includes('yellow') || (clean.includes('back') && !clean.includes('pull'))) {
+      return EXERCISE_CATALOG.find(e => e.id === 'pushup-back') || EXERCISE_CATALOG[0];
+    }
+    // Any pushup (with self equipment, handles, books, board, elevation) -> Standard Push-up tutorial
+    return EXERCISE_CATALOG.find(e => e.id === 'pushup-chest') || EXERCISE_CATALOG[0];
+  }
+
+  // 2. Direct high-priority matches to specific exercise videos
   if (clean.includes('side plank')) {
     return EXERCISE_CATALOG.find(e => e.id === 'abs-side-plank') || EXERCISE_CATALOG[0];
   }

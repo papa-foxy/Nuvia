@@ -25,9 +25,9 @@ export function ExerciseVideoModal({
   const targetVideoId = exercise.youtube_id || PLAYLIST_VIDEO_ID;
   const hasVideo = !!targetVideoId && targetVideoId !== '';
   const embedUrl = hasVideo
-    ? `https://www.youtube-nocookie.com/embed/${targetVideoId}?list=${PLAYLIST_ID}&autoplay=1&rel=0&modestbranding=1&playsinline=1`
+    ? `https://www.youtube-nocookie.com/embed/${targetVideoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1`
     : '';
-  const youtubeWatchUrl = `https://www.youtube.com/watch?v=${targetVideoId}&list=${PLAYLIST_ID}`;
+  const youtubeWatchUrl = `https://www.youtube.com/watch?v=${targetVideoId}`;
 
   return (
     <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
