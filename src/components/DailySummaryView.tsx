@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { DataService, getLocalDateString } from '@/lib/data-service';
 import { DailySummary, Meal, ExerciseLog } from '@/types/database';
+import { MacroDonutChart } from './MacroDonutChart';
 
 export function DailySummaryView({ refreshKey }: { refreshKey?: number } = {}) {
   const { user, goals } = useAuth();
@@ -101,6 +102,20 @@ export function DailySummaryView({ refreshKey }: { refreshKey?: number } = {}) {
           <p className="text-xs text-[#8E8E93]">{summary?.exercise_minutes || 0} min active</p>
         </div>
       </div>
+
+      {/* Interactive Calorie & Macro Donut Chart */}
+      <MacroDonutChart
+        calories={caloriesConsumed}
+        calorieTarget={calorieTarget}
+        protein={proteinConsumed}
+        proteinTarget={proteinTarget}
+        carbs={carbsConsumed}
+        carbsTarget={carbsTarget}
+        fat={fatConsumed}
+        fatTarget={fatTarget}
+        exerciseMinutes={summary?.exercise_minutes || 0}
+        exerciseTarget={goals?.exercise_minutes_target || 45}
+      />
 
       {/* Macronutrient Detail (Apple Health Inset Cell) */}
       <div className="ios-card p-4 space-y-3">

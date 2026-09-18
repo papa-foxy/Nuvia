@@ -13,12 +13,16 @@ export interface MuscleGroup {
 interface BodyMuscleMapProps {
   workedMuscles?: string[]; // e.g. ['chest', 'shoulders', 'triceps', 'abs', 'back']
   routineTitle?: string;
+  isPumpActive?: boolean;
+  exercisesPerformed?: string[];
   onSelectMuscle?: (muscleId: string) => void;
 }
 
 export function BodyMuscleMap({
   workedMuscles = [],
   routineTitle,
+  isPumpActive = false,
+  exercisesPerformed = [],
   onSelectMuscle,
 }: BodyMuscleMapProps) {
   const [activeView, setActiveView] = useState<'front' | 'back'>('front');
@@ -48,13 +52,17 @@ export function BodyMuscleMap({
     const selected = selectedMuscle === id;
 
     if (selected) return '#30D158'; // Bright Emerald selected
-    if (worked) return '#FF9500'; // Active Amber
+    if (worked) return isPumpActive ? '#30D158' : '#FF9500'; // Pump Emerald or Active Amber
     return '#2C2C2E'; // Neutral dark
   };
 
   const getMuscleFilter = (id: string) => {
-    if (selectedMuscle === id) return 'drop-shadow(0 0 8px rgba(48, 209, 88, 0.8))';
-    if (isWorked(id)) return 'drop-shadow(0 0 6px rgba(255, 149, 0, 0.6))';
+    if (selectedMuscle === id) return 'drop-shadow(0 0 10px rgba(48, 209, 88, 0.9))';
+    if (isWorked(id)) {
+      return isPumpActive
+        ? 'drop-shadow(0 0 12px rgba(48, 209, 88, 0.8))'
+        : 'drop-shadow(0 0 6px rgba(255, 149, 0, 0.6))';
+    }
     return 'none';
   };
 
@@ -77,11 +85,18 @@ export function BodyMuscleMap({
         <div>
           <div className="flex items-center gap-1.5">
             <span className="text-xs font-semibold text-[#8E8E93] uppercase tracking-wider">
-              Muscle Activation Heatmap
+              Muscle Activation
             </span>
-            <span className="inline-flex items-center px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-[#FF9500]/20 text-[#FF9500]">
-              LIVE
-            </span>
+            {isPumpActive ? (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-[#30D158]/20 text-[#30D158] border border-[#30D158]/30 animate-pulse">
+                <Sparkles className="w-2.5 h-2.5" />
+                PUMP ACTIVE
+              </span>
+            ) : (
+              <span className="inline-flex items-center px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-[#FF9500]/20 text-[#FF9500]">
+                SCHEDULED
+              </span>
+            )}
           </div>
           <p className="text-sm font-bold text-white mt-0.5">
             {routineTitle || 'Targeted Muscle Groups'}
@@ -381,6 +396,25 @@ export function BodyMuscleMap({
           );
         })}
       </div>
+
+      {/* Exercises that activated the pump */}
+      {exercisesPerformed.length > 0 && (
+        <div className="pt-2 border-t border-white/5 space-y-1.5">
+          <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block">
+            Movements Driving The Pump ({exercisesPerformed.length})
+          </span>
+          <div className="flex flex-wrap gap-1.5">
+            {exercisesPerformed.map((ex, i) => (
+              <span
+                key={i}
+                className="px-2 py-0.5 rounded-md bg-[#30D158]/10 border border-[#30D158]/20 text-[10px] text-[#30D158] font-medium"
+              >
+                ✓ {ex}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

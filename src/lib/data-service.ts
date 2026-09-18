@@ -1231,6 +1231,72 @@ export const DataService = {
     };
   },
 
+  async getActivityMap(userId?: string): Promise<Record<string, { hasMeal: boolean; hasWorkout: boolean; calories: number; burned: number }>> {
+    const isRemoteUser = isSupabaseConfigured() && userId && userId !== DEMO_USER_ID;
+    const result: Record<string, { hasMeal: boolean; hasWorkout: boolean; calories: number; burned: number }> = {};
+
+    const record = (dateStr: string, opts: { meal?: boolean; workout?: boolean; calories?: number; burned?: number }) => {
+      if (!dateStr) return;
+      if (!result[dateStr]) {
+        result[dateStr] = { hasMeal: false, hasWorkout: false, calories: 0, burned: 0 };
+      }
+      if (opts.meal) result[dateStr].hasMeal = true;
+      if (opts.workout) result[dateStr].hasWorkout = true;
+      if (opts.calories) result[dateStr].calories += opts.calories;
+      if (opts.burned) result[dateStr].burned += opts.burned;
+    };
+
+    if (isRemoteUser) {
+      try {
+        const supabase = createClient();
+        const [mealsRes, exRes, sumRes] = await Promise.all([
+          supabase.from('meals').select('meal_time, calories').eq('user_id', userId),
+          supabase.from('exercise_logs').select('created_at, calories_burned').eq('user_id', userId),
+          supabase.from('daily_summaries').select('date, calories_consumed, calories_burned').eq('user_id', userId),
+        ]);
+
+        if (mealsRes.data) {
+          for (const m of mealsRes.data) {
+            record(getLocalDateString(new Date(m.meal_time)), { meal: true, calories: Number(m.calories) || 0 });
+          }
+        }
+        if (exRes.data) {
+          for (const e of exRes.data) {
+            record(getLocalDateString(new Date(e.created_at)), { workout: true, burned: Number(e.calories_burned) || 0 });
+          }
+        }
+        if (sumRes.data) {
+          for (const s of sumRes.data) {
+            if ((s.calories_consumed || 0) > 0 || (s.calories_burned || 0) > 0) {
+              record(s.date, {
+                meal: (s.calories_consumed || 0) > 0,
+                workout: (s.calories_burned || 0) > 0,
+                calories: Number(s.calories_consumed) || 0,
+                burned: Number(s.calories_burned) || 0,
+              });
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Supabase getActivityMap error:', err);
+      }
+    } else {
+      const state = getLocalState();
+      for (const m of state.meals) {
+        if (!userId || m.user_id === userId) {
+          record(getLocalDateString(new Date(m.meal_time)), { meal: true, calories: Number(m.calories) || 0 });
+        }
+      }
+      for (const e of state.exerciseLogs) {
+        if (!userId || e.user_id === userId) {
+          record(getLocalDateString(new Date(e.created_at || new Date())), { workout: true, burned: Number(e.calories_burned) || 0 });
+        }
+      }
+    }
+
+    return result;
+  },
+
   getDemoUserId() {
     return DEMO_USER_ID;
   },
