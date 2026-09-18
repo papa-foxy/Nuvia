@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
-import { TopBar, BottomNav, TabType } from '@/components/Navigation';
+import { BottomNav, TabType } from '@/components/Navigation';
 import { LandingView } from '@/components/LandingView';
 import { OnboardingWizard } from '@/components/OnboardingWizard';
 import { DashboardView } from '@/components/DashboardView';
@@ -142,11 +142,8 @@ export default function HomePage() {
         {/* PWA Install Banner */}
         <PwaInstallBanner />
 
-        {/* Fixed Top Bar */}
-        <TopBar activeTab={activeTab} setActiveTab={setActiveTab} />
-
         {/* Main Tab Content — pb-20 keeps content above the fixed bottom nav */}
-        <main className="flex-1 flex flex-col overflow-y-auto pb-20">
+        <main className="flex-1 flex flex-col overflow-y-auto pb-20" style={{ paddingTop: 'max(8px, env(safe-area-inset-top))' }}>
           {activeTab === 'home' && (
             <DashboardView
               onOpenAddMeal={() => setIsAddMealOpen(true)}
