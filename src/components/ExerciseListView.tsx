@@ -119,6 +119,14 @@ export function ExerciseListView({ onOpenAddExercise, onNavigateTab }: ExerciseL
     showNotification(`Logged ${ex.name} (+${ex.sets * 25} kcal)!`);
   };
 
+  const handleDeleteExercise = async (id: string) => {
+    if (confirm('Delete this exercise log entry?')) {
+      await DataService.deleteExerciseLog(id, user?.id);
+      await loadAll();
+      showNotification('Exercise log removed.');
+    }
+  };
+
   const totalBurned = exercises.reduce((sum, e) => sum + (Number(e.calories_burned) || 0), 0);
   const totalMinutes = exercises.reduce((sum, e) => sum + (Number(e.duration_minutes) || 0), 0);
 
@@ -476,30 +484,53 @@ export function ExerciseListView({ onOpenAddExercise, onNavigateTab }: ExerciseL
             </div>
           ) : (
             <div className="ios-card divide-y divide-white/[0.06] overflow-hidden">
-              {exercises.map((ex) => (
-                <div
-                  key={ex.id}
-                  className="p-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
-                >
-                  <div>
-                    <h3 className="text-sm font-semibold text-white">{ex.exercise_type}</h3>
-                    <p className="text-xs text-[#8E8E93] mt-0.5">
-                      {ex.duration_minutes} min {ex.distance_km ? `· ${ex.distance_km} km` : ''} ·{' '}
-                      <span className="capitalize">{ex.intensity || 'moderate'} intensity</span>
-                    </p>
-                    {ex.ai_analysis?.ai_tip && (
-                      <p className="text-[11px] text-[#A1A1A6] mt-1 italic">
-                        Nuvia: {ex.ai_analysis.ai_tip}
-                      </p>
-                    )}
-                  </div>
+              {exercises.map((ex) => {
+                const exDate = new Date(ex.created_at || new Date());
+                const isToday = exDate.toDateString() === new Date().toDateString();
+                const timeLabel = isToday
+                  ? exDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                  : `${exDate.toLocaleDateString([], { month: 'short', day: 'numeric' })}, ${exDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
 
-                  <div className="text-right shrink-0">
-                    <span className="text-sm font-semibold text-white">~{ex.calories_burned}</span>
-                    <span className="text-xs text-[#8E8E93] ml-1">kcal</span>
+                return (
+                  <div
+                    key={ex.id}
+                    className="p-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
+                  >
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-[#636366]">
+                          {timeLabel}
+                        </span>
+                      </div>
+                      <h3 className="text-sm font-semibold text-white mt-0.5">{ex.exercise_type}</h3>
+                      <p className="text-xs text-[#8E8E93] mt-0.5">
+                        {ex.duration_minutes} min {ex.distance_km ? `· ${ex.distance_km} km` : ''} ·{' '}
+                        <span className="capitalize">{ex.intensity || 'moderate'} intensity</span>
+                      </p>
+                      {ex.ai_analysis?.ai_tip && (
+                        <p className="text-[11px] text-[#A1A1A6] mt-1 italic">
+                          Nuvia: {ex.ai_analysis.ai_tip}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <div className="text-right shrink-0">
+                        <span className="text-sm font-semibold text-white">~{ex.calories_burned}</span>
+                        <span className="text-xs text-[#8E8E93] ml-1">kcal</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteExercise(ex.id)}
+                        className="p-1.5 text-[#8E8E93] hover:text-[#FF453A] transition-colors"
+                        title="Delete exercise entry"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

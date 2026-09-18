@@ -3,12 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
-import { DataService } from '@/lib/data-service';
+import { DataService, getLocalDateString } from '@/lib/data-service';
 import { DailySummary, Meal, ExerciseLog } from '@/types/database';
 
 export function DailySummaryView({ refreshKey }: { refreshKey?: number } = {}) {
   const { user, goals } = useAuth();
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState(() => getLocalDateString());
   const [summary, setSummary] = useState<DailySummary | null>(null);
   const [meals, setMeals] = useState<Meal[]>([]);
   const [exercises, setExercises] = useState<ExerciseLog[]>([]);
@@ -26,9 +26,10 @@ export function DailySummaryView({ refreshKey }: { refreshKey?: number } = {}) {
   }, [user, selectedDate, refreshKey]);
 
   const changeDateBy = (days: number) => {
-    const current = new Date(selectedDate);
+    const [y, m, d] = selectedDate.split('-').map(Number);
+    const current = new Date(y, m - 1, d);
     current.setDate(current.getDate() + days);
-    setSelectedDate(current.toISOString().split('T')[0]);
+    setSelectedDate(getLocalDateString(current));
   };
 
   const calorieTarget = goals?.calorie_target || 2200;

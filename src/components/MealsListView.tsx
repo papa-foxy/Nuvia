@@ -91,34 +91,47 @@ export function MealsListView({ onOpenAddMeal, refreshKey }: MealsListViewProps)
                 key={meal.id}
                 className="p-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors group"
               >
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-medium text-[#8E8E93] uppercase">
-                      {meal.meal_type}
-                    </span>
-                    <span className="text-[10px] text-[#636366]">
-                      {new Date(meal.meal_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                  </div>
-                  <h3 className="text-sm font-semibold text-white mt-0.5">{meal.description}</h3>
-                  <p className="text-xs text-[#8E8E93] mt-0.5">
-                    {meal.protein_g}g protein · {meal.carbs_g}g carbs · {meal.fat_g}g fat
-                  </p>
-                </div>
+                {(() => {
+                  const mealDate = new Date(meal.meal_time);
+                  const isToday = mealDate.toDateString() === new Date().toDateString();
+                  const timeLabel = isToday
+                    ? mealDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    : `${mealDate.toLocaleDateString([], { month: 'short', day: 'numeric' })}, ${mealDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
 
-                <div className="flex items-center gap-3">
-                  <div className="text-right">
-                    <span className="text-sm font-semibold text-white">{meal.calories}</span>
-                    <span className="text-xs text-[#8E8E93] ml-1">kcal</span>
-                  </div>
-                  <button
-                    onClick={() => handleDelete(meal.id)}
-                    className="p-1 text-[#636366] hover:text-[#FF453A] opacity-0 group-hover:opacity-100 transition-opacity"
-                    title="Delete"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
+                  return (
+                    <>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-medium text-[#8E8E93] uppercase">
+                            {meal.meal_type}
+                          </span>
+                          <span className="text-[10px] text-[#636366]">
+                            {timeLabel}
+                          </span>
+                        </div>
+                        <h3 className="text-sm font-semibold text-white mt-0.5">{meal.description}</h3>
+                        <p className="text-xs text-[#8E8E93] mt-0.5">
+                          {meal.protein_g}g protein · {meal.carbs_g}g carbs · {meal.fat_g}g fat
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <div className="text-right">
+                          <span className="text-sm font-semibold text-white">{meal.calories}</span>
+                          <span className="text-xs text-[#8E8E93] ml-1">kcal</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(meal.id)}
+                          className="p-1.5 text-[#8E8E93] hover:text-[#FF453A] transition-colors"
+                          title="Delete meal"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             ))}
           </div>

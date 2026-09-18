@@ -275,6 +275,36 @@ create policy "recommendations_insert_own" on ai_recommendations
 create policy "recommendations_delete_own" on ai_recommendations
   for delete using (auth.uid() = user_id);
 
+-- ---------------------------------------------------------------------
+-- WORKOUT ROUTINES (optional custom user workout splits)
+-- ---------------------------------------------------------------------
+create table if not exists workout_routines (
+  id text primary key,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  title text not null,
+  days text[],
+  focus text,
+  description text,
+  exercises jsonb not null default '[]'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table workout_routines enable row level security;
+
+create policy "routines_select_own" on workout_routines
+  for select using (auth.uid() = user_id);
+
+create policy "routines_insert_own" on workout_routines
+  for insert with check (auth.uid() = user_id);
+
+create policy "routines_update_own" on workout_routines
+  for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create policy "routines_delete_own" on workout_routines
+  for delete using (auth.uid() = user_id);
+
+
 -- =====================================================================
 -- IMPORTANT REMINDERS
 -- =====================================================================

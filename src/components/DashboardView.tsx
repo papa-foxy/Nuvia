@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronRight, ArrowUpRight, Sparkles, Send, Dumbbell, Flame, CheckCircle2, Activity, Camera } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
-import { DataService } from '@/lib/data-service';
+import { DataService, getLocalDateString } from '@/lib/data-service';
 import { DailySummary, Meal, ExerciseLog } from '@/types/database';
 import { WorkoutRoutine } from '@/types/routine';
 import { TabType } from './Navigation';
@@ -39,7 +39,7 @@ export function DashboardView({
   }).toUpperCase();
 
   const todayDayName = today.toLocaleDateString('en-US', { weekday: 'long' });
-  const todayStr = today.toISOString().split('T')[0];
+  const todayStr = getLocalDateString(today);
 
   useEffect(() => {
     async function loadDashboardData() {

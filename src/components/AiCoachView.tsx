@@ -18,6 +18,23 @@ export function AiCoachView() {
 
   useEffect(() => {
     async function loadInsights() {
+      // Load any existing stored recommendations first for instant display
+      try {
+        const storedRecs = await DataService.getRecommendations(user?.id);
+        if (storedRecs && storedRecs.length > 0 && storedRecs[0].recommendation) {
+          try {
+            const parsed = JSON.parse(storedRecs[0].recommendation);
+            if (parsed.headline && Array.isArray(parsed.priorities)) {
+              setAdvice(parsed);
+            }
+          } catch {
+            // Recommendation was raw text
+          }
+        }
+      } catch {
+        // Continue
+      }
+
       setLoadingAdvice(true);
       const summary = await DataService.getDailySummary(user?.id);
       const meals = await DataService.getMeals(user?.id);
@@ -31,6 +48,14 @@ export function AiCoachView() {
         });
         if (res.advice) {
           setAdvice(res.advice);
+          if (user?.id) {
+            await DataService.addRecommendation({
+              user_id: user.id,
+              date: new Date().toISOString().split('T')[0],
+              recommendation: JSON.stringify(res.advice),
+              priority: 1,
+            });
+          }
         }
       } catch {
         // Fallback handled gracefully

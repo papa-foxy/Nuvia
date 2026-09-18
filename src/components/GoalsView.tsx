@@ -20,18 +20,21 @@ export function GoalsView() {
 
   const handleSaveGoals = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!goals) return;
     setSaving(true);
 
     const updated = {
-      ...goals,
+      ...(goals || {}),
+      id: goals?.id || `goal-${Date.now()}`,
+      user_id: user?.id || goals?.user_id || DataService.getDemoUserId(),
       calorie_target: Number(calorieTarget) || 2200,
       protein_target: Number(proteinTarget) || 150,
+      carbohydrate_target: Number(goals?.carbohydrate_target) || 250,
+      fat_target: Number(goals?.fat_target) || 70,
       target_weight_kg: Number(targetWeight) || 68,
       exercise_minutes_target: Number(exerciseMinutes) || 45,
     };
 
-    await DataService.saveGoals(updated);
+    await DataService.saveGoals(updated as any);
     await refreshProfileAndGoals();
     setSaving(false);
     setShowEditModal(false);
