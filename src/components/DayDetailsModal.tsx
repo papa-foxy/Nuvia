@@ -417,9 +417,6 @@ export function DayDetailsModal({
                             <span className="text-xs font-bold text-white block">
                               {m.calories} <span className="text-[9px] text-zinc-400 font-normal">kcal</span>
                             </span>
-                            <span className="text-[10px] text-zinc-400 font-medium block">
-                              {m.protein_g}g protein
-                            </span>
                           </div>
                           {isExpanded ? (
                             <ChevronUp className="w-3.5 h-3.5 text-zinc-400" />

@@ -170,10 +170,6 @@ export function MealsListView({ onOpenAddMeal, refreshKey }: MealsListViewProps)
                     >
                       {meal.description || 'Logged Meal'}
                     </h3>
-
-                    <p className="text-xs text-[#8E8E93] mt-0.5 truncate">
-                      {meal.protein_g || 0}g protein · {meal.carbs_g || 0}g carbs · {meal.fat_g || 0}g fat
-                    </p>
                   </div>
 
                   {/* Right Calories & Arrow */}
