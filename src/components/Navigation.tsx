@@ -153,28 +153,12 @@ export function BottomNav({
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-1.5">
-                    <p className="text-sm font-bold text-white">Take Food Picture</p>
-                    <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded bg-[#30D158] text-black">
+                    <p className="text-sm font-bold text-white">Log Meal</p>
+                    <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-[#30D158] text-black">
                       AI Camera
                     </span>
                   </div>
-                  <p className="text-xs text-[#8E8E93]">Direct phone capture & instant calorie count</p>
-                </div>
-              </button>
-
-              <button
-                onClick={() => {
-                  setShowLogSheet(false);
-                  onOpenAddMeal?.();
-                }}
-                className="w-full p-3.5 rounded-2xl bg-[#2C2C2E] hover:bg-[#3A3A3C] text-left transition-colors flex items-center gap-3.5 group"
-              >
-                <div className="w-10 h-10 rounded-xl bg-[#30D158]/15 text-[#30D158] flex items-center justify-center shrink-0">
-                  <Utensils className="w-5 h-5" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-white">Log Meal</p>
-                  <p className="text-xs text-[#8E8E93]">Photo capture or text description</p>
+                  <p className="text-xs text-[#8E8E93]">Photo capture & instant calorie calculation</p>
                 </div>
               </button>
 
