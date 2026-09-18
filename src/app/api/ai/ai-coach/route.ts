@@ -1,5 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+const GEMINI_MODELS = [
+  'gemini-3.5-flash',
+  'gemini-3-flash-preview',
+  'gemini-3.7-flash',
+  'gemini-3.5-flash-lite',
+];
+
+function cleanJsonString(raw: string): string {
+  let cleaned = raw.trim();
+  if (cleaned.startsWith('```json')) {
+    cleaned = cleaned.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+  } else if (cleaned.startsWith('```')) {
+    cleaned = cleaned.replace(/^```\s*/, '').replace(/\s*```$/, '');
+  }
+  return cleaned.trim();
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { todaySummary, goals, profile, recentMeals, recentExercises, chatMessage } = await req.json();
@@ -26,40 +43,47 @@ ${exerciseContext}
 - Recent meals: ${(recentMeals || []).map((m: any) => `${m.meal_type}: ${m.description}`).join('; ')}
 `;
 
-
       if (chatMessage) {
-        const systemPrompt = `You are Nuvia's intelligent AI Coach.
+        const systemPrompt = `You are Nuvia's intelligent AI Coach, specialized in fitness, practical macro tracking, and Malaysian/Southeast Asian lifestyles (e.g. eating out at mamak stalls, hawker centers, Ayam Gepuk, Nasi Kandar, ordering 'kurang manis' or 'kosong' drinks, finding high-protein options locally).
 Respond warmly, concisely, and practically to the user's question using their actual logged context.
 Do not write long essays; answer in 2-3 focused sentences with specific meal/action suggestions fitting their remaining macros.`;
 
-        const res = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [
-                {
-                  parts: [
-                    { text: systemPrompt },
-                    { text: userContext },
-                    { text: `User message: "${chatMessage}"` },
+        for (const model of GEMINI_MODELS) {
+          try {
+            const res = await fetch(
+              `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  contents: [
+                    {
+                      parts: [
+                        { text: systemPrompt },
+                        { text: userContext },
+                        { text: `User message: "${chatMessage}"` },
+                      ],
+                    },
                   ],
-                },
-              ],
-              generationConfig: { temperature: 0.5 },
-            }),
-          }
-        );
+                  generationConfig: { temperature: 0.5 },
+                }),
+              }
+            );
 
-        if (res.ok) {
-          const data = await res.json();
-          const reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
-          return NextResponse.json({ success: true, mode: 'chat', reply });
+            if (res.ok) {
+              const data = await res.json();
+              const reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
+              if (reply) {
+                return NextResponse.json({ success: true, mode: 'chat', reply });
+              }
+            }
+          } catch (modelErr) {
+            console.warn(`AI Coach chat model ${model} error:`, modelErr);
+          }
         }
       } else {
         const systemPrompt = `You are Nuvia's AI Fitness & Nutrition Coach.
-Analyze the user's progress today against their goals.
+Analyze the user's progress today against their goals, keeping in mind Malaysian lifestyle & food options.
 Generate prioritized, highly actionable guidance in strictly valid JSON format:
 {
   "headline": "Here's your daily summary and advice for better results:",
@@ -72,26 +96,34 @@ Generate prioritized, highly actionable guidance in strictly valid JSON format:
   ]
 }`;
 
-        const res = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: systemPrompt }, { text: userContext }] }],
-              generationConfig: {
-                responseMimeType: 'application/json',
-                temperature: 0.3,
-              },
-            }),
-          }
-        );
+        for (const model of GEMINI_MODELS) {
+          try {
+            const res = await fetch(
+              `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  contents: [{ parts: [{ text: systemPrompt }, { text: userContext }] }],
+                  generationConfig: {
+                    responseMimeType: 'application/json',
+                    temperature: 0.3,
+                  },
+                }),
+              }
+            );
 
-        if (res.ok) {
-          const data = await res.json();
-          const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-          const parsed = JSON.parse(text);
-          return NextResponse.json({ success: true, mode: 'priorities', data: parsed });
+            if (res.ok) {
+              const data = await res.json();
+              const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+              if (text) {
+                const parsed = JSON.parse(cleanJsonString(text));
+                return NextResponse.json({ success: true, mode: 'priorities', data: parsed });
+              }
+            }
+          } catch (modelErr) {
+            console.warn(`AI Coach priorities model ${model} error:`, modelErr);
+          }
         }
       }
     }

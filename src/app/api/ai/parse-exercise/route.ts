@@ -26,33 +26,45 @@ Return strictly valid JSON matching this schema:
   "ai_tip": "One concise encouraging tip"
 }`;
 
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [
-              {
-                parts: [
-                  { text: systemPrompt },
-                  { text: promptText },
+      const models = ['gemini-3.5-flash', 'gemini-3-flash-preview', 'gemini-3.7-flash', 'gemini-3.5-flash-lite'];
+      for (const model of models) {
+        try {
+          const res = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [
+                  {
+                    parts: [
+                      { text: systemPrompt },
+                      { text: promptText },
+                    ],
+                  },
                 ],
-              },
-            ],
-            generationConfig: {
-              responseMimeType: 'application/json',
-              temperature: 0.2,
-            },
-          }),
-        }
-      );
+                generationConfig: {
+                  responseMimeType: 'application/json',
+                  temperature: 0.2,
+                },
+              }),
+            }
+          );
 
-      if (res.ok) {
-        const data = await res.json();
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        const parsed = JSON.parse(text);
-        return NextResponse.json({ success: true, data: parsed });
+          if (res.ok) {
+            const data = await res.json();
+            const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (text) {
+              let cleaned = text.trim();
+              if (cleaned.startsWith('```json')) cleaned = cleaned.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+              else if (cleaned.startsWith('```')) cleaned = cleaned.replace(/^```\s*/, '').replace(/\s*```$/, '');
+              const parsed = JSON.parse(cleaned);
+              return NextResponse.json({ success: true, data: parsed });
+            }
+          }
+        } catch (mErr) {
+          console.warn(`Exercise parse model ${model} error:`, mErr);
+        }
       }
     }
 

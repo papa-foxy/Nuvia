@@ -510,10 +510,12 @@ export function AddMealModal({
 
                 <div className="flex flex-wrap gap-1.5">
                   {[
-                    'Chicken rice with extra chicken',
-                    '2 eggs and wholemeal toast',
+                    'Ayam gepuk with rice & sambal',
+                    'Nasi lemak ayam goreng berempah',
                     'Roti canai with dhal',
-                    'Grilled salmon with quinoa',
+                    'Hainanese chicken rice',
+                    'Nasi kandar kuah campur',
+                    'Mee goreng mamak with egg',
                   ].map((preset) => (
                     <button
                       key={preset}

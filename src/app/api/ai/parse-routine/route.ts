@@ -69,36 +69,47 @@ Normalize reps to strings like "10-12", "15", "40-60 sec", "20 per side".
 Ensure sets is an integer.
 Include rest_seconds if mentioned (e.g. "Rest 90 seconds" -> 90).`;
 
-        const res = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [
-                {
-                  parts: [
-                    { text: systemPrompt },
-                    { text: `Raw consultation text:\n"""\n${text}\n"""` },
+        const models = ['gemini-3.5-flash', 'gemini-3-flash-preview', 'gemini-3.7-flash', 'gemini-3.5-flash-lite'];
+        for (const model of models) {
+          try {
+            const res = await fetch(
+              `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  contents: [
+                    {
+                      parts: [
+                        { text: systemPrompt },
+                        { text: `Raw consultation text:\n"""\n${text}\n"""` },
+                      ],
+                    },
                   ],
-                },
-              ],
-              generationConfig: {
-                responseMimeType: 'application/json',
-                temperature: 0.1,
-              },
-            }),
-          }
-        );
+                  generationConfig: {
+                    responseMimeType: 'application/json',
+                    temperature: 0.1,
+                  },
+                }),
+              }
+            );
 
-        if (res.ok) {
-          const data = await res.json();
-          const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (content) {
-            const parsed = JSON.parse(content);
-            if (Array.isArray(parsed.routines) && parsed.routines.length > 0) {
-              parsedRoutines = parsed.routines;
+            if (res.ok) {
+              const data = await res.json();
+              const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+              if (content) {
+                let cleaned = content.trim();
+                if (cleaned.startsWith('```json')) cleaned = cleaned.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+                else if (cleaned.startsWith('```')) cleaned = cleaned.replace(/^```\s*/, '').replace(/\s*```$/, '');
+                const parsed = JSON.parse(cleaned);
+                if (Array.isArray(parsed.routines) && parsed.routines.length > 0) {
+                  parsedRoutines = parsed.routines;
+                  break;
+                }
+              }
             }
+          } catch (mErr) {
+            console.warn(`Gemini routine parsing model ${model} error:`, mErr);
           }
         }
       } catch (geminiErr) {
