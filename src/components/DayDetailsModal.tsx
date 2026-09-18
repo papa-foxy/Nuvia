@@ -13,10 +13,13 @@ import {
   Plus,
   Sparkles,
   Calendar,
+  Moon,
+  Droplets,
 } from 'lucide-react';
 import { Meal, ExerciseLog, DailySummary } from '@/types/database';
 import { WorkoutRoutine } from '@/types/routine';
 import { BodyMuscleMap } from './BodyMuscleMap';
+import { ExerciseThumbnail } from './ExerciseThumbnail';
 
 interface DayDetailsModalProps {
   isOpen: boolean;
@@ -152,6 +155,7 @@ export function DayDetailsModal({
 
   if (!isOpen) return null;
 
+  // Format date display
   const [y, m, d] = dateStr.split('-').map(Number);
   const dateObj = new Date(y, m - 1, d);
   const formattedDate = dateObj.toLocaleDateString('en-US', {
@@ -162,67 +166,69 @@ export function DayDetailsModal({
   });
 
   const hasExercises = exercises.length > 0;
+  const exerciseNames = exercises.map((e) => (e as any).exercise_name || e.exercise_type || e.description || 'Exercise');
 
-  // Extract worked muscles from logged exercises
-  const exercisedMuscles = exercises.flatMap((ex) => {
-    const desc = `${ex.exercise_type} ${ex.description || ''}`.toLowerCase();
-    const list: string[] = [];
-    if (desc.includes('push') || desc.includes('chest') || desc.includes('bench')) list.push('chest');
-    if (desc.includes('shoulder') || desc.includes('press') || desc.includes('lateral')) list.push('shoulders');
-    if (desc.includes('abs') || desc.includes('crunch') || desc.includes('plank') || desc.includes('twist') || desc.includes('knee raise') || desc.includes('core')) list.push('abs');
-    if (desc.includes('bicep') || desc.includes('curl')) list.push('biceps');
-    if (desc.includes('tricep')) list.push('triceps');
-    if (desc.includes('back') || desc.includes('row') || desc.includes('pull')) list.push('back');
-    if (desc.includes('leg') || desc.includes('squat') || desc.includes('lunge')) list.push('quads');
-    return list;
-  });
+  let targetMuscles = Array.from(
+    new Set(
+      exercises
+        .map((e) => (e as any).target_muscle || (e as any).muscle_group)
+        .filter(Boolean)
+    )
+  );
 
-  let targetMuscles: string[] = [];
-  if (hasExercises) {
-    targetMuscles = Array.from(new Set(exercisedMuscles));
-    if (targetMuscles.length === 0) {
-      targetMuscles = ['chest', 'abs', 'shoulders']; // Default pump
-    }
-  } else if (routine) {
-    const focus = (routine.focus || '').toLowerCase();
-    if (focus.includes('upper')) {
-      targetMuscles = ['chest', 'shoulders', 'triceps', 'biceps', 'back'];
-    } else if (focus.includes('abs') || focus.includes('core')) {
-      targetMuscles = ['abs'];
-    } else if (focus.includes('leg')) {
-      targetMuscles = ['quads', 'hamstrings', 'calves'];
+  if (targetMuscles.length === 0) {
+    if (hasExercises) {
+      const exercisedMuscles = exercises.flatMap((ex) => {
+        const desc = `${ex.exercise_type} ${ex.description || ''}`.toLowerCase();
+        const list: string[] = [];
+        if (desc.includes('push') || desc.includes('chest') || desc.includes('bench')) list.push('chest');
+        if (desc.includes('shoulder') || desc.includes('press') || desc.includes('lateral')) list.push('shoulders');
+        if (desc.includes('abs') || desc.includes('crunch') || desc.includes('plank') || desc.includes('twist') || desc.includes('knee raise') || desc.includes('core')) list.push('abs');
+        if (desc.includes('bicep') || desc.includes('curl')) list.push('biceps');
+        if (desc.includes('tricep')) list.push('triceps');
+        if (desc.includes('back') || desc.includes('row') || desc.includes('pull')) list.push('back');
+        if (desc.includes('leg') || desc.includes('squat') || desc.includes('lunge')) list.push('quads');
+        return list;
+      });
+      targetMuscles = Array.from(new Set(exercisedMuscles));
+      if (targetMuscles.length === 0) {
+        targetMuscles = ['chest', 'abs', 'shoulders'];
+      }
+    } else if (routine) {
+      const focus = (routine.focus || '').toLowerCase();
+      if (focus.includes('upper')) {
+        targetMuscles = ['chest', 'shoulders', 'triceps', 'biceps', 'back'];
+      } else if (focus.includes('abs') || focus.includes('core')) {
+        targetMuscles = ['abs'];
+      } else if (focus.includes('leg')) {
+        targetMuscles = ['quads', 'hamstrings', 'calves'];
+      }
     }
   }
 
-  const exerciseNames = exercises.map((e) => e.exercise_type || e.description || 'Exercise');
-
   return (
-    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/80 backdrop-blur-md transition-opacity"
-        style={{
-          opacity: isClosing || isEntering ? 0 : Math.max(0.1, 1 - dragY / 300),
-          transitionDuration: isDragging ? '0ms' : isEntering ? '320ms' : '220ms',
-        }}
         onClick={triggerClose}
+        className={`fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-200 cursor-pointer ${
+          isClosing ? 'opacity-0' : 'opacity-100'
+        }`}
       />
 
-      {/* Modal Sheet */}
+      {/* Modal Container */}
       <div
         style={{
-          transform: isClosing || isEntering
+          transform: isClosing
+            ? 'translateY(100%)'
+            : isEntering
             ? 'translateY(100%)'
             : `translateY(${dragY}px)`,
-          transition: isDragging
-            ? 'none'
-            : isEntering
-            ? 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)'
-            : 'transform 0.24s cubic-bezier(0.2, 0.9, 0.3, 1)',
+          transition: isDragging ? 'none' : 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
-        className="relative w-full max-w-md bg-[#161618] border border-white/10 rounded-t-[28px] sm:rounded-[28px] max-h-[92vh] flex flex-col overflow-hidden shadow-2xl z-10 select-none sm:select-auto will-change-transform"
+        className="relative z-10 w-full max-w-md bg-[#1C1C1E] border-t sm:border border-white/10 rounded-t-3xl sm:rounded-3xl max-h-[90vh] sm:max-h-[85vh] flex flex-col shadow-2xl overflow-hidden will-change-transform"
       >
-        {/* Grab Handle */}
+        {/* iOS Drag Handle */}
         <div
           onTouchStart={(e) => handleTouchStart(e, true)}
           onTouchMove={(e) => handleTouchMove(e, true)}
@@ -337,6 +343,91 @@ export function DayDetailsModal({
               </div>
             </div>
           </div>
+
+          {/* SCHEDULED ROUTINE MOVEMENTS (If day has routine prescribed & not completed yet) */}
+          {routine && !hasExercises && (
+            <div className="ios-card p-4 space-y-3 border border-[#30D158]/25 bg-gradient-to-br from-[#30D158]/10 via-[#1C1C1E] to-[#121214]">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-[#30D158]/20 text-[#30D158] flex items-center justify-center">
+                    <Dumbbell className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-white">{routine.title}</h4>
+                    <p className="text-[11px] text-[#30D158]">
+                      {routine.focus || 'Training'} · {routine.exercises.length} movements
+                    </p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#30D158] text-black">
+                  Scheduled
+                </span>
+              </div>
+
+              <p className="text-xs text-zinc-300 leading-relaxed">
+                <strong className="text-white">Guideline:</strong> This day is programmed for strength training. Complete your movements with controlled tempo and rest 60–90 seconds between sets.
+              </p>
+
+              {/* Exercises List */}
+              <div className="space-y-1.5 pt-1">
+                {routine.exercises.map((ex, idx) => (
+                  <div
+                    key={ex.id || idx}
+                    className="flex items-center justify-between p-2 rounded-xl bg-black/40 border border-white/5 text-xs"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-lg overflow-hidden bg-black/60 shrink-0 border border-white/10">
+                        <ExerciseThumbnail exercise={ex} aspectRatio="1/1" className="w-full h-full" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-white truncate text-xs">{ex.name}</p>
+                        <p className="text-[10px] text-[#8E8E93] truncate">{ex.target_muscle}</p>
+                      </div>
+                    </div>
+                    <span className="text-xs font-mono font-bold text-[#30D158] shrink-0 ml-2">
+                      {ex.sets} × {ex.reps}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* REST DAY GUIDELINE (If no workout routine scheduled & no workout logged) */}
+          {!routine && !hasExercises && (
+            <div className="ios-card p-4 space-y-2.5 border border-[#0A84FF]/25 bg-gradient-to-br from-[#0A84FF]/10 via-[#1C1C1E] to-[#121214]">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-[#0A84FF]">
+                  <Heart className="w-4 h-4" />
+                  <span className="text-xs font-bold uppercase tracking-wider">Rest & Recovery Guideline</span>
+                </div>
+                <span className="text-[10px] font-semibold text-sky-400 px-2 py-0.5 rounded-full bg-[#0A84FF]/15 border border-[#0A84FF]/20">
+                  Active Recovery
+                </span>
+              </div>
+              <p className="text-xs text-zinc-300 leading-relaxed">
+                No workout routine is scheduled for this day. Muscles rebuild and strengthen during recovery. Prioritize hydration, adequate protein intake, light walking, and 7–8 hours of restorative sleep.
+              </p>
+              <div className="grid grid-cols-2 gap-2 pt-1 text-[11px] text-zinc-300">
+                <div className="p-2 rounded-xl bg-black/30 border border-white/5 flex items-center gap-2">
+                  <Droplets className="w-3.5 h-3.5 text-[#0A84FF] shrink-0" />
+                  <span>2.5L+ Hydration</span>
+                </div>
+                <div className="p-2 rounded-xl bg-black/30 border border-white/5 flex items-center gap-2">
+                  <Flame className="w-3.5 h-3.5 text-[#FF9500] shrink-0" />
+                  <span>Protein synthesis</span>
+                </div>
+                <div className="p-2 rounded-xl bg-black/30 border border-white/5 flex items-center gap-2">
+                  <Heart className="w-3.5 h-3.5 text-pink-400 shrink-0" />
+                  <span>Light 15m walk</span>
+                </div>
+                <div className="p-2 rounded-xl bg-black/30 border border-white/5 flex items-center gap-2">
+                  <Moon className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                  <span>7–8h Deep sleep</span>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* MUSCLE ACTIVATION PUMP HEATMAP */}
           <BodyMuscleMap
