@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { DataService, getLocalDateString } from '@/lib/data-service';
 import { DailySummary, Meal, ExerciseLog } from '@/types/database';
 import { MacroDonutChart } from './MacroDonutChart';
+import { DateFilterBar } from './DateFilterBar';
 import {
   NuviaCache,
   todaySummaryKey,
@@ -111,21 +111,11 @@ export function DailySummaryView({ refreshKey }: { refreshKey?: number } = {}) {
           </h1>
         </div>
 
-        <div className="flex items-center gap-2 bg-[#1C1C1E] px-2.5 py-1.5 rounded-full border border-white/[0.08]">
-          <button
-            onClick={() => changeDateBy(-1)}
-            className="p-1 text-[#8E8E93] hover:text-white"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <span className="text-xs font-semibold text-white">{dateLabel}</span>
-          <button
-            onClick={() => changeDateBy(1)}
-            className="p-1 text-[#8E8E93] hover:text-white"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
+        {/* Date Filter Bar with Calendar Selection */}
+        <DateFilterBar
+          selectedDate={selectedDate}
+          onDateChange={setSelectedDate}
+        />
       </div>
 
       {/* Primary Metrics (Calories Intake & Burned) */}

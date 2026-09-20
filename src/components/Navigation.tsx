@@ -20,7 +20,9 @@ export function TopBar({
   activeTab: TabType;
   setActiveTab: (tab: TabType) => void;
 }) {
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
+  const avatarUrl = profile?.avatar_url || user?.avatar_url;
+  const displayName = profile?.name || user?.full_name || 'U';
 
   return (
     <header className="sticky top-0 z-40 w-full ios-blur border-b border-white/[0.08] px-5 py-3 flex items-center justify-between">
@@ -47,10 +49,21 @@ export function TopBar({
 
         <button
           onClick={() => setActiveTab('profile')}
-          className="w-7 h-7 rounded-full bg-[#1C1C1E] border border-white/[0.12] flex items-center justify-center text-xs font-semibold text-white hover:border-white/30 transition-all overflow-hidden"
+          className="w-8 h-8 rounded-full bg-[#1C1C1E] border border-white/[0.15] flex items-center justify-center text-xs font-semibold text-white hover:border-[#30D158]/50 transition-all overflow-hidden shadow-sm"
           title="Profile"
         >
-          {profile?.name ? profile.name.charAt(0).toUpperCase() : <User className="w-3.5 h-3.5 text-[#8E8E93]" />}
+          {avatarUrl ? (
+            <img
+              src={avatarUrl}
+              alt={displayName}
+              referrerPolicy="no-referrer"
+              className="w-full h-full object-cover"
+            />
+          ) : displayName ? (
+            displayName.charAt(0).toUpperCase()
+          ) : (
+            <User className="w-3.5 h-3.5 text-[#8E8E93]" />
+          )}
         </button>
       </div>
     </header>
@@ -63,64 +76,83 @@ export function BottomNav({
   onOpenAddMeal,
   onOpenAddExercise,
 }: NavigationProps) {
+  const { user, profile } = useAuth();
+  const avatarUrl = profile?.avatar_url || user?.avatar_url;
   const [showLogSheet, setShowLogSheet] = useState(false);
 
   return (
     <>
-      <nav className="fixed bottom-0 left-0 right-0 z-30 w-full ios-blur border-t border-white/[0.08] px-4 pt-2 flex items-center justify-between shrink-0" style={{ paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }}>
+      <nav
+        className="fixed md:absolute bottom-0 left-0 right-0 z-40 w-full bg-black border-t border-white/[0.08] px-4 pt-1.5 pb-1 flex items-center justify-between"
+      >
         {/* Destination 1: Today */}
         <button
           onClick={() => setActiveTab('home')}
-          className={`flex flex-col items-center gap-0.5 py-1 px-3 transition-colors ${
-            activeTab === 'home' ? 'text-[#30D158]' : 'text-[#8E8E93] hover:text-white'
+          className={`flex flex-col items-center gap-0.5 py-0.5 px-2.5 transition-colors ${
+            activeTab === 'home' ? 'text-white' : 'text-[#8E8E93] hover:text-white'
           }`}
         >
           <Calendar className="w-5 h-5" />
-          <span className="text-[10px] font-medium tracking-tight">Today</span>
+          <span className="text-[10px] font-semibold tracking-tight">Today</span>
         </button>
 
         {/* Destination 2: Meals */}
         <button
           onClick={() => setActiveTab('meals')}
-          className={`flex flex-col items-center gap-0.5 py-1 px-3 transition-colors ${
-            activeTab === 'meals' ? 'text-[#30D158]' : 'text-[#8E8E93] hover:text-white'
+          className={`flex flex-col items-center gap-0.5 py-0.5 px-2.5 transition-colors ${
+            activeTab === 'meals' ? 'text-white' : 'text-[#8E8E93] hover:text-white'
           }`}
         >
           <Utensils className="w-5 h-5" />
-          <span className="text-[10px] font-medium tracking-tight">Meals</span>
+          <span className="text-[10px] font-semibold tracking-tight">Meals</span>
         </button>
 
-        {/* Action Center: (+) Visually Dominant */}
+        {/* Action Center: (+) Larger with Crisp Border, No Glow */}
         <div className="relative -top-2">
           <button
             onClick={() => setShowLogSheet(true)}
-            className="w-12 h-12 rounded-full bg-[#30D158] text-black flex items-center justify-center shadow-lg active:scale-95 transition-transform"
+            className="w-14 h-14 rounded-full bg-[#30D158] text-black flex items-center justify-center border-2 border-white ring-4 ring-black active:scale-95 transition-all cursor-pointer"
             title="Log Meal or Activity"
           >
-            <Plus className="w-6 h-6 stroke-[2.5]" />
+            <Plus className="w-7 h-7 stroke-[3] text-black" />
           </button>
         </div>
 
         {/* Destination 3: Activity */}
         <button
           onClick={() => setActiveTab('exercise')}
-          className={`flex flex-col items-center gap-0.5 py-1 px-3 transition-colors ${
-            activeTab === 'exercise' ? 'text-[#30D158]' : 'text-[#8E8E93] hover:text-white'
+          className={`flex flex-col items-center gap-0.5 py-0.5 px-2.5 transition-colors ${
+            activeTab === 'exercise' ? 'text-white' : 'text-[#8E8E93] hover:text-white'
           }`}
         >
           <Activity className="w-5 h-5" />
-          <span className="text-[10px] font-medium tracking-tight">Activity</span>
+          <span className="text-[10px] font-semibold tracking-tight">Activity</span>
         </button>
 
         {/* Destination 4: Profile */}
         <button
           onClick={() => setActiveTab('profile')}
-          className={`flex flex-col items-center gap-0.5 py-1 px-3 transition-colors ${
-            activeTab === 'profile' ? 'text-[#30D158]' : 'text-[#8E8E93] hover:text-white'
+          className={`flex flex-col items-center gap-0.5 py-0.5 px-2.5 transition-colors ${
+            activeTab === 'profile' ? 'text-white' : 'text-[#8E8E93] hover:text-white'
           }`}
         >
-          <User className="w-5 h-5" />
-          <span className="text-[10px] font-medium tracking-tight">Profile</span>
+          {avatarUrl ? (
+            <div
+              className={`w-5 h-5 rounded-full overflow-hidden border transition-all ${
+                activeTab === 'profile' ? 'border-white ring-1 ring-white' : 'border-white/20'
+              }`}
+            >
+              <img
+                src={avatarUrl}
+                alt="Profile"
+                referrerPolicy="no-referrer"
+                className="w-full h-full object-cover"
+              />
+            </div>
+          ) : (
+            <User className="w-5 h-5" />
+          )}
+          <span className="text-[10px] font-semibold tracking-tight">Profile</span>
         </button>
       </nav>
 

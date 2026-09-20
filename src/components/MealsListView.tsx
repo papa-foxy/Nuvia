@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Trash2, Utensils, ChevronRight, Camera, Plus } from 'lucide-react';
+import { Trash2, Utensils, ChevronRight, ChevronLeft, Camera, Plus } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { DataService } from '@/lib/data-service';
 import { Meal } from '@/types/database';
 import { MealDetailsModal } from './MealDetailsModal';
+import { DateFilterBar } from './DateFilterBar';
 import { NuviaCache, allMealsKey, todaySummaryKey, todayMealsKey } from '@/lib/nuvia-cache';
 import { getLocalDateString } from '@/lib/data-service';
 
@@ -16,6 +17,7 @@ interface MealsListViewProps {
 
 export function MealsListView({ onOpenAddMeal, refreshKey }: MealsListViewProps) {
   const { user } = useAuth();
+  const [selectedDate, setSelectedDate] = useState(() => getLocalDateString());
   const [meals, setMeals] = useState<Meal[]>([]);
   const [filterType, setFilterType] = useState<string>('all');
   const [isInitialLoading, setIsInitialLoading] = useState(true);
@@ -26,14 +28,19 @@ export function MealsListView({ onOpenAddMeal, refreshKey }: MealsListViewProps)
   const userId = user?.id;
   const todayStr = getLocalDateString();
 
-  const cacheKey = allMealsKey(userId);
+  const changeDateBy = (days: number) => {
+    const [y, m, d] = selectedDate.split('-').map(Number);
+    const current = new Date(y, m - 1, d);
+    current.setDate(current.getDate() + days);
+    setSelectedDate(getLocalDateString(current));
+  };
 
-  const fetchAndCache = async (background = false) => {
-    const data = await DataService.getMeals(userId);
+  const fetchAndCache = async (date: string, background = false) => {
+    const cacheKey = todayMealsKey(userId, date);
+    const data = await DataService.getMeals(userId, date);
     NuviaCache.set(cacheKey, data, { staleTime: 90_000, gcTime: 600_000 });
     setMeals(data);
-    if (!background) setIsInitialLoading(false);
-    else setIsInitialLoading(false);
+    setIsInitialLoading(false);
   };
 
   useEffect(() => {
@@ -41,9 +48,12 @@ export function MealsListView({ onOpenAddMeal, refreshKey }: MealsListViewProps)
       prevRefreshKey.current !== undefined && refreshKey !== prevRefreshKey.current;
     prevRefreshKey.current = refreshKey;
 
+    const cacheKey = todayMealsKey(userId, selectedDate);
+
     if (forcedRefresh) {
       NuviaCache.invalidate(cacheKey);
-      fetchAndCache(false);
+      NuviaCache.invalidate(allMealsKey(userId));
+      fetchAndCache(selectedDate, false);
       return;
     }
 
@@ -51,28 +61,35 @@ export function MealsListView({ onOpenAddMeal, refreshKey }: MealsListViewProps)
     if (cached) {
       setMeals(cached.data);
       setIsInitialLoading(false);
-      if (cached.isStale) fetchAndCache(true);
+      if (cached.isStale) fetchAndCache(selectedDate, true);
     } else {
-      fetchAndCache(false);
+      setIsInitialLoading(true);
+      fetchAndCache(selectedDate, false);
     }
-  }, [userId, refreshKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [userId, selectedDate, refreshKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleDelete = async (mealId: string) => {
     await DataService.deleteMeal(mealId, userId);
     // Invalidate cache so Next visit gets fresh data
-    NuviaCache.invalidate(cacheKey);
-    NuviaCache.invalidate(todayMealsKey(userId, todayStr));
-    NuviaCache.invalidate(todaySummaryKey(userId, todayStr));
-    await fetchAndCache(false);
+    NuviaCache.invalidate(allMealsKey(userId));
+    NuviaCache.invalidate(todayMealsKey(userId, selectedDate));
+    NuviaCache.invalidate(todaySummaryKey(userId, selectedDate));
+    await fetchAndCache(selectedDate, false);
   };
 
   const filtered = filterType === 'all' ? meals : meals.filter((m) => m.meal_type === filterType);
   const totalCals = filtered.reduce((sum, m) => sum + (Number(m.calories) || 0), 0);
 
+  const dateLabel = new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  });
+
   return (
     <div className="flex-1 flex flex-col pb-24 px-5 pt-4 w-full max-w-md mx-auto space-y-6">
-      {/* Title Header */}
-      <div className="flex items-end justify-between pt-2">
+      {/* Title Header with Date Filter */}
+      <div className="flex items-center justify-between pt-2">
         <div>
           <p className="text-[11px] font-semibold tracking-wider text-[#8E8E93] uppercase">
             Nutrition & Diet
@@ -81,13 +98,24 @@ export function MealsListView({ onOpenAddMeal, refreshKey }: MealsListViewProps)
             Meals
           </h1>
         </div>
-        <div className="text-right">
+
+        {/* Date Filter Bar with Calendar Selection */}
+        <DateFilterBar
+          selectedDate={selectedDate}
+          onDateChange={setSelectedDate}
+        />
+      </div>
+
+      {/* Quick Summary Sub-row */}
+      <div className="flex items-center justify-between -mt-2">
+        <span className="text-[11px] text-[#8E8E93]">Daily intake</span>
+        <div className="text-right ml-auto">
           <span className="text-sm font-semibold text-white whitespace-nowrap">
             {totalCals.toLocaleString()} <span className="text-xs text-[#8E8E93] font-normal">kcal</span>
           </span>
-          <p className="text-[10px] text-[#8E8E93]">
-            {filtered.length} {filtered.length === 1 ? 'logged meal' : 'logged meals'}
-          </p>
+          <span className="text-xs text-[#8E8E93] ml-2">
+            ({filtered.length} {filtered.length === 1 ? 'meal' : 'meals'})
+          </span>
         </div>
       </div>
 
@@ -125,8 +153,8 @@ export function MealsListView({ onOpenAddMeal, refreshKey }: MealsListViewProps)
               <p className="text-sm font-semibold text-white">No meals recorded</p>
               <p className="text-xs text-[#8E8E93] mt-1">
                 {filterType === 'all'
-                  ? 'Start by logging your breakfast, lunch, or dinner.'
-                  : `No ${filterType} logged yet.`}
+                  ? `No meals logged for ${dateLabel}.`
+                  : `No ${filterType} logged for ${dateLabel}.`}
               </p>
             </div>
             <button

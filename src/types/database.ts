@@ -22,6 +22,7 @@ export type IntensityLevel = 'low' | 'moderate' | 'high';
 export interface Profile {
   id: string; // references auth.users(id)
   name: string | null;
+  avatar_url?: string | null;
   date_of_birth: string | null;
   sex: 'male' | 'female' | null;
   height_cm: number | null;

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   X,
   Dumbbell,
@@ -57,6 +57,21 @@ export function DayDetailsModal({
 
   // Keep ref synchronized with state for event handlers
   currentDragYRef.current = dragY;
+  // Ref mirror of isDragging to avoid async state lag causing over-scroll jump
+  const isDraggingRef = useRef(false);
+
+
+  // Lock body scroll while modal is open to prevent background page from scrolling
+  React.useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
+  }, [isOpen]);
 
   // Trigger smooth entrance slide-up animation when modal opens
   React.useEffect(() => {
@@ -73,6 +88,7 @@ export function DayDetailsModal({
     }
   }, [isOpen]);
 
+
   const triggerClose = () => {
     setIsClosing(true);
     setIsDragging(false);
@@ -87,19 +103,21 @@ export function DayDetailsModal({
     // Only allow drag-down if content is at top or if initiating from header/handle
     if (!fromHeader && scrollRef.current && scrollRef.current.scrollTop > 5) return;
     startYRef.current = e.touches[0].clientY;
+    isDraggingRef.current = true;
     setIsDragging(true);
   };
 
   const handleTouchMove = (e: React.TouchEvent, fromHeader = false) => {
-    if (!isDragging) return;
+    if (!isDraggingRef.current) return;
     const currentY = e.touches[0].clientY;
     const delta = currentY - startYRef.current;
 
     if (delta > 0) {
       setDragY(delta);
     } else {
-      // If user is swiping up inside scrollable content, cancel sheet drag to allow native scrolling
+      // Swiping up inside scrollable content — cancel sheet drag, let native scroll work
       if (!fromHeader) {
+        isDraggingRef.current = false;
         setIsDragging(false);
         setDragY(0);
       } else {
@@ -109,7 +127,8 @@ export function DayDetailsModal({
   };
 
   const handleTouchEnd = () => {
-    if (!isDragging) return;
+    if (!isDraggingRef.current) return;
+    isDraggingRef.current = false;
     setIsDragging(false);
     if (currentDragYRef.current > 80) {
       triggerClose();
@@ -117,6 +136,7 @@ export function DayDetailsModal({
       setDragY(0);
     }
   };
+
 
   const handleMouseDown = (e: React.MouseEvent) => {
     startYRef.current = e.clientY;
@@ -137,6 +157,7 @@ export function DayDetailsModal({
     };
 
     const onMouseUp = () => {
+      isDraggingRef.current = false;
       setIsDragging(false);
       if (currentDragYRef.current > 80) {
         triggerClose();
@@ -144,6 +165,7 @@ export function DayDetailsModal({
         setDragY(0);
       }
     };
+
 
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
@@ -207,7 +229,7 @@ export function DayDetailsModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 pb-[calc(56px+env(safe-area-inset-bottom,0px))] sm:pb-0">
       {/* Backdrop */}
       <div
         onClick={triggerClose}
@@ -226,7 +248,7 @@ export function DayDetailsModal({
             : `translateY(${dragY}px)`,
           transition: isDragging ? 'none' : 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
-        className="relative z-10 w-full max-w-md bg-[#1C1C1E] border-t sm:border border-white/10 rounded-t-3xl sm:rounded-3xl max-h-[90vh] sm:max-h-[85vh] flex flex-col shadow-2xl overflow-hidden will-change-transform"
+        className="relative z-10 w-full max-w-md bg-[#1C1C1E] border-t sm:border border-white/10 rounded-t-3xl sm:rounded-3xl max-h-[calc(100dvh-56px-env(safe-area-inset-bottom,0px)-0.75rem)] sm:max-h-[85vh] flex flex-col shadow-2xl overflow-hidden will-change-transform"
       >
         {/* iOS Drag Handle */}
         <div
@@ -271,7 +293,7 @@ export function DayDetailsModal({
           onTouchStart={(e) => handleTouchStart(e, false)}
           onTouchMove={(e) => handleTouchMove(e, false)}
           onTouchEnd={handleTouchEnd}
-          className="flex-1 overflow-y-auto px-5 py-4 pb-8 sm:pb-6 space-y-4 overscroll-contain"
+          className="flex-1 overflow-y-auto px-5 py-4 pb-6 sm:pb-8 space-y-4 overscroll-contain"
         >
           {/* Status Banner */}
           <div className="ios-card p-4 space-y-3 border border-white/10 bg-gradient-to-br from-white/[0.05] to-transparent">

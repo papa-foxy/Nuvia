@@ -20,6 +20,7 @@ interface AuthContextType {
   isLoading: boolean;
   isDemo: boolean;
   signInWithEmail: (email: string, pass: string) => Promise<{ error?: string }>;
+  signInWithGoogle: () => Promise<{ error?: string }>;
   signUpWithEmail: (email: string, pass: string, name?: string) => Promise<{ error?: string }>;
   sendOtp: (
     email: string,
@@ -147,6 +148,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  const signInWithGoogle = async () => {
+    if (!isSupabaseConfigured()) {
+      return { error: 'Supabase authentication service is not configured.' };
+    }
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/` : undefined,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        },
+      },
+    });
+    if (error) {
+      return { error: error.message };
+    }
+    return {};
+  };
+
   const signInWithEmail = async (email: string, pass: string) => {
     if (!isSupabaseConfigured()) {
       return { error: 'Supabase authentication service is not configured.' };
@@ -157,7 +179,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error: error.message };
     }
     if (data.user) {
-      setUser({ id: data.user.id, email: data.user.email || email });
+      const avatar =
+        data.user.user_metadata?.avatar_url ||
+        data.user.user_metadata?.picture ||
+        data.user.identities?.[0]?.identity_data?.avatar_url ||
+        data.user.identities?.[0]?.identity_data?.picture ||
+        null;
+      const fullName =
+        data.user.user_metadata?.full_name ||
+        data.user.user_metadata?.name ||
+        null;
+      setUser({
+        id: data.user.id,
+        email: data.user.email || email,
+        avatar_url: avatar,
+        full_name: fullName,
+      });
       const p = await DataService.getProfile(data.user.id);
       const g = await DataService.getGoals(data.user.id);
       setProfile(p);
@@ -286,13 +323,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { success: false, error: 'Failed to retrieve authenticated user session.' };
       }
 
-      setUser({ id: verifiedUser.id, email: verifiedUser.email || email });
+      const avatar =
+        verifiedUser.user_metadata?.avatar_url ||
+        verifiedUser.user_metadata?.picture ||
+        verifiedUser.identities?.[0]?.identity_data?.avatar_url ||
+        verifiedUser.identities?.[0]?.identity_data?.picture ||
+        null;
+      const fullName =
+        verifiedUser.user_metadata?.full_name ||
+        verifiedUser.user_metadata?.name ||
+        name ||
+        null;
+
+      setUser({
+        id: verifiedUser.id,
+        email: verifiedUser.email || email,
+        avatar_url: avatar,
+        full_name: fullName,
+      });
 
       let existingProfile = await DataService.getProfile(verifiedUser.id);
       if (!existingProfile) {
         const newProf: Profile = {
           id: verifiedUser.id,
-          name: name || (verifiedUser.user_metadata?.name as string) || '',
+          name: fullName || '',
+          avatar_url: avatar,
           date_of_birth: null,
           sex: null,
           height_cm: null,
@@ -325,6 +380,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     if (typeof window !== 'undefined') {
       localStorage.removeItem('nuvia_is_demo');
+      // Clean up localStorage routines belonging to logged-in users so next user doesn't see them
+      try {
+        const stored = localStorage.getItem('nuvia_storage');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed.workoutRoutines) {
+            parsed.workoutRoutines = parsed.workoutRoutines.filter(
+              (r: any) => r.user_id === 'demo-user-001' || !r.user_id
+            );
+            localStorage.setItem('nuvia_storage', JSON.stringify(parsed));
+          }
+        }
+      } catch {}
     }
     // Clear all cached data so a new login doesn't see stale user data
     NuviaCache.clear();
@@ -346,6 +414,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isLoading,
         isDemo,
         signInWithEmail,
+        signInWithGoogle,
         signUpWithEmail,
         sendOtp,
         verifyOtp,

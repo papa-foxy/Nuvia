@@ -24,7 +24,10 @@
   }
 
   html {
-    overscroll-behavior-y: auto;
+    overscroll-behavior: none;
+    overflow: hidden;
+    height: 100%;
+    min-height: -webkit-fill-available;
   }
 
   body {
@@ -35,13 +38,16 @@
     -moz-osx-font-smoothing: grayscale;
     -webkit-tap-highlight-color: transparent;
     letter-spacing: -0.015em;
-    overscroll-behavior-y: auto;
-    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: none;
+    overflow: hidden;
+    height: 100%;
+    min-height: -webkit-fill-available;
+    /* Prevent Chrome Android pull-to-refresh */
+    overscroll-behavior-y: none;
   }
 
   main {
-    overscroll-behavior-y: auto;
-    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: none;
   }
 }
 

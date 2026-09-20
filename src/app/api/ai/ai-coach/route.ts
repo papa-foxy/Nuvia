@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { calculateTargets, getUserCalculationContext } from '@/lib/calculator';
 
 const GEMINI_MODELS = [
   'gemini-3.5-flash',
@@ -17,36 +18,129 @@ function cleanJsonString(raw: string): string {
   return cleaned.trim();
 }
 
+function formatFitnessContext(fc: any): string {
+  if (!fc) return '';
+  const p = fc.profile || {};
+  const g = fc.goal || {};
+  const c = fc.constraints || {};
+  const pref = fc.preferences || {};
+  const rec = fc.recovery || {};
+  const sched = fc.weekly_schedule || [];
+  const perf = fc.performance?.recent_exercises || [];
+
+  const schedStr = sched.map((s: any) => `  * ${s.day}: ${s.type.toUpperCase()} ${s.routine_title ? `(${s.routine_title})` : ''} - ${s.description || ''}`).join('\n');
+  const perfStr = perf.length > 0
+    ? perf.map((e: any) => `  * ${e.exercise_name}: Last lifted ${e.top_set_performance || 'bodyweight'} (${e.last_reps} reps). ${e.suggested_next_target || ''}`).join('\n')
+    : '  * No previous detailed performance logs recorded yet';
+
+  return `
+=== AUTHORITATIVE PERSONAL FITNESS CONTEXT ===
+- Biometrics: ${p.sex || 'Not specified'}, ${p.age ? `${p.age} yrs` : ''}, ${p.height_cm ? `${p.height_cm} cm` : ''}, ${p.weight_kg ? `${p.weight_kg} kg` : ''}
+- Training Background & Level: ${p.fitness_level || 'beginner_inconsistent'} (${p.training_background || 'Returning trainee'})
+- Primary Goal & Objective: ${g.primary_goal || 'lose_weight'}
+  * Objective: ${g.objective || 'Body recomposition (fat loss while preserving/building lean muscle)'}
+  * Desired Look: ${g.physique_preference?.desired_look || 'Athletic, lean, and balanced'}
+  * User-Estimated Visual Appearance: ~${g.physique_preference?.user_estimated_bf_percent || 28}% body fat (user estimated, not medical)
+- Training Environment & Available Equipment:
+  * Environment: ${c.environment || 'home'}
+  * Available Equipment: ${(c.available_equipment || ['dumbbells', 'push_up_board', 'bodyweight']).join(', ')}
+  * STRICT EQUIPMENT CONSTRAINT: ONLY prescribe exercises executable with their available equipment. NEVER prescribe barbell bench press, cable crossovers, leg press, or machine lat pulldowns unless explicitly in available equipment.
+- Cardio Habits: ${c.cardio_habits?.type || 'Brisk walking'} (~${c.cardio_habits?.distance_km || 4.5} km on ${(c.cardio_habits?.typical_days || ['Saturday']).join(', ')})
+  * RULE: Do NOT automatically add large amounts of cardio for fat loss; respect their existing weekend walking baseline and prioritize progressive resistance training.
+- Weekly Training Structure:
+${schedStr}
+- Current Day Reality:
+  * Scheduled Today: ${rec.scheduled_today?.has_routine ? `WORKOUT DAY (${rec.scheduled_today?.routine_title})` : 'REST / CARDIO DAY'}
+  * Completed Today: ${rec.scheduled_today?.is_completed ? 'YES (Routine already logged today!)' : 'NO'}
+- Recovery Context:
+  * Muscles trained in last 48h: ${(rec.trained_in_last_48h || []).join(', ') || 'None (fully recovered)'}
+- Personal Preferences & Progression Rules:
+  * Effort Target: ${pref.effort_target || '1-3 RIR (challenging but with 1-3 clean reps in reserve)'}
+  * Progression Rule: ${pref.progression_rule || 'Double progression (10-15 reps; raise weight when all sets reach 15)'}
+  * Muscle Bias: ${(pref.muscle_biases || []).join('; ') || 'None'}
+  * Preferred Exercises: ${(pref.preferred_exercises || []).join(', ')}
+  * Disliked / Avoided Exercises: ${(pref.disliked_exercises || []).join(', ')} (NEVER prescribe these without user asking!)
+  * Custom Starting Estimates: ${JSON.stringify(pref.custom_starting_weights || {})}
+- Recent Performance & Progressive Overload Memory:
+${perfStr}
+
+WORKOUT GENERATION & MODIFICATION RULES:
+1. When asked for a workout or "what should I do today":
+   - Always check what day of the week it is.
+   - If today is a REST DAY: State clearly that today is their scheduled rest/recovery day. Suggest light mobility, stretching, or an easy walk; do NOT prescribe a full lifting session unless they explicitly ask to train anyway.
+   - If today is a WORKOUT DAY: Use their assigned routine (${rec.scheduled_today?.routine_title || 'Assigned Routine'}). If already completed, congratulate them. If not, generate the session with EXACT exercises, sets, rep ranges (e.g. 10-15), and weights derived from their last session or starting estimates.
+   - For every exercise, include a concrete progressive overload target (e.g. "Last time you hit 12 reps with 14kg; aim for 13-15 reps today before bumping to 16kg").
+2. When asked to modify or replace an exercise (e.g. "I can't do Bulgarian split squats"):
+   - Replace it with a movement targeting the same muscle group and movement pattern using their available equipment (${(c.available_equipment || ['dumbbells', 'push_up_board', 'bodyweight']).join(', ')}).
+   - Preserve weekly volume and ensure muscles fatigued in the last 48h are not overloaded.
+3. Keep responses structured, encouraging, concise (under 200 words), and tailored specifically to this user's constraints.
+`;
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const { todaySummary, goals, profile, recentMeals, recentExercises, chatMessage } = await req.json();
+    const { todaySummary, goals, profile, recentMeals, recentExercises, chatMessage, fitnessContext } = await req.json();
     const apiKey = process.env.GEMINI_API_KEY;
 
-    const remainingCals = Math.max(0, (goals?.calorie_target || 2000) - (todaySummary?.calories_consumed || 0));
-    const remainingProtein = Math.max(0, (goals?.protein_target || 140) - (todaySummary?.protein_consumed || 0));
-    const remainingExercise = Math.max(0, (goals?.exercise_minutes_target || 30) - (todaySummary?.exercise_minutes || 0));
+    // Authoritative calculation context
+    const calcCtx = getUserCalculationContext(profile, goals);
+    const authCalc = calculateTargets(calcCtx);
+    const maintenanceCalories = authCalc.tdee;
+    const authoritativeCalorieTarget = goals?.calorie_target || authCalc.calorie_target;
+    const goalAdjustment = authoritativeCalorieTarget - maintenanceCalories;
+
+    // Structured Net Calorie Accounting:
+    const foodCalories = todaySummary?.calories_consumed || 0;
+    const exerciseCalories = todaySummary?.calories_burned || 0;
+    const netCalories = foodCalories - exerciseCalories;
+    const remainingCalories = authoritativeCalorieTarget - netCalories;
+    const isOverTarget = netCalories > authoritativeCalorieTarget;
+    const overCalories = isOverTarget ? netCalories - authoritativeCalorieTarget : 0;
+
+    const structuredCalorieState = {
+      dailyTarget: authoritativeCalorieTarget,
+      foodCalories,
+      exerciseCalories,
+      netCalories,
+      remainingCalories,
+      goalType: profile?.goal || 'lose_weight',
+    };
+
+    const remainingProtein = Math.max(0, (goals?.protein_target || authCalc.protein_target) - (todaySummary?.protein_consumed || 0));
+    const remainingExercise = Math.max(0, (goals?.exercise_minutes_target || authCalc.exercise_minutes_target) - (todaySummary?.exercise_minutes || 0));
 
     const exerciseContext = (recentExercises || []).length > 0
       ? `- Completed exercises today: ${(recentExercises as string[]).join(', ')}`
       : '- No exercises logged yet today';
 
+    const fitnessContextBlock = formatFitnessContext(fitnessContext);
+
     if (apiKey) {
       const userContext = `
 USER CONTEXT:
-- Name: ${profile?.name || 'User'}
-- Goal: ${profile?.goal || 'Healthy lifestyle'}
+- Name: ${profile?.name || profile?.full_name || 'User'}
+- Goal: ${profile?.goal || 'lose_weight'}
+- Estimated Maintenance (TDEE): ${maintenanceCalories} kcal/day
+- Daily Calorie Target: ${authoritativeCalorieTarget} kcal/day (Goal Adjustment: ${goalAdjustment >= 0 ? `+${goalAdjustment}` : goalAdjustment} kcal/day vs maintenance)
+- Structured Net Calorie State: ${JSON.stringify(structuredCalorieState, null, 2)}
+- Calorie Accounting Today:
+  * Food consumed (eaten): ${foodCalories} kcal
+  * Activity burned: ${exerciseCalories} kcal
+  * Net calories: ${netCalories} kcal (${foodCalories} eaten - ${exerciseCalories} burned)
+  * Budget status: ${isOverTarget ? `${overCalories} kcal above target` : `${remainingCalories} kcal remaining in net budget`}
+- Protein Goal: ${goals?.protein_target || authCalc.protein_target} g (Consumed: ${todaySummary?.protein_consumed || 0} g, Remaining: ${remainingProtein} g)
+- Exercise: ${todaySummary?.exercise_minutes || 0} min / Target ${goals?.exercise_minutes_target || authCalc.exercise_minutes_target} min (Burned: ${exerciseCalories} kcal)
 - Dietary Preference: ${profile?.dietary_preference || 'None'}
-- Calorie Goal: ${goals?.calorie_target || 2000} kcal (Consumed: ${todaySummary?.calories_consumed || 0} kcal, Remaining: ${remainingCals} kcal)
-- Protein Goal: ${goals?.protein_target || 140} g (Consumed: ${todaySummary?.protein_consumed || 0} g, Remaining: ${remainingProtein} g)
-- Exercise: ${todaySummary?.exercise_minutes || 0} min / Target ${goals?.exercise_minutes_target || 30} min (Burned: ${todaySummary?.calories_burned || 0} kcal)
 ${exerciseContext}
 - Recent meals: ${(recentMeals || []).map((m: any) => `${m.meal_type}: ${m.description}`).join('; ')}
+${fitnessContextBlock}
 `;
 
       if (chatMessage) {
-        const systemPrompt = `You are Nuvia's intelligent AI Coach, specialized in fitness, practical macro tracking, and Malaysian/Southeast Asian lifestyles (e.g. eating out at mamak stalls, hawker centers, Ayam Gepuk, Nasi Kandar, ordering 'kurang manis' or 'kosong' drinks, finding high-protein options locally).
-Respond warmly, concisely, and practically to the user's question using their actual logged context.
-Do not write long essays; answer in 2-3 focused sentences with specific meal/action suggestions fitting their remaining macros.`;
+        const systemPrompt = `You are Nuvia's intelligent AI Coach, specialized in progressive resistance training, practical macro tracking, and Malaysian/Southeast Asian lifestyles (e.g. eating out at mamak stalls, hawker centers, Ayam Gepuk, Nasi Kandar, ordering 'kurang manis' or 'kosong' drinks, finding high-protein options locally).
+IMPORTANT NUTRITION RULE: Nuvia uses a net calorie budgeting model (dailyTarget: ${authoritativeCalorieTarget} kcal, food: ${foodCalories} kcal, activity: -${exerciseCalories} kcal, net: ${netCalories} kcal, remaining: ${remainingCalories} kcal). Do NOT say the user only consumed ${netCalories} kcal.
+IMPORTANT WORKOUT RULE: Never generate a generic workout. Always check the user's Weekly Training Structure, Available Equipment, Recovery Status, and Previous Performance. Follow the WORKOUT GENERATION & MODIFICATION RULES strictly.
+Respond warmly, directly, concisely, and practically in 2-4 focused sentences or bullet points.`;
 
         for (const model of GEMINI_MODELS) {
           try {
@@ -131,13 +225,16 @@ Generate prioritized, highly actionable guidance in strictly valid JSON format:
     // Heuristic intelligent fallback based on user's exact current metrics
     if (chatMessage) {
       const q = chatMessage.toLowerCase();
-      let reply = `You have ${remainingCals} kcal remaining today and are ${remainingProtein}g short of your protein goal.`;
+      let reply =
+        remainingCalories > 0
+          ? `You have ${remainingCalories} kcal remaining in your net calorie budget today (${foodCalories} kcal eaten, ${exerciseCalories} kcal activity) and are ${remainingProtein}g short of your protein goal.`
+          : `You have reached your daily calorie target (${netCalories} kcal net of ${authoritativeCalorieTarget} kcal target) and are ${remainingProtein}g short of your protein goal.`;
 
       if (q.includes('dinner') || q.includes('eat') || q.includes('food')) {
         if (remainingProtein > 25) {
-          reply = `Yes! You have around ${remainingCals} kcal remaining and still need ${remainingProtein}g of protein. A high-protein dinner like grilled chicken or salmon with vegetables and quinoa (around 500–600 kcal) would fit your target perfectly.`;
+          reply = `Yes! You have around ${remainingCalories} kcal remaining in your net budget and still need ${remainingProtein}g of protein. A high-protein dinner like grilled chicken or salmon with vegetables and quinoa (around 500–600 kcal) would fit your target perfectly.`;
         } else {
-          reply = `You have ${remainingCals} kcal left. Since your protein intake is in good shape, a balanced, lighter dinner like a stir-fry or salad with lean protein would keep you right on track!`;
+          reply = `You have ${remainingCalories} kcal left in your net budget. Since your protein intake is in good shape, a balanced, lighter dinner like a stir-fry or salad with lean protein would keep you right on track!`;
         }
       } else if (q.includes('exercise') || q.includes('workout') || q.includes('run')) {
         if (remainingExercise > 0) {
@@ -156,8 +253,8 @@ Generate prioritized, highly actionable guidance in strictly valid JSON format:
         category: 'Nutrition',
         priority: 1,
         message:
-          remainingCals > 0
-            ? `You're ${remainingCals} kcal below your daily goal. Consider adding a healthy snack (e.g. nuts or Greek yogurt) if you feel hungry.`
+          remainingCalories > 0
+            ? `You have ${remainingCalories} kcal remaining in your net daily budget today. Consider a balanced meal or snack if you feel hungry.`
             : `You've reached your daily calorie target. Stick to water or herbal tea for the rest of the evening.`,
       },
       {

@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/lib/auth-context';
-import { DataService } from '@/lib/data-service';
-import { ExerciseLog } from '@/types/database';
+import { DataService, getLocalDateString } from '@/lib/data-service';
+import { Meal, ExerciseLog, DailySummary } from '@/types/database';
 import { WorkoutRoutine, RoutineExercise } from '@/types/routine';
 import {
   Play,
@@ -12,36 +12,46 @@ import {
   Dumbbell,
   Trash2,
   ChevronRight,
+  ChevronLeft,
   CheckCircle2,
   Activity,
   Flame,
   Clock,
-  Zap,
   Calendar,
-  Timer,
   ArrowRight,
+  Heart,
+  Droplets,
+  Moon,
+  Copy,
+  Pencil,
+  X,
+  Info,
+  Check,
 } from 'lucide-react';
 import { ExerciseVideoModal } from './ExerciseVideoModal';
 import { PasteAiRoutineModal } from './PasteAiRoutineModal';
 import { ManualRoutineModal } from './ManualRoutineModal';
 import { RoutineDetailView } from './RoutineDetailView';
+import { RoutineEditView } from './RoutineEditView';
 import { ExerciseThumbnail } from './ExerciseThumbnail';
-
+import { DayDetailsModal } from './DayDetailsModal';
+import { ActivityDetailsModal } from './ActivityDetailsModal';
 import { TabType } from './Navigation';
+import { cleanActivityTitle, getActivityDisplayData } from '@/lib/activity-utils';
 
 interface ExerciseListViewProps {
   onOpenAddExercise: () => void;
+  onOpenAddMeal?: () => void;
   onNavigateTab?: (tab: TabType) => void;
+  initialViewMode?: 'today' | 'plans' | 'history';
 }
 
-// ─── Intensity dot color ─────────────────────────────────────────────────────
 function intensityColor(intensity: string) {
   if (intensity === 'high') return '#FF453A';
   if (intensity === 'low') return '#30D158';
   return '#FF9F0A';
 }
 
-// ─── Format duration ──────────────────────────────────────────────────────────
 function fmtDuration(mins: number) {
   if (mins < 60) return `${mins}m`;
   const h = Math.floor(mins / 60);
@@ -49,14 +59,21 @@ function fmtDuration(mins: number) {
   return m > 0 ? `${h}h ${m}m` : `${h}h`;
 }
 
-export function ExerciseListView({ onOpenAddExercise, onNavigateTab }: ExerciseListViewProps) {
-  const { user } = useAuth();
-  const [viewMode, setViewMode] = useState<'today' | 'plans'>('today');
+export function ExerciseListView({
+  onOpenAddExercise,
+  onOpenAddMeal,
+  onNavigateTab,
+  initialViewMode = 'today',
+}: ExerciseListViewProps) {
+  const { user, goals } = useAuth();
+  const [viewMode, setViewMode] = useState<'today' | 'plans' | 'history'>(initialViewMode);
 
   // Routines State
   const [routines, setRoutines] = useState<WorkoutRoutine[]>([]);
   const [loadingRoutines, setLoadingRoutines] = useState(true);
   const [selectedRoutine, setSelectedRoutine] = useState<WorkoutRoutine | null>(null);
+  const [editingRoutine, setEditingRoutine] = useState<WorkoutRoutine | null>(null);
+  const [routineInitialMode, setRoutineInitialMode] = useState<'overview' | 'workout'>('overview');
 
   // Activity Logs State
   const [exercises, setExercises] = useState<ExerciseLog[]>([]);
@@ -66,9 +83,111 @@ export function ExerciseListView({ onOpenAddExercise, onNavigateTab }: ExerciseL
   const [selectedVideoExercise, setSelectedVideoExercise] = useState<RoutineExercise | null>(null);
   const [isAiPasteOpen, setIsAiPasteOpen] = useState(false);
   const [isManualRoutineOpen, setIsManualRoutineOpen] = useState(false);
+  const [showRecoverySheet, setShowRecoverySheet] = useState(false);
+  const [selectedHistoryLog, setSelectedHistoryLog] = useState<ExerciseLog | null>(null);
+  const [isHistoryDetailOpen, setIsHistoryDetailOpen] = useState(false);
 
   // Feedback banner
   const [successBanner, setSuccessBanner] = useState<string | null>(null);
+
+  // Calendar & History State
+  const today = new Date();
+  const todayStr = getLocalDateString(today);
+
+  const [selectedMonthOffset, setSelectedMonthOffset] = useState(0);
+  const [isDayModalOpen, setIsDayModalOpen] = useState(false);
+  const [inspectDateStr, setInspectDateStr] = useState<string>(todayStr);
+
+  const [activityMap, setActivityMap] = useState<
+    Record<string, { hasMeal: boolean; hasWorkout: boolean; calories: number; burned: number }>
+  >({});
+  const [inspectSummary, setInspectSummary] = useState<DailySummary | null>(null);
+  const [inspectMeals, setInspectMeals] = useState<Meal[]>([]);
+  const [inspectExercises, setInspectExercises] = useState<ExerciseLog[]>([]);
+
+  // Load activity map when entering history mode or on initial load
+  useEffect(() => {
+    if (viewMode === 'history' && Object.keys(activityMap).length === 0) {
+      DataService.getActivityMap(user?.id).then(setActivityMap);
+    }
+  }, [viewMode, user?.id, activityMap]);
+
+  const handleDayClick = async (dateStr: string) => {
+    setInspectDateStr(dateStr);
+    setIsDayModalOpen(true);
+
+    const [s, m, e] = await Promise.all([
+      DataService.getDailySummary(user?.id, dateStr),
+      DataService.getMeals(user?.id, dateStr),
+      DataService.getExerciseLogs(user?.id, dateStr),
+    ]);
+    setInspectSummary(s);
+    setInspectMeals(m);
+    setInspectExercises(e);
+  };
+
+  // Calendar calculations
+  const viewedDate = new Date(today.getFullYear(), today.getMonth() + selectedMonthOffset, 1);
+  const viewedYear = viewedDate.getFullYear();
+  const viewedMonth = viewedDate.getMonth();
+  const monthName = viewedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const firstDayIndex = (new Date(viewedYear, viewedMonth, 1).getDay() + 6) % 7;
+  const daysInMonth = new Date(viewedYear, viewedMonth + 1, 0).getDate();
+
+  // Find routine matching inspect day
+  const [iY, iM, iD] = inspectDateStr.split('-').map(Number);
+  const inspectDateObj = new Date(iY || today.getFullYear(), (iM || 1) - 1, iD || 1);
+  const inspectDayName = inspectDateObj.toLocaleDateString('en-US', { weekday: 'long' });
+  const inspectRoutine = routines.find((r) =>
+    r.days.map((d) => d.toLowerCase()).includes(inspectDayName.toLowerCase())
+  );
+
+  // Tomorrow calculations
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  const tomorrowDayName = tomorrow.toLocaleDateString('en-US', { weekday: 'long' });
+  const todayDayName = today.toLocaleDateString('en-US', { weekday: 'long' });
+  const todayFormatted = today.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+  });
+
+  const todayAct = activityMap[todayStr];
+  const todayHasWorkout = exercises.length > 0 || Boolean(todayAct?.hasWorkout);
+  const todayRoutine = routines.find((r) =>
+    r.days.map((d) => d.toLowerCase()).includes(todayDayName.toLowerCase())
+  );
+  const tomorrowRoutine = routines.find((r) =>
+    r.days.map((d) => d.toLowerCase()).includes(tomorrowDayName.toLowerCase())
+  );
+  const isTomorrowRest = routines.length > 0 && !tomorrowRoutine;
+
+  // Next scheduled routine within 7 days
+  const nextScheduled = useMemo(() => {
+    for (let i = 1; i <= 7; i++) {
+      const futureDate = new Date(today);
+      futureDate.setDate(today.getDate() + i);
+      const dayName = futureDate.toLocaleDateString('en-US', { weekday: 'long' });
+      const found = routines.find((r) =>
+        r.days.map((d) => d.toLowerCase()).includes(dayName.toLowerCase())
+      );
+      if (found) {
+        return {
+          routine: found,
+          dayName,
+          daysAhead: i,
+          dateStr: getLocalDateString(futureDate),
+          dateFormatted: futureDate.toLocaleDateString('en-US', {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+          }),
+        };
+      }
+    }
+    return null;
+  }, [routines, today]);
 
   const loadAll = async () => {
     setLoadingRoutines(true);
@@ -87,7 +206,7 @@ export function ExerciseListView({ onOpenAddExercise, onNavigateTab }: ExerciseL
 
   useEffect(() => {
     loadAll();
-  }, [user]);
+  }, [user?.id]);
 
   const showNotification = (msg: string) => {
     setSuccessBanner(msg);
@@ -96,14 +215,14 @@ export function ExerciseListView({ onOpenAddExercise, onNavigateTab }: ExerciseL
 
   const handleSaveRoutinesFromAi = async (newRoutines: WorkoutRoutine[]) => {
     for (const r of newRoutines) {
-      await DataService.saveWorkoutRoutine(r);
+      await DataService.saveWorkoutRoutine(r, user?.id);
     }
     await loadAll();
     showNotification(`Added ${newRoutines.length} routine(s) from AI consultation!`);
   };
 
   const handleSaveManualRoutine = async (routine: WorkoutRoutine) => {
-    await DataService.saveWorkoutRoutine(routine);
+    await DataService.saveWorkoutRoutine(routine, user?.id);
     await loadAll();
     showNotification(`Saved "${routine.title}"!`);
   };
@@ -111,13 +230,47 @@ export function ExerciseListView({ onOpenAddExercise, onNavigateTab }: ExerciseL
   const handleDeleteRoutine = async (id: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     if (confirm('Are you sure you want to remove this workout routine?')) {
-      await DataService.deleteWorkoutRoutine(id);
+      await DataService.deleteWorkoutRoutine(id, user?.id);
       if (selectedRoutine?.id === id) {
         setSelectedRoutine(null);
       }
       await loadAll();
       showNotification('Workout routine removed.');
     }
+  };
+
+  const handleEditRoutine = (routine: WorkoutRoutine, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setEditingRoutine(routine);
+  };
+
+  const handleDuplicateRoutine = async (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const cloned = await DataService.duplicateWorkoutRoutine(id, user?.id);
+    if (cloned) {
+      await loadAll();
+      showNotification(`Duplicated routine as "${cloned.title}"`);
+    }
+  };
+
+  const handleSaveEditedRoutine = async (updated: WorkoutRoutine) => {
+    await DataService.saveWorkoutRoutine(updated, user?.id);
+    if (selectedRoutine?.id === updated.id) {
+      setSelectedRoutine(updated);
+    }
+    await loadAll();
+    showNotification(`Updated "${updated.title}"`);
+  };
+
+  const handleStartWorkoutDirect = (routine: WorkoutRoutine, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setRoutineInitialMode('workout');
+    setSelectedRoutine(routine);
+  };
+
+  const handleOpenRoutineOverview = (routine: WorkoutRoutine) => {
+    setRoutineInitialMode('overview');
+    setSelectedRoutine(routine);
   };
 
   const handleCompleteExerciseFromVideo = async (ex: RoutineExercise) => {
@@ -145,52 +298,115 @@ export function ExerciseListView({ onOpenAddExercise, onNavigateTab }: ExerciseL
     }
   };
 
-  // ─── Derived values ───────────────────────────────────────────────────────
-  const todayName = new Date().toLocaleDateString('en-US', { weekday: 'long' });
-  const todayDate = new Date().toDateString();
+  // Filter to today's exercises for the Today view
+  const todayExercises = useMemo(() => {
+    return exercises.filter(
+      (e) => new Date(e.created_at || new Date()).toDateString() === today.toDateString()
+    );
+  }, [exercises, today]);
 
-  // Filter to today's exercises only for the Today view
-  const todayExercises = exercises.filter(
-    (e) => new Date(e.created_at || new Date()).toDateString() === todayDate
+  const totalBurned = todayExercises.reduce(
+    (sum, e) => sum + (Number(e.calories_burned) || 0),
+    0
   );
-  const totalBurned = todayExercises.reduce((sum, e) => sum + (Number(e.calories_burned) || 0), 0);
-  const totalMinutes = todayExercises.reduce((sum, e) => sum + (Number(e.duration_minutes) || 0), 0);
-
-  // Find today's scheduled routine (first one that matches today)
-  const todayRoutine = routines.find((r) =>
-    r.days.some((d) => d.toLowerCase() === todayName.toLowerCase())
+  const totalMinutes = todayExercises.reduce(
+    (sum, e) => sum + (Number(e.duration_minutes) || 0),
+    0
   );
 
-  // ─── If a specific routine is open, render it ─────────────────────────────
+  // History stats
+  const historyStats = useMemo(() => {
+    let activeDays = 0;
+    let totalKcal = 0;
+    let workoutsCount = 0;
+
+    Object.values(activityMap).forEach((val) => {
+      if (val.hasWorkout || val.burned > 0) {
+        activeDays++;
+        totalKcal += val.burned || 0;
+        if (val.hasWorkout) workoutsCount++;
+      }
+    });
+
+    return {
+      activeDays: Math.max(activeDays, exercises.length > 0 ? 1 : 0),
+      workoutsCount: Math.max(workoutsCount, exercises.length),
+      totalKcal: Math.max(
+        totalKcal,
+        exercises.reduce((s, e) => s + (Number(e.calories_burned) || 0), 0)
+      ),
+    };
+  }, [activityMap, exercises]);
+
+  // Group historical exercises by date strictly from timestamp, descending
+  const groupedExercises = useMemo(() => {
+    const sorted = [...exercises].sort((a, b) => {
+      const timeA = new Date(a.created_at || 0).getTime();
+      const timeB = new Date(b.created_at || 0).getTime();
+      return timeB - timeA;
+    });
+
+    const map = new Map<string, ExerciseLog[]>();
+    sorted.forEach((ex) => {
+      const d = new Date(ex.created_at || new Date());
+      const key = d.toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+      }).toUpperCase();
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(ex);
+    });
+    return Array.from(map.entries());
+  }, [exercises]);
+
+  // If a routine is active in workout or overview mode
   if (selectedRoutine) {
     return (
-      <RoutineDetailView
-        routine={selectedRoutine}
-        onBack={() => {
-          setSelectedRoutine(null);
-          loadAll();
-        }}
-        onDeleteRoutine={async (id) => {
-          await handleDeleteRoutine(id);
-        }}
-        onWorkoutFinished={() => {
-          loadAll();
-          showNotification('Workout completed & calories calculated! Recorded on homepage.');
-        }}
-        onNavigateHome={() => {
-          setSelectedRoutine(null);
-          if (onNavigateTab) {
-            onNavigateTab('home');
-          }
-        }}
-      />
+      <>
+        <RoutineDetailView
+          routine={selectedRoutine}
+          initialMode={routineInitialMode}
+          onBack={() => {
+            setSelectedRoutine(null);
+            loadAll();
+          }}
+          onDeleteRoutine={async (id) => {
+            await handleDeleteRoutine(id);
+          }}
+          onEditRoutine={(r) => setEditingRoutine(r)}
+          onDuplicateRoutine={(id) => handleDuplicateRoutine(id)}
+          onWorkoutFinished={() => {
+            loadAll();
+            showNotification('Workout completed & calories calculated! Recorded on homepage.');
+          }}
+          onNavigateHome={() => {
+            setSelectedRoutine(null);
+            if (onNavigateTab) {
+              onNavigateTab('home');
+            }
+          }}
+        />
+
+        {editingRoutine && (
+          <RoutineEditView
+            routine={editingRoutine}
+            isOpen={!!editingRoutine}
+            onClose={() => setEditingRoutine(null)}
+            onSave={async (updated) => {
+              await handleSaveEditedRoutine(updated);
+              setEditingRoutine(null);
+            }}
+          />
+        )}
+      </>
     );
   }
 
   return (
-    <div className="flex-1 flex flex-col pb-24 px-5 pt-4 w-full max-w-md mx-auto space-y-5">
-      {/* ── Header ── */}
-      <div className="flex items-end justify-between pt-2">
+    <div className="flex-1 flex flex-col pb-28 px-4 pt-3 w-full max-w-md mx-auto space-y-6 animate-fadeIn">
+      {/* ── HEADER ──────────────────────────────────────────────────────── */}
+      <div className="pt-1 flex items-end justify-between">
         <div>
           <p className="text-[11px] font-semibold tracking-wider text-[#8E8E93] uppercase">
             Fitness & Training
@@ -198,26 +414,14 @@ export function ExerciseListView({ onOpenAddExercise, onNavigateTab }: ExerciseL
           <h1 className="text-3xl font-bold tracking-tight text-white mt-0.5">Activity</h1>
         </div>
 
-        {/* Contextual stat in header */}
-        {viewMode === 'today' ? (
-          <div className="text-right mb-1">
-            {totalBurned > 0 ? (
-              <>
-                <span className="text-sm font-bold text-white">{totalBurned}</span>
-                <span className="text-xs text-[#8E8E93] font-normal ml-1">kcal today</span>
-              </>
-            ) : (
-              <span className="text-xs text-[#8E8E93]">No activity yet</span>
-            )}
-          </div>
-        ) : (
-          <span className="text-xs text-[#8E8E93] mb-1 font-medium">
-            {routines.length} {routines.length === 1 ? 'Routine' : 'Routines'}
-          </span>
+        {viewMode === 'today' && (
+          <p className="text-xs text-[#8E8E93] mb-1 font-medium">
+            {todayDayName}
+          </p>
         )}
       </div>
 
-      {/* ── Notification Toast ── */}
+      {/* ── TOAST NOTIFICATION ──────────────────────────────────────────── */}
       {successBanner && (
         <div className="p-3 rounded-2xl bg-[#30D158]/15 border border-[#30D158]/30 text-[#30D158] text-xs font-semibold flex items-center gap-2 animate-fadeIn">
           <CheckCircle2 className="w-4 h-4 shrink-0" />
@@ -225,150 +429,268 @@ export function ExerciseListView({ onOpenAddExercise, onNavigateTab }: ExerciseL
         </div>
       )}
 
-      {/* ── iOS Segmented Control: [ Today | Plans ] ── */}
-      <div className="p-1 bg-[#1C1C1E] border border-white/[0.08] rounded-2xl flex items-center">
+      {/* ── COMPACT APPLE SEGMENTED CONTROL ─────────────────────────────── */}
+      <div className="p-1 bg-[#1C1C1E] border border-white/[0.08] rounded-xl flex items-center">
         <button
           type="button"
           onClick={() => setViewMode('today')}
-          className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5 ${
+          className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all text-center cursor-pointer ${
             viewMode === 'today'
               ? 'bg-[#2C2C2E] text-white shadow-sm'
               : 'text-[#8E8E93] hover:text-white'
           }`}
         >
-          <Zap className="w-3.5 h-3.5 text-[#FF9F0A]" />
-          <span>Today</span>
+          Today
         </button>
 
         <button
           type="button"
           onClick={() => setViewMode('plans')}
-          className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5 ${
+          className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all text-center cursor-pointer ${
             viewMode === 'plans'
               ? 'bg-[#2C2C2E] text-white shadow-sm'
               : 'text-[#8E8E93] hover:text-white'
           }`}
         >
-          <Dumbbell className="w-3.5 h-3.5 text-[#0A84FF]" />
-          <span>Plans</span>
+          Plans
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setViewMode('history')}
+          className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all text-center cursor-pointer ${
+            viewMode === 'history'
+              ? 'bg-[#2C2C2E] text-white shadow-sm'
+              : 'text-[#8E8E93] hover:text-white'
+          }`}
+        >
+          History
         </button>
       </div>
 
-      {/* ============================================================ */}
-      {/* TODAY VIEW — Execution-first                                  */}
-      {/* ============================================================ */}
+      {/* ══════════════════════════════════════════════════════════════════ */}
+      {/* ── 1. TODAY VIEW ("What have I done today, and what next?") ────── */}
+      {/* ══════════════════════════════════════════════════════════════════ */}
       {viewMode === 'today' && (
-        <div className="space-y-4">
+        <div className="space-y-6">
+          {/* ── ACTIVITY SUMMARY HERO (Large Typography) ─────────────────── */}
+          <div className="space-y-1">
+            <span className="text-[11px] font-bold tracking-wider text-[#8E8E93] uppercase block">
+              Today · {todayFormatted}
+            </span>
 
-          {/* ── Daily Stats Strip ── */}
-          {totalMinutes > 0 && (
-            <div className="grid grid-cols-3 gap-2">
-              <div className="ios-card p-3 flex flex-col items-center gap-1">
-                <Flame className="w-4 h-4 text-[#FF9F0A]" />
-                <span className="text-sm font-bold text-white">{totalBurned}</span>
-                <span className="text-[10px] text-[#8E8E93]">kcal</span>
+            <div className="flex items-baseline gap-6 pt-1">
+              <div>
+                <span className="text-4xl font-extrabold text-white tracking-tight leading-none block">
+                  {totalMinutes > 0 ? `${totalMinutes}m` : '0m'}
+                </span>
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E8E93] mt-1 block">
+                  Active Time
+                </span>
               </div>
-              <div className="ios-card p-3 flex flex-col items-center gap-1">
-                <Clock className="w-4 h-4 text-[#0A84FF]" />
-                <span className="text-sm font-bold text-white">{fmtDuration(totalMinutes)}</span>
-                <span className="text-[10px] text-[#8E8E93]">active</span>
-              </div>
-              <div className="ios-card p-3 flex flex-col items-center gap-1">
-                <Activity className="w-4 h-4 text-[#30D158]" />
-                <span className="text-sm font-bold text-white">{todayExercises.length}</span>
-                <span className="text-[10px] text-[#8E8E93]">sessions</span>
+
+              <div>
+                <span className="text-4xl font-extrabold text-white tracking-tight leading-none block">
+                  {totalBurned > 0 ? totalBurned.toLocaleString() : '0'}
+                </span>
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E8E93] mt-1 block">
+                  kcal Burned
+                </span>
               </div>
             </div>
-          )}
 
-          {/* ── Up Next: Today's Scheduled Routine ── */}
-          {!loadingRoutines && todayRoutine && (
-            <div>
-              <p className="text-[11px] font-semibold tracking-wider text-[#8E8E93] uppercase mb-2">
-                Up Next
-              </p>
-              <button
-                type="button"
-                onClick={() => setSelectedRoutine(todayRoutine)}
-                className="w-full ios-card p-4 text-left hover:border-[#30D158]/40 transition-all group"
-              >
+            {/* Concise Status Line */}
+            <div className="pt-2 flex items-center gap-2">
+              {todayExercises.length > 0 ? (
+                <span className="text-xs font-semibold text-[#30D158] flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>
+                    Workout completed · {cleanActivityTitle(todayExercises[todayExercises.length - 1]?.exercise_type).title}
+                  </span>
+                </span>
+              ) : todayRoutine ? (
+                <span className="text-xs font-medium text-white flex items-center gap-1.5">
+                  <Dumbbell className="w-4 h-4 text-[#0A84FF]" />
+                  <span>
+                    Scheduled today: <strong className="text-white">{cleanActivityTitle(todayRoutine.title).title}</strong>
+                  </span>
+                </span>
+              ) : (
+                <span className="text-xs text-[#8E8E93]">
+                  Recovery day · No workout scheduled for today
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="h-px bg-white/[0.06] w-full" />
+
+          {/* ── UP NEXT (Action-First) ──────────────────────────────────── */}
+          <div className="space-y-3">
+            <span className="text-[11px] font-bold tracking-wider text-[#8E8E93] uppercase block">
+              Up Next
+            </span>
+
+            {tomorrowRoutine ? (
+              /* Tomorrow is a workout day */
+              <div className="ios-card p-4 space-y-3 hover:border-white/20 transition-all">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-2xl overflow-hidden bg-black/60 border border-white/[0.1] shrink-0 relative group-hover:border-[#30D158]/40 transition-colors shadow-sm">
-                      {todayRoutine.exercises[0] ? (
-                        <ExerciseThumbnail exercise={todayRoutine.exercises[0]} aspectRatio="1/1" className="w-full h-full" />
-                      ) : (
-                        <div className="w-full h-full bg-[#30D158]/15 flex items-center justify-center">
-                          <Play className="w-5 h-5 text-[#30D158] fill-[#30D158]" />
-                        </div>
-                      )}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-1.5 mb-0.5">
-                        <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[#30D158] text-black">
-                          Today
-                        </span>
-                        <span className="text-[10px] text-[#8E8E93]">
-                          {todayRoutine.exercises.length} exercises
-                        </span>
-                      </div>
-                      <h3 className="text-sm font-bold text-white group-hover:text-[#30D158] transition-colors">
-                        {todayRoutine.title}
-                      </h3>
-                    </div>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-[#8E8E93] group-hover:text-[#30D158] transition-colors shrink-0" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#0A84FF]/20 text-[#0A84FF] border border-[#0A84FF]/30">
+                    Tomorrow · Workout Day
+                  </span>
+                  <span className="text-xs text-[#8E8E93]">
+                    {tomorrowRoutine.exercises.length} exercises
+                  </span>
                 </div>
-              </button>
-            </div>
-          )}
 
-          {/* ── Log Activity CTA (shown when no logs yet or always) ── */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-[11px] font-semibold tracking-wider text-[#8E8E93] uppercase">
-                Today's Activity
-              </p>
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-black/60 border border-white/10 overflow-hidden shrink-0 flex items-center justify-center">
+                    {tomorrowRoutine.exercises[0] ? (
+                      <ExerciseThumbnail
+                        exercise={tomorrowRoutine.exercises[0]}
+                        aspectRatio="1/1"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <Dumbbell className="w-5 h-5 text-white" />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-sm font-bold text-white truncate">
+                      {cleanActivityTitle(tomorrowRoutine.title).title}
+                    </h3>
+                    <p className="text-xs text-[#8E8E93] mt-0.5 truncate">
+                      Focus: {tomorrowRoutine.focus || 'Strength & Conditioning'}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleStartWorkoutDirect(tomorrowRoutine)}
+                  className="w-full py-2.5 px-4 rounded-xl bg-white text-black font-bold text-xs flex items-center justify-center gap-1.5 hover:bg-zinc-200 transition-colors cursor-pointer"
+                >
+                  <Play className="w-3.5 h-3.5 fill-black" />
+                  <span>Start Workout</span>
+                </button>
+              </div>
+            ) : isTomorrowRest ? (
+              /* Tomorrow is an active recovery day */
+              <div className="ios-card p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/10 text-zinc-300">
+                    Tomorrow · Recovery Day
+                  </span>
+                  <button
+                    onClick={() => setShowRecoverySheet(true)}
+                    className="text-[11px] font-semibold text-[#30D158] hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>Why recovery?</span>
+                    <ChevronRight className="w-3 h-3" />
+                  </button>
+                </div>
+
+                <div>
+                  <h3 className="text-sm font-bold text-white">Active Recovery & Restoration</h3>
+                  <p className="text-xs text-[#8E8E93] mt-0.5">
+                    No heavy training scheduled for {tomorrowDayName}. Focus on sleep and nutrition.
+                  </p>
+                </div>
+
+                {/* Clean Recovery Checklist */}
+                <div className="grid grid-cols-2 gap-2 text-xs text-zinc-300 pt-1">
+                  <div className="flex items-center gap-2 p-2 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+                    <Droplets className="w-3.5 h-3.5 text-[#0A84FF] shrink-0" />
+                    <span>2.5 L water</span>
+                  </div>
+                  <div className="flex items-center gap-2 p-2 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+                    <Flame className="w-3.5 h-3.5 text-[#FF9500] shrink-0" />
+                    <span>Hit {goals?.protein_target || 140}g protein</span>
+                  </div>
+                  <div className="flex items-center gap-2 p-2 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+                    <Heart className="w-3.5 h-3.5 text-pink-400 shrink-0" />
+                    <span>15m mobility walk</span>
+                  </div>
+                  <div className="flex items-center gap-2 p-2 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+                    <Moon className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                    <span>7–8h deep sleep</span>
+                  </div>
+                </div>
+
+                {nextScheduled && (
+                  <button
+                    type="button"
+                    onClick={() => handleOpenRoutineOverview(nextScheduled.routine)}
+                    className="w-full pt-1 text-xs text-[#8E8E93] hover:text-white flex items-center justify-between transition-colors cursor-pointer"
+                  >
+                    <span>
+                      Next session: <strong className="text-white">{cleanActivityTitle(nextScheduled.routine.title).title}</strong> ({nextScheduled.dayName})
+                    </span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            ) : (
+              /* No routines set up yet */
+              <div className="ios-card p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold text-white">No Upcoming Routine</p>
+                  <p className="text-[11px] text-[#8E8E93] mt-0.5">
+                    Add or paste your training routine in the Plans tab.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('plans')}
+                  className="px-3 py-1.5 rounded-xl bg-white text-black font-bold text-xs hover:bg-zinc-200 transition-colors cursor-pointer"
+                >
+                  Go to Plans
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="h-px bg-white/[0.06] w-full" />
+
+          {/* ── TODAY'S TIMELINE ────────────────────────────────────────── */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold tracking-wider text-[#8E8E93] uppercase">
+                Today&apos;s Activity
+              </span>
               <button
                 type="button"
                 onClick={onOpenAddExercise}
-                className="text-xs text-[#30D158] font-semibold hover:underline flex items-center gap-1"
+                className="text-xs text-[#30D158] font-semibold hover:underline flex items-center gap-1 cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>Log</span>
+                <span>Log Activity</span>
               </button>
             </div>
 
             {loadingLogs ? (
               <div className="space-y-2">
-                {[1, 2].map((n) => (
-                  <div key={n} className="h-16 bg-[#1C1C1E] rounded-2xl animate-pulse" />
+                {[1, 2].map((i) => (
+                  <div key={i} className="h-14 bg-[#1C1C1E] rounded-2xl animate-pulse" />
                 ))}
               </div>
             ) : todayExercises.length === 0 ? (
-              <div className="ios-card p-6 text-center space-y-3">
-                <div className="w-12 h-12 rounded-2xl bg-[#1C1C1E] flex items-center justify-center mx-auto">
-                  <Activity className="w-6 h-6 text-[#3A3A3C]" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-white">No Activity Yet</p>
-                  <p className="text-xs text-[#8E8E93] mt-1 max-w-xs mx-auto">
-                    {todayRoutine
-                      ? `Start "${todayRoutine.title}" or log a manual activity.`
-                      : 'Log a run, workout, or any movement to get started.'}
-                  </p>
-                </div>
+              <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.04] text-center space-y-2">
+                <p className="text-sm font-semibold text-white">Nothing logged yet</p>
+                <p className="text-xs text-[#8E8E93] max-w-xs mx-auto">
+                  Your activity timeline will appear here as you log sessions or complete workouts today.
+                </p>
                 <button
                   type="button"
                   onClick={onOpenAddExercise}
-                  className="px-5 py-2.5 rounded-full bg-[#30D158] text-black font-semibold text-xs inline-flex items-center gap-1.5"
+                  className="mt-2 px-4 py-2 rounded-full bg-[#30D158] text-black font-bold text-xs inline-flex items-center gap-1 cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Log Activity</span>
                 </button>
               </div>
             ) : (
-              <div className="ios-card divide-y divide-white/[0.06] overflow-hidden">
+              <div className="divide-y divide-white/[0.06] text-xs">
                 {todayExercises.map((ex) => {
                   const exDate = new Date(ex.created_at || new Date());
                   const timeLabel = exDate.toLocaleTimeString([], {
@@ -379,17 +701,16 @@ export function ExerciseListView({ onOpenAddExercise, onNavigateTab }: ExerciseL
                   return (
                     <div
                       key={ex.id}
-                      className="p-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
+                      className="py-3 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
                     >
                       <div className="flex items-center gap-3">
-                        {/* Intensity indicator dot */}
                         <div
                           className="w-2 h-2 rounded-full shrink-0"
                           style={{ backgroundColor: intensityColor(ex.intensity || 'moderate') }}
                         />
                         <div>
-                          <h3 className="text-sm font-semibold text-white">{ex.exercise_type}</h3>
-                          <p className="text-xs text-[#8E8E93] mt-0.5">
+                          <p className="font-semibold text-white text-sm">{ex.exercise_type}</p>
+                          <p className="text-[11px] text-[#8E8E93] mt-0.5">
                             {fmtDuration(Number(ex.duration_minutes))}
                             {ex.distance_km ? ` · ${ex.distance_km} km` : ''}
                             <span className="text-[#636366]"> · {timeLabel}</span>
@@ -398,19 +719,16 @@ export function ExerciseListView({ onOpenAddExercise, onNavigateTab }: ExerciseL
                       </div>
 
                       <div className="flex items-center gap-3">
-                        <div className="text-right shrink-0">
-                          <span className="text-sm font-semibold text-white">
-                            ~{ex.calories_burned}
-                          </span>
-                          <span className="text-xs text-[#8E8E93] ml-1">kcal</span>
-                        </div>
+                        <span className="font-bold text-white text-sm">
+                          ~{ex.calories_burned} kcal
+                        </span>
                         <button
                           type="button"
                           onClick={() => handleDeleteExercise(ex.id)}
-                          className="p-1.5 text-[#8E8E93] hover:text-[#FF453A] transition-colors"
-                          title="Delete exercise entry"
+                          className="p-1 text-zinc-500 hover:text-red-400 transition-colors cursor-pointer"
+                          title="Delete"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </div>
@@ -420,226 +738,185 @@ export function ExerciseListView({ onOpenAddExercise, onNavigateTab }: ExerciseL
             )}
           </div>
 
-          {/* ── Nudge to Plans if no routine scheduled today ── */}
-          {!loadingRoutines && !todayRoutine && (
-            <button
-              type="button"
-              onClick={() => setViewMode('plans')}
-              className="w-full ios-card p-4 text-left hover:border-white/20 transition-all group"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-[#0A84FF]/10 flex items-center justify-center shrink-0">
-                    <Dumbbell className="w-4.5 h-4.5 text-[#0A84FF]" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-white">Browse your Plans</p>
-                    <p className="text-[11px] text-[#8E8E93] mt-0.5">
-                      {routines.length > 0
-                        ? `${routines.length} routine${routines.length > 1 ? 's' : ''} saved`
-                        : 'Create or import a workout routine'}
-                    </p>
-                  </div>
-                </div>
-                <ArrowRight className="w-4 h-4 text-[#8E8E93] group-hover:text-white transition-colors shrink-0" />
+          <div className="h-px bg-white/[0.06] w-full" />
+
+          {/* ── NUVIA COACH INSIGHT ──────────────────────────────────────── */}
+          <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.05] space-y-2 text-xs">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-[#30D158]" />
+                <span className="font-bold text-white text-xs">Coach Insight</span>
               </div>
-            </button>
-          )}
+              <button
+                onClick={() => setShowRecoverySheet(true)}
+                className="text-[11px] text-[#30D158] hover:underline cursor-pointer"
+              >
+                Why? →
+              </button>
+            </div>
+
+            <p className="text-[#8E8E93] leading-relaxed">
+              {todayHasWorkout
+                ? 'Great effort on your session today. Muscles adapt and synthesize new tissue during rest—fuel with adequate protein and aim for 7–8 hours of quality sleep.'
+                : todayRoutine
+                ? `You have "${todayRoutine.title}" planned for today. Complete it when your energy is highest, or log any manual activity.`
+                : 'Rest and recovery day. Keep activity gentle, focus on mobility, and replenish hydration.'}
+            </p>
+          </div>
         </div>
       )}
 
-      {/* ============================================================ */}
-      {/* PLANS VIEW — Preparation-first                               */}
-      {/* ============================================================ */}
+      {/* ══════════════════════════════════════════════════════════════════ */}
+      {/* ── 2. PLANS VIEW ("What I intend to do") ───────────────────────── */}
+      {/* ══════════════════════════════════════════════════════════════════ */}
       {viewMode === 'plans' && (
         <div className="space-y-4">
-          {/* Action Row: Paste from AI & Manual Builder */}
-          <div className="grid grid-cols-2 gap-2.5">
-            <button
-              type="button"
-              onClick={() => setIsAiPasteOpen(true)}
-              className="p-3 rounded-2xl bg-gradient-to-br from-[#1C1C1E] to-[#121214] border border-white/[0.08] hover:border-[#30D158]/50 text-left transition-all group flex flex-col justify-between"
-            >
-              <div className="w-7 h-7 rounded-xl bg-[#30D158]/15 text-[#30D158] flex items-center justify-center mb-2">
-                <Sparkles className="w-3.5 h-3.5" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-white group-hover:text-[#30D158] transition-colors">
-                  Paste AI Routine
-                </p>
-                <p className="text-[10px] text-[#8E8E93] mt-0.5">From your AI consultation</p>
-              </div>
-            </button>
+          {/* Header Action Strip */}
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold tracking-wider text-[#8E8E93] uppercase">
+              Your Routines ({routines.length})
+            </span>
 
-            <button
-              type="button"
-              onClick={() => setIsManualRoutineOpen(true)}
-              className="p-3 rounded-2xl bg-gradient-to-br from-[#1C1C1E] to-[#121214] border border-white/[0.08] hover:border-white/30 text-left transition-all group flex flex-col justify-between"
-            >
-              <div className="w-7 h-7 rounded-xl bg-[#0A84FF]/15 text-[#0A84FF] flex items-center justify-center mb-2">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setIsAiPasteOpen(true)}
+                className="px-2.5 py-1.5 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] text-xs font-semibold text-[#30D158] flex items-center gap-1 transition-colors cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>AI Paste</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsManualRoutineOpen(true)}
+                className="px-2.5 py-1.5 rounded-lg bg-white text-black font-bold text-xs flex items-center gap-1 hover:bg-zinc-200 transition-colors cursor-pointer"
+              >
                 <Plus className="w-3.5 h-3.5" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-white group-hover:text-white transition-colors">
-                  Build Routine
-                </p>
-                <p className="text-[10px] text-[#8E8E93] mt-0.5">Pick specific exercises</p>
-              </div>
-            </button>
+                <span>Build</span>
+              </button>
+            </div>
           </div>
 
-          {/* Routine List */}
           {loadingRoutines ? (
             <div className="space-y-3">
-              {[1, 2].map((n) => (
-                <div key={n} className="h-44 bg-[#1C1C1E] rounded-3xl animate-pulse" />
+              {[1, 2].map((i) => (
+                <div key={i} className="h-36 bg-[#1C1C1E] rounded-2xl animate-pulse" />
               ))}
             </div>
           ) : routines.length === 0 ? (
-            <div className="py-12 text-center ios-card p-6 space-y-2">
-              <Dumbbell className="w-8 h-8 text-[#8E8E93] mx-auto mb-1" />
-              <p className="text-sm font-semibold text-white">No Routines Yet</p>
-              <p className="text-xs text-[#8E8E93] max-w-xs mx-auto">
-                Paste the consultation text from your AI coach or build a routine manually to get
-                started.
-              </p>
+            <div className="ios-card p-6 text-center space-y-3">
+              <Dumbbell className="w-8 h-8 text-[#8E8E93] mx-auto" />
+              <div>
+                <p className="text-sm font-bold text-white">No Routines Created</p>
+                <p className="text-xs text-[#8E8E93] mt-1 max-w-xs mx-auto">
+                  Build a custom training split or paste your workout routine from your AI coach.
+                </p>
+              </div>
+              <div className="flex items-center justify-center gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAiPasteOpen(true)}
+                  className="px-4 py-2 rounded-xl bg-white/[0.08] text-white font-semibold text-xs cursor-pointer"
+                >
+                  Paste AI Routine
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsManualRoutineOpen(true)}
+                  className="px-4 py-2 rounded-xl bg-[#30D158] text-black font-bold text-xs cursor-pointer"
+                >
+                  Build Custom
+                </button>
+              </div>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {routines.map((routine) => {
                 const isScheduledToday = routine.days.some(
-                  (d) => d.toLowerCase() === todayName.toLowerCase()
+                  (d) => d.toLowerCase() === todayDayName.toLowerCase()
                 );
-                const firstEx = routine.exercises[0];
-                const bannerThumb = firstEx?.youtube_id
-                  ? `https://img.youtube.com/vi/${firstEx.youtube_id}/hqdefault.jpg`
-                  : firstEx?.thumbnail_url;
 
                 return (
                   <div
                     key={routine.id}
-                    onClick={() => setSelectedRoutine(routine)}
-                    className="ios-card overflow-hidden border border-white/[0.08] hover:border-[#30D158]/40 transition-all cursor-pointer group"
+                    onClick={() => handleOpenRoutineOverview(routine)}
+                    className="ios-card p-4 space-y-3 hover:border-white/20 transition-all cursor-pointer group"
                   >
-                    {/* ── Video Thumbnail Banner ── */}
-                    {bannerThumb && (
-                      <div className="relative h-36 bg-black overflow-hidden">
-                        <img
-                          src={bannerThumb}
-                          alt={routine.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).style.display = 'none';
-                          }}
-                        />
-                        {/* Gradient overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
-
-                        {/* Today badge */}
-                        {isScheduledToday && (
-                          <div className="absolute top-2.5 left-2.5">
-                            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#30D158] text-black shadow">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="flex items-center gap-1.5 mb-1">
+                          {isScheduledToday && (
+                            <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-[#30D158] text-black">
                               Today
                             </span>
-                          </div>
-                        )}
+                          )}
+                          <span className="text-[10px] text-[#8E8E93] uppercase font-semibold">
+                            {routine.days.join(', ') || 'Flexible days'}
+                          </span>
+                        </div>
+                        <h3 className="text-base font-bold text-white group-hover:text-[#30D158] transition-colors">
+                          {routine.title}
+                        </h3>
+                        <p className="text-xs text-[#8E8E93] mt-0.5">
+                          {routine.exercises.length} exercises · Focus: {routine.focus || 'Strength'}
+                        </p>
+                      </div>
 
-                        {/* Delete */}
+                      {/* Thumbnail Preview strip */}
+                      <div className="flex -space-x-2 overflow-hidden shrink-0">
+                        {routine.exercises.slice(0, 3).map((ex, idx) => (
+                          <div
+                            key={idx}
+                            className="w-10 h-10 rounded-xl bg-black/60 border border-white/10 overflow-hidden shrink-0"
+                          >
+                            <ExerciseThumbnail
+                              exercise={ex}
+                              aspectRatio="1/1"
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Action footer */}
+                    <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between">
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={(e) => handleEditRoutine(routine, e)}
+                          className="p-1.5 text-[#8E8E93] hover:text-white transition-colors cursor-pointer"
+                          title="Edit"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => handleDuplicateRoutine(routine.id, e)}
+                          className="p-1.5 text-[#8E8E93] hover:text-white transition-colors cursor-pointer"
+                          title="Duplicate"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                        </button>
                         <button
                           type="button"
                           onClick={(e) => handleDeleteRoutine(routine.id, e)}
-                          className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white/60 hover:text-red-400 hover:bg-black/70 transition-colors"
-                          title="Delete Routine"
+                          className="p-1.5 text-[#8E8E93] hover:text-red-400 transition-colors cursor-pointer"
+                          title="Delete"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
-
-                        {/* Title overlay */}
-                        <div className="absolute bottom-0 left-0 right-0 p-3">
-                          <div className="flex items-center gap-1.5 mb-1">
-                            <span className="text-[10px] font-semibold uppercase tracking-wider text-[#0A84FF] bg-[#0A84FF]/20 px-2 py-0.5 rounded-full backdrop-blur-sm border border-[#0A84FF]/20">
-                              {routine.focus || 'Training'}
-                            </span>
-                            <span className="text-[10px] text-white/50">
-                              {routine.exercises.length} exercises
-                            </span>
-                          </div>
-                          <h3 className="text-sm font-bold text-white leading-snug group-hover:text-[#30D158] transition-colors line-clamp-2">
-                            {routine.title}
-                          </h3>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* ── Card Body ── */}
-                    <div className="p-3 space-y-2.5">
-                      {/* If no banner, show title here */}
-                      {!bannerThumb && (
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <div className="flex items-center gap-2 mb-1">
-                              {isScheduledToday && (
-                                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#30D158] text-black">
-                                  Today
-                                </span>
-                              )}
-                              <span className="text-[10px] font-semibold uppercase tracking-wider text-[#0A84FF] bg-[#0A84FF]/10 px-2 py-0.5 rounded-full">
-                                {routine.focus || 'Training'}
-                              </span>
-                            </div>
-                            <h3 className="text-sm font-bold text-white group-hover:text-[#30D158] transition-colors">
-                              {routine.title}
-                            </h3>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={(e) => handleDeleteRoutine(routine.id, e)}
-                            className="p-1.5 text-[#8E8E93] hover:text-red-400 transition-colors shrink-0"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      )}
-
-                      {/* Scheduled Days & Open CTA */}
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex flex-wrap items-center gap-1">
-                          {routine.days.map((day) => (
-                            <span
-                              key={day}
-                              className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
-                                day.toLowerCase() === todayName.toLowerCase()
-                                  ? 'bg-[#30D158]/20 text-[#30D158] border border-[#30D158]/30 font-semibold'
-                                  : 'bg-white/[0.05] text-[#8E8E93]'
-                              }`}
-                            >
-                              {day}
-                            </span>
-                          ))}
-                        </div>
-
-                        <div className="flex items-center gap-1 text-xs font-semibold text-[#30D158] group-hover:translate-x-0.5 transition-transform shrink-0">
-                          <span>Open</span>
-                          <ChevronRight className="w-4 h-4" />
-                        </div>
                       </div>
 
-                      {/* Exercise Movements Visual Strip */}
-                      {routine.exercises.length > 0 && (
-                        <div className="pt-2 border-t border-white/[0.04]">
-                          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth">
-                            {routine.exercises.map((ex, idx) => (
-                              <div
-                                key={ex.id || idx}
-                                className="w-10 h-10 rounded-xl overflow-hidden bg-black/60 border border-white/[0.08] shrink-0 relative group-hover:border-[#30D158]/30 transition-colors"
-                                title={ex.name}
-                              >
-                                <ExerciseThumbnail exercise={ex} aspectRatio="1/1" className="w-full h-full" />
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
+                      <button
+                        type="button"
+                        onClick={(e) => handleStartWorkoutDirect(routine, e)}
+                        className="px-3 py-1.5 rounded-lg bg-white text-black font-bold text-xs flex items-center gap-1 hover:bg-zinc-200 transition-colors cursor-pointer"
+                      >
+                        <Play className="w-3 h-3 fill-black" />
+                        <span>Start</span>
+                      </button>
                     </div>
                   </div>
                 );
@@ -649,9 +926,282 @@ export function ExerciseListView({ onOpenAddExercise, onNavigateTab }: ExerciseL
         </div>
       )}
 
-      {/* ============================================================ */}
-      {/* MODALS                                                        */}
-      {/* ============================================================ */}
+      {/* ══════════════════════════════════════════════════════════════════ */}
+      {/* ── 3. HISTORY VIEW ("What I did previously") ───────────────────── */}
+      {/* ══════════════════════════════════════════════════════════════════ */}
+      {viewMode === 'history' && (
+        <div className="space-y-5">
+          {/* Monthly Stats Summary */}
+          <div className="grid grid-cols-3 gap-2">
+            <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/[0.04] text-center">
+              <span className="text-xl font-bold text-white tracking-tight block">
+                {historyStats.activeDays}
+              </span>
+              <span className="text-[10px] text-[#8E8E93] uppercase font-semibold block mt-0.5">
+                Active Days
+              </span>
+            </div>
+
+            <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/[0.04] text-center">
+              <span className="text-xl font-bold text-white tracking-tight block">
+                {historyStats.workoutsCount}
+              </span>
+              <span className="text-[10px] text-[#8E8E93] uppercase font-semibold block mt-0.5">
+                Workouts
+              </span>
+            </div>
+
+            <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/[0.04] text-center">
+              <span className="text-xl font-bold text-white tracking-tight block">
+                {historyStats.totalKcal.toLocaleString()}
+              </span>
+              <span className="text-[10px] text-[#8E8E93] uppercase font-semibold block mt-0.5">
+                kcal Burned
+              </span>
+            </div>
+          </div>
+
+          {/* Minimal Clean Calendar */}
+          <div className="ios-card p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-bold text-white">{monthName}</span>
+
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setSelectedMonthOffset((prev) => prev - 1)}
+                  className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-zinc-300 transition-colors cursor-pointer"
+                  aria-label="Previous Month"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedMonthOffset(0)}
+                  className={`px-2 h-7 rounded-lg text-[10px] font-semibold transition-colors cursor-pointer ${
+                    selectedMonthOffset === 0
+                      ? 'text-zinc-500 bg-transparent'
+                      : 'text-zinc-300 bg-white/5 hover:bg-white/10'
+                  }`}
+                >
+                  Today
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedMonthOffset((prev) => prev + 1)}
+                  className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-zinc-300 transition-colors cursor-pointer"
+                  aria-label="Next Month"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Day of Week Headers */}
+            <div className="grid grid-cols-7 text-center text-[10px] font-semibold text-zinc-500 uppercase">
+              <span>Mo</span>
+              <span>Tu</span>
+              <span>We</span>
+              <span>Th</span>
+              <span>Fr</span>
+              <span>Sa</span>
+              <span>Su</span>
+            </div>
+
+            {/* Monthly Grid */}
+            <div className="grid grid-cols-7 gap-1">
+              {Array.from({ length: firstDayIndex }).map((_, i) => (
+                <div key={`blank-${i}`} className="h-8" />
+              ))}
+
+              {Array.from({ length: daysInMonth }).map((_, i) => {
+                const dayNum = i + 1;
+                const d = new Date(viewedYear, viewedMonth, dayNum);
+                const dateStr = getLocalDateString(d);
+                const isToday = dateStr === todayStr;
+                const act = activityMap[dateStr];
+                const hasWorkout = Boolean(act?.hasWorkout);
+                const hasMeal = Boolean(act?.hasMeal);
+
+                return (
+                  <button
+                    key={dateStr}
+                    type="button"
+                    onClick={() => handleDayClick(dateStr)}
+                    className={`relative h-8 rounded-lg flex flex-col items-center justify-center text-xs transition-all cursor-pointer ${
+                      isToday ? 'border border-white text-white font-bold' : 'text-zinc-400 hover:bg-white/5'
+                    }`}
+                  >
+                    <span className="leading-none text-[11px]">{dayNum}</span>
+                    <div className="flex gap-0.5 mt-0.5">
+                      {hasWorkout && <span className="w-1 h-1 rounded-full bg-[#30D158]" />}
+                      {hasMeal && <span className="w-1 h-1 rounded-full bg-[#FF9500]" />}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Simple Legend */}
+            <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[10px] text-zinc-500">
+              <div className="flex items-center gap-3">
+                <span className="flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#30D158]" />
+                  <span>Workout</span>
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#FF9500]" />
+                  <span>Meal</span>
+                </span>
+              </div>
+              <span>Tap day for details</span>
+            </div>
+          </div>
+
+          {/* Chronological Activity Log */}
+          <div className="space-y-3">
+            <span className="text-[11px] font-bold tracking-wider text-[#8E8E93] uppercase block">
+              Recent Activity
+            </span>
+
+            {groupedExercises.length === 0 ? (
+              <p className="text-xs text-[#8E8E93] text-center py-6">No historical activity recorded yet.</p>
+            ) : (
+              <div className="space-y-4">
+                {groupedExercises.map(([dateTitle, list]) => (
+                  <div key={dateTitle} className="space-y-1.5">
+                    <span className="text-[10px] font-bold text-[#8E8E93] uppercase px-1">
+                      {dateTitle}
+                    </span>
+                    <div className="ios-card divide-y divide-white/[0.06] overflow-hidden text-xs">
+                      {list.map((ex) => {
+                        const data = getActivityDisplayData(ex);
+                        return (
+                          <div
+                            key={ex.id}
+                            onClick={() => {
+                              setSelectedHistoryLog(ex);
+                              setIsHistoryDetailOpen(true);
+                            }}
+                            className="p-3.5 flex items-center justify-between hover:bg-white/[0.03] active:bg-white/[0.05] transition-colors cursor-pointer group select-none"
+                          >
+                            <div className="flex-1 pr-3">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <p className="font-bold text-white text-xs tracking-tight group-hover:text-[#30D158] transition-colors">
+                                  {data.cleanTitle}
+                                </p>
+                                {data.isPartial && (
+                                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                                    Partial ({data.movementsSummary || 'incomplete'})
+                                  </span>
+                                )}
+                              </div>
+                              {data.equipmentSubtitle && (
+                                <p className="text-[10px] text-[#30D158] font-medium mt-0.5">
+                                  {data.equipmentSubtitle}
+                                </p>
+                              )}
+                              <p className="text-[11px] text-[#8E8E93] mt-0.5">
+                                {fmtDuration(Number(ex.duration_minutes))}
+                                {ex.distance_km ? ` · ${ex.distance_km} km` : ''}
+                                {data.movementsSummary && !data.isPartial ? ` · ${data.movementsSummary}` : ''}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2.5 shrink-0">
+                              <span className="font-black text-white text-xs">~{data.caloriesBurned} kcal</span>
+                              <ChevronRight className="w-3.5 h-3.5 text-zinc-600 group-hover:text-zinc-400 transition-colors" />
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteExercise(ex.id);
+                                }}
+                                className="text-zinc-600 hover:text-red-400 p-1 transition-colors cursor-pointer ml-1"
+                                title="Delete record"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════ */}
+      {/* ── RECOVERY GUIDANCE BOTTOM SHEET ──────────────────────────────── */}
+      {/* ══════════════════════════════════════════════════════════════════ */}
+      {showRecoverySheet && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
+          <div className="w-full max-w-md bg-[#1C1C1E] border-t sm:border border-white/10 rounded-t-3xl sm:rounded-3xl p-5 space-y-4 max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-2 border-b border-white/10">
+              <div>
+                <h3 className="text-base font-bold text-white">Why is Recovery Crucial?</h3>
+                <p className="text-[11px] text-[#8E8E93]">The science of muscle adaptation</p>
+              </div>
+              <button
+                onClick={() => setShowRecoverySheet(false)}
+                className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-zinc-400 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs text-zinc-300 leading-relaxed">
+              <p>
+                Muscles don&apos;t grow during your workouts—they grow <strong className="text-white">afterward</strong> while recovering. Strength training creates microscopic micro-tears in muscle fibers. Your body repairs and thickens these fibers during rest periods through muscle protein synthesis.
+              </p>
+
+              <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.06] space-y-2">
+                <span className="font-bold text-white block">Key Recovery Pillars</span>
+                <div className="space-y-1.5 text-[11px] text-[#8E8E93]">
+                  <div className="flex items-center gap-2">
+                    <Droplets className="w-3.5 h-3.5 text-[#0A84FF] shrink-0" />
+                    <span className="text-zinc-300">
+                      <strong className="text-white">Hydration:</strong> 2.5L+ restores cell volume and transports nutrients.
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Flame className="w-3.5 h-3.5 text-[#FF9500] shrink-0" />
+                    <span className="text-zinc-300">
+                      <strong className="text-white">Protein:</strong> Hit your daily macro target to provide amino acid building blocks.
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Heart className="w-3.5 h-3.5 text-pink-400 shrink-0" />
+                    <span className="text-zinc-300">
+                      <strong className="text-white">Active Mobility:</strong> 15-20 min light walking promotes blood flow without fatigue.
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Moon className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                    <span className="text-zinc-300">
+                      <strong className="text-white">Deep Sleep:</strong> 7–8 hours triggers growth hormone release.
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowRecoverySheet(false)}
+              className="w-full py-3 rounded-xl bg-white text-black font-bold text-xs hover:bg-zinc-200 transition-colors cursor-pointer"
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════ */}
+      {/* ── MODALS (100% Preserved) ─────────────────────────────────────── */}
+      {/* ══════════════════════════════════════════════════════════════════ */}
       <ExerciseVideoModal
         exercise={selectedVideoExercise}
         isOpen={!!selectedVideoExercise}
@@ -670,6 +1220,41 @@ export function ExerciseListView({ onOpenAddExercise, onNavigateTab }: ExerciseL
         onClose={() => setIsManualRoutineOpen(false)}
         onRoutineSaved={handleSaveManualRoutine}
       />
+
+      <DayDetailsModal
+        isOpen={isDayModalOpen}
+        onClose={() => setIsDayModalOpen(false)}
+        dateStr={inspectDateStr}
+        summary={inspectSummary}
+        meals={inspectMeals}
+        exercises={inspectExercises}
+        routine={inspectRoutine || null}
+        isToday={inspectDateStr === todayStr}
+        onOpenAddMeal={onOpenAddMeal}
+        onOpenAddExercise={onOpenAddExercise}
+      />
+
+      <ActivityDetailsModal
+        log={selectedHistoryLog}
+        isOpen={isHistoryDetailOpen}
+        onClose={() => {
+          setIsHistoryDetailOpen(false);
+          setSelectedHistoryLog(null);
+        }}
+        onDelete={handleDeleteExercise}
+      />
+
+      {editingRoutine && (
+        <RoutineEditView
+          routine={editingRoutine}
+          isOpen={!!editingRoutine}
+          onClose={() => setEditingRoutine(null)}
+          onSave={async (updated) => {
+            await handleSaveEditedRoutine(updated);
+            setEditingRoutine(null);
+          }}
+        />
+      )}
     </div>
   );
 }

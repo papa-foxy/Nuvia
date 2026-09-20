@@ -8,11 +8,17 @@ import {
   AiRecommendation,
   CustomExercise,
 } from '@/types/database';
-import { WorkoutRoutine } from '@/types/routine';
+import {
+  WorkoutRoutine,
+  RoutineWorkoutStats,
+  LoggedSet,
+  ExercisePerformance,
+} from '@/types/routine';
 import { StreakData, StreakDay, MilestoneBadge } from '@/types/streak';
 import { matchExercise, PLAYLIST_ID } from './exercise-catalog';
 import { createClient, isSupabaseConfigured } from './supabase/client';
 import { calculateTargets } from './calculator';
+import { NuviaCache, workoutRoutinesKey } from './nuvia-cache';
 
 const DEMO_USER_ID = 'demo-user-001';
 
@@ -847,68 +853,97 @@ export const DataService = {
           .eq('user_id', userId)
           .order('created_at', { ascending: false });
 
-        if (!error && data && data.length > 0) {
+        if (!error && data) {
+          // If query succeeded, return strictly this user's routines (even if empty []).
+          // NEVER fall back to other users' routines when Supabase successfully returns 0 routines.
           return data as WorkoutRoutine[];
         }
-      } catch {
-        // Fallback to local
+        if (error) {
+          console.warn('Supabase getWorkoutRoutines error:', error);
+        }
+      } catch (err) {
+        console.warn('Supabase getWorkoutRoutines exception:', err);
       }
     }
 
     const state = getLocalState();
-    return state.workoutRoutines || DEFAULT_ROUTINES;
+    if (userId && userId !== DEMO_USER_ID) {
+      // Local/offline fallback for logged-in user: ONLY return routines belonging to THIS user!
+      return (state.workoutRoutines || []).filter((r) => r.user_id === userId);
+    }
+
+    // Demo mode: only return demo routines (never routines created by registered users)
+    return (state.workoutRoutines || []).filter((r) => r.user_id === DEMO_USER_ID || !r.user_id);
   },
 
-  async saveWorkoutRoutine(routine: WorkoutRoutine): Promise<WorkoutRoutine> {
-    if (isSupabaseConfigured() && routine.user_id && routine.user_id !== DEMO_USER_ID) {
+  async saveWorkoutRoutine(routine: WorkoutRoutine, userId?: string): Promise<WorkoutRoutine> {
+    const effectiveUserId = userId || routine.user_id || DEMO_USER_ID;
+    const routineToSave: WorkoutRoutine = {
+      ...routine,
+      user_id: effectiveUserId,
+      updated_at: new Date().toISOString(),
+    };
+
+    if (isSupabaseConfigured() && effectiveUserId && effectiveUserId !== DEMO_USER_ID) {
       try {
         const supabase = createClient();
         const { error } = await supabase
           .from('workout_routines')
           .upsert({
-            id: routine.id,
-            user_id: routine.user_id,
-            title: routine.title,
-            days: routine.days,
-            focus: routine.focus,
-            description: routine.description,
-            exercises: routine.exercises,
-            updated_at: new Date().toISOString(),
+            id: routineToSave.id,
+            user_id: effectiveUserId,
+            title: routineToSave.title,
+            days: routineToSave.days,
+            focus: routineToSave.focus,
+            description: routineToSave.description,
+            exercises: routineToSave.exercises,
+            updated_at: routineToSave.updated_at,
           });
 
-        if (!error) {
-          // Table exists and saved!
+        if (error) {
+          console.error('Supabase saveWorkoutRoutine error:', error);
         }
-      } catch {
-        // Table may not exist yet in Supabase
+      } catch (err) {
+        console.error('Supabase saveWorkoutRoutine exception:', err);
       }
     }
+
+    // Invalidate routine cache for this user
+    NuviaCache.invalidate(workoutRoutinesKey(effectiveUserId));
 
     const state = getLocalState();
     if (!state.workoutRoutines) {
       state.workoutRoutines = [...DEFAULT_ROUTINES];
     }
-    const idx = state.workoutRoutines.findIndex((r) => r.id === routine.id);
+    const idx = state.workoutRoutines.findIndex((r) => r.id === routineToSave.id);
     if (idx >= 0) {
-      state.workoutRoutines[idx] = { ...routine, updated_at: new Date().toISOString() };
+      state.workoutRoutines[idx] = routineToSave;
     } else {
       state.workoutRoutines.unshift({
-        ...routine,
-        created_at: routine.created_at || new Date().toISOString(),
+        ...routineToSave,
+        created_at: routineToSave.created_at || new Date().toISOString(),
       });
     }
     saveLocalState(state);
-    return routine;
+    return routineToSave;
   },
 
   async deleteWorkoutRoutine(routineId: string, userId?: string): Promise<void> {
     if (isSupabaseConfigured() && userId && userId !== DEMO_USER_ID) {
       try {
         const supabase = createClient();
-        await supabase.from('workout_routines').delete().eq('id', routineId);
-      } catch {
-        // Fallback
+        await supabase
+          .from('workout_routines')
+          .delete()
+          .eq('id', routineId)
+          .eq('user_id', userId);
+      } catch (err) {
+        console.error('Supabase deleteWorkoutRoutine exception:', err);
       }
+    }
+
+    if (userId) {
+      NuviaCache.invalidate(workoutRoutinesKey(userId));
     }
 
     const state = getLocalState();
@@ -916,6 +951,130 @@ export const DataService = {
       state.workoutRoutines = state.workoutRoutines.filter((r) => r.id !== routineId);
       saveLocalState(state);
     }
+  },
+
+  async duplicateWorkoutRoutine(routineId: string, userId?: string, newTitle?: string): Promise<WorkoutRoutine | null> {
+    const routines = await this.getWorkoutRoutines(userId);
+    const target = routines.find((r) => r.id === routineId);
+    if (!target) return null;
+
+    const effectiveUserId = userId || target.user_id || DEMO_USER_ID;
+    const clonedId = `routine-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+    const clonedRoutine: WorkoutRoutine = {
+      ...target,
+      id: clonedId,
+      user_id: effectiveUserId,
+      title: newTitle?.trim() || `${target.title} (Copy)`,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      exercises: target.exercises.map((ex, idx) => ({
+        ...ex,
+        id: `ex-${clonedId}-${idx}`,
+      })),
+    };
+
+    await this.saveWorkoutRoutine(clonedRoutine, effectiveUserId);
+    return clonedRoutine;
+  },
+
+  /**
+   * Aggregates real historical workout statistics for a specific routine.
+   * Never fabricates data; returns 0s if no workouts logged yet.
+   */
+  async getRoutineWorkoutStats(routineId: string, routineTitle: string, userId?: string): Promise<RoutineWorkoutStats> {
+    const allLogs = await this.getExerciseLogs(userId);
+    
+    // Match logs associated with this routine either by routine_id in ai_analysis or by title
+    const matchingLogs = allLogs.filter((log) => {
+      const logRoutineId = log.ai_analysis?.routine_id;
+      if (logRoutineId && logRoutineId === routineId) return true;
+      if (log.exercise_type && log.exercise_type.toLowerCase() === routineTitle.toLowerCase()) return true;
+      return false;
+    });
+
+    if (matchingLogs.length === 0) {
+      return {
+        completedCount: 0,
+        lastCompletedDate: null,
+        totalDurationMinutes: 0,
+        totalCaloriesBurned: 0,
+      };
+    }
+
+    let totalDuration = 0;
+    let totalCalories = 0;
+    let lastDate: string | null = null;
+
+    for (const log of matchingLogs) {
+      totalDuration += Number(log.duration_minutes) || 0;
+      totalCalories += Number(log.calories_burned) || 0;
+      if (!lastDate && log.created_at) {
+        lastDate = log.created_at;
+      }
+    }
+
+    return {
+      completedCount: matchingLogs.length,
+      lastCompletedDate: lastDate,
+      totalDurationMinutes: totalDuration,
+      totalCaloriesBurned: totalCalories,
+    };
+  },
+
+  /**
+   * Retrieves the most recent logged set-by-set performance for an exercise,
+   * enabling Progressive Overload insights (e.g. "Last session: 10 kg · 12, 10, 10 reps").
+   */
+  async getExercisePerformanceHistory(exerciseName: string, userId?: string): Promise<{ date: string; sets: LoggedSet[] } | null> {
+    if (!exerciseName) return null;
+    const allLogs = await this.getExerciseLogs(userId);
+    const searchName = exerciseName.trim().toLowerCase();
+
+    for (const log of allLogs) {
+      const performanceList = log.ai_analysis?.actual_performance as ExercisePerformance[] | undefined;
+      if (Array.isArray(performanceList)) {
+        const match = performanceList.find(
+          (p) => p.name.trim().toLowerCase() === searchName
+        );
+        if (match && match.sets && match.sets.length > 0) {
+          return {
+            date: log.created_at || new Date().toISOString(),
+            sets: match.sets,
+          };
+        }
+      }
+    }
+    return null;
+  },
+
+  /**
+   * Identifies muscle groups trained within the last 48 hours for recovery awareness.
+   */
+  async getRecentMuscleTrainingHistory(userId?: string): Promise<{ muscle: string; date: string }[]> {
+    const allLogs = await this.getExerciseLogs(userId);
+    const now = Date.now();
+    const fortyEightHoursAgo = now - 48 * 60 * 60 * 1000;
+    const results: { muscle: string; date: string }[] = [];
+    const seenMuscles = new Set<string>();
+
+    for (const log of allLogs) {
+      const logTime = new Date(log.created_at || now).getTime();
+      if (logTime < fortyEightHoursAgo) break;
+
+      const performanceList = log.ai_analysis?.actual_performance as ExercisePerformance[] | undefined;
+      if (Array.isArray(performanceList)) {
+        for (const p of performanceList) {
+          if (p.target_muscle && !seenMuscles.has(p.target_muscle.toLowerCase())) {
+            seenMuscles.add(p.target_muscle.toLowerCase());
+            results.push({
+              muscle: p.target_muscle,
+              date: log.created_at || new Date().toISOString(),
+            });
+          }
+        }
+      }
+    }
+    return results;
   },
 
   // =========================================================================

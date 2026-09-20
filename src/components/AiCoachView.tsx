@@ -5,6 +5,7 @@ import { Send, Utensils, Flame, Activity, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { DataService } from '@/lib/data-service';
 import { AiService, CoachAdviceResult } from '@/lib/ai-service';
+import { FitnessContextService } from '@/lib/fitness-context-service';
 
 export function AiCoachView() {
   const { user, profile, goals } = useAuth();
@@ -36,15 +37,19 @@ export function AiCoachView() {
       }
 
       setLoadingAdvice(true);
-      const summary = await DataService.getDailySummary(user?.id);
-      const meals = await DataService.getMeals(user?.id);
-
       try {
+        const [summary, meals, fitnessCtx] = await Promise.all([
+          DataService.getDailySummary(user?.id),
+          DataService.getMeals(user?.id),
+          FitnessContextService.getFitnessContext(user?.id),
+        ]);
+
         const res = await AiService.getCoachAdvice({
           todaySummary: summary,
           goals,
           profile,
           recentMeals: meals,
+          fitnessContext: fitnessCtx,
         });
         if (res.advice) {
           setAdvice(res.advice);
@@ -76,8 +81,11 @@ export function AiCoachView() {
     setAnswer(null);
 
     try {
-      const summary = await DataService.getDailySummary(user?.id);
-      const meals = await DataService.getMeals(user?.id);
+      const [summary, meals, fitnessCtx] = await Promise.all([
+        DataService.getDailySummary(user?.id),
+        DataService.getMeals(user?.id),
+        FitnessContextService.getFitnessContext(user?.id),
+      ]);
 
       const res = await AiService.getCoachAdvice({
         todaySummary: summary,
@@ -85,6 +93,7 @@ export function AiCoachView() {
         profile,
         recentMeals: meals,
         chatMessage: q,
+        fitnessContext: fitnessCtx,
       });
 
       setAnswer(res.reply || "You're making steady progress today! Keep staying consistent with your protein and movement.");
@@ -168,9 +177,10 @@ export function AiCoachView() {
         {/* Quick Suggestion Pills */}
         <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
           {[
+            'What workout should I do today?',
+            'How should I progress my squats?',
             'Can I still eat dinner?',
             'What high-protein snack should I eat?',
-            'How much exercise is left?',
           ].map((prompt, i) => (
             <button
               key={i}

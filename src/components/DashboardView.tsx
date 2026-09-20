@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { ChevronRight, Sparkles, Send, Dumbbell, Flame, CheckCircle2, Camera } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { ChevronRight, Sparkles, Send, Dumbbell, Flame, CheckCircle2, Camera, Moon, X } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { DataService, getLocalDateString } from '@/lib/data-service';
 import { DailySummary, Meal, ExerciseLog } from '@/types/database';
@@ -15,6 +15,8 @@ import {
   workoutRoutinesKey,
 } from '@/lib/nuvia-cache';
 import { ExerciseThumbnail } from './ExerciseThumbnail';
+import { calculateTargets, getUserCalculationContext } from '@/lib/calculator';
+import { cleanActivityTitle } from '@/lib/activity-utils';
 
 interface DashboardViewProps {
   onOpenAddMeal: () => void;
@@ -45,6 +47,7 @@ export function DashboardView({
 
   const [quickInput, setQuickInput] = useState('');
   const [nuviaReply, setNuviaReply] = useState<string | null>(null);
+  const [targetUpdateNotice, setTargetUpdateNotice] = useState<{ prev: number; current: number } | null>(null);
 
   const today = new Date();
   const dateFormatted = today
@@ -152,20 +155,67 @@ export function DashboardView({
   }, [userId, todayStr, refreshKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Computed values ───────────────────────────────────────────────────────
-  const calorieTarget   = goals?.calorie_target       || 2200;
-  const proteinTarget   = goals?.protein_target        || 150;
-  const carbsTarget     = goals?.carbohydrate_target   || 250;
-  const fatTarget       = goals?.fat_target            || 70;
+  const userCalc = useMemo(() => {
+    const ctx = getUserCalculationContext(profile, goals);
+    return calculateTargets(ctx);
+  }, [profile, goals]);
 
-  const caloriesConsumed = summary?.calories_consumed   || 0;
-  const caloriesBurned   = summary?.calories_burned     || 0;
-  const proteinConsumed  = summary?.protein_consumed    || 0;
-  const carbsConsumed    = summary?.carbohydrate_consumed || 0;
-  const fatConsumed      = summary?.fat_consumed        || 0;
-  const exerciseMinutes  = summary?.exercise_minutes    || 0;
+  const maintenanceCalories = userCalc.tdee;
+  const calorieTarget   = goals?.calorie_target       || userCalc.calorie_target;
+  const proteinTarget   = goals?.protein_target        || userCalc.protein_target;
+  const carbsTarget     = goals?.carbohydrate_target   || userCalc.carbohydrate_target;
+  const fatTarget       = goals?.fat_target            || userCalc.fat_target;
 
-  const remainingCalories = Math.max(0, calorieTarget - caloriesConsumed);
-  const proteinGap        = Math.max(0, proteinTarget - proteinConsumed);
+  // Food consumed from logged meals
+  const foodCalories = summary?.calories_consumed || 0;
+  // Exercise calories burned from logged workouts/activities
+  const exerciseCalories = summary?.calories_burned || 0;
+  const exerciseMinutes = summary?.exercise_minutes || 0;
+  const proteinConsumed = summary?.protein_consumed || 0;
+  const carbsConsumed = summary?.carbohydrate_consumed || 0;
+  const fatConsumed = summary?.fat_consumed || 0;
+
+  /**
+   * Authoritative Calorie Accounting Pipeline:
+   * 1. Maintenance (TDEE): Baseline energy expenditure calculated from Mifflin-St Jeor BMR * Activity Multiplier.
+   * 2. Goal Adjustment: Deficit/surplus based on user's target (e.g. -500 kcal for fat loss, +250 kcal for muscle gain).
+   * 3. Daily Calorie Target: The authoritative dietary baseline allowance (TDEE + Goal Adjustment).
+   * 4. Eligible Exercise Credit: Workout and activity calories burned logged today (exerciseCalories).
+   * 5. Net Calories: Actual food consumed minus eligible exercise credit (foodCalories - exerciseCalories).
+   * 6. Remaining Budget: Allowance remaining within the daily target (dailyTarget - netCalories).
+   *
+   * Accounting integrity: Food consumed is never artificially altered, recorded workout burns remain
+   * exact, and exercise directly offsets food intake within the daily net budget without double-counting baseline activity.
+   */
+  const netCalories = foodCalories - exerciseCalories;
+  const remainingCalories = calorieTarget - netCalories;
+  const isOverTarget = netCalories > calorieTarget;
+  const overCalories = isOverTarget ? netCalories - calorieTarget : 0;
+  const proteinGap = Math.max(0, proteinTarget - proteinConsumed);
+
+  const goalType = profile?.goal || 'lose_weight';
+
+  // Target recalculation detection: show banner only when target actually changed
+  useEffect(() => {
+    if (!userId || !calorieTarget) return;
+    const storageKey = `nuvia_last_calorie_target_${userId}`;
+    const stored = localStorage.getItem(storageKey);
+    if (stored) {
+      const prevVal = Number(stored);
+      if (prevVal && prevVal !== calorieTarget) {
+        setTargetUpdateNotice({ prev: prevVal, current: calorieTarget });
+      }
+    } else {
+      localStorage.setItem(storageKey, String(calorieTarget));
+    }
+  }, [userId, calorieTarget]);
+
+  const handleDismissTargetNotice = () => {
+    if (userId && calorieTarget) {
+      localStorage.setItem(`nuvia_last_calorie_target_${userId}`, String(calorieTarget));
+    }
+    setTargetUpdateNotice(null);
+  };
 
   const handleAskNuvia = (e: React.FormEvent) => {
     e.preventDefault();
@@ -190,11 +240,11 @@ export function DashboardView({
       );
     } else if (remainingCalories > 300) {
       setNuviaReply(
-        `You have ${remainingCalories} kcal remaining. A balanced option around 400 kcal like salmon with vegetables fits comfortably within your goal.`
+        `You have ${remainingCalories.toLocaleString()} kcal remaining in your net calorie budget today. A balanced option around 400 kcal like salmon with vegetables fits comfortably within your goal.`
       );
     } else {
       setNuviaReply(
-        `You're right on target today (${caloriesConsumed} of ${calorieTarget} kcal). Focus on hydration and restful sleep.`
+        `You're right on target today (${netCalories.toLocaleString()} net of ${calorieTarget.toLocaleString()} kcal target; ${foodCalories.toLocaleString()} kcal eaten, ${exerciseCalories.toLocaleString()} kcal burned). Focus on hydration and restful sleep.`
       );
     }
     setQuickInput('');
@@ -227,7 +277,9 @@ export function DashboardView({
     );
   }
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  const avatarUrl = profile?.avatar_url || user?.avatar_url;
+  const displayName = profile?.name || user?.full_name || user?.email?.split('@')[0] || 'User';
+
   return (
     <div className="flex-1 flex flex-col pb-20 px-5 pt-4 w-full max-w-md mx-auto space-y-6">
       {/* Subtle background-refresh indicator */}
@@ -237,15 +289,73 @@ export function DashboardView({
         </div>
       )}
 
-      {/* Large Page Title (Apple Health Style) */}
-      <div className="pt-2">
-        <p className="text-[11px] font-semibold tracking-wider text-[#8E8E93]">
-          {dateFormatted}
-        </p>
-        <h1 className="text-3xl font-bold tracking-tight text-white mt-0.5">Today</h1>
+      {/* Large Page Title (Apple Health Style) with User Avatar */}
+      <div className="pt-2 flex items-center justify-between">
+        <div>
+          <p className="text-[11px] font-semibold tracking-wider text-[#8E8E93]">
+            {dateFormatted}
+          </p>
+          <h1 className="text-3xl font-bold tracking-tight text-white mt-0.5">Today</h1>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => onNavigateTab('profile')}
+          className="relative group p-0.5 rounded-full hover:scale-105 active:scale-95 transition-transform"
+          title="View Profile"
+        >
+          <div className="w-10 h-10 rounded-full bg-[#1C1C1E] border border-white/20 group-hover:border-[#30D158] overflow-hidden flex items-center justify-center text-white font-bold text-sm shadow-md">
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt={displayName}
+                referrerPolicy="no-referrer"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span>{displayName.charAt(0).toUpperCase()}</span>
+            )}
+          </div>
+        </button>
       </div>
 
-      {/* SECTION 1: CALORIES */}
+      {/* TARGET RECALCULATION NOTIFICATION (When authoritative calorie target changes) */}
+      {targetUpdateNotice && (
+        <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex items-start justify-between gap-3 shadow-sm animate-in fade-in duration-300">
+          <div className="space-y-1">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-white">
+              <Sparkles className="w-3.5 h-3.5 text-[#30D158]" />
+              <span>Calorie target updated</span>
+            </div>
+            <p className="text-sm text-white font-bold tracking-tight">
+              {targetUpdateNotice.prev.toLocaleString()} → {targetUpdateNotice.current.toLocaleString()} kcal/day
+            </p>
+            <p className="text-[11px] text-[#8E8E93]">
+              Based on your latest goal and profile information.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                handleDismissTargetNotice();
+                onNavigateTab('goals');
+              }}
+              className="text-[11px] text-[#30D158] hover:underline font-medium pt-0.5 block cursor-pointer"
+            >
+              Why this changed →
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={handleDismissTargetNotice}
+            className="text-[#8E8E93] hover:text-white p-1 rounded-lg transition-colors cursor-pointer"
+            title="Dismiss notice"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
+      {/* SECTION 1: CALORIES (NET CALORIE BUDGETING MODEL) */}
       <div onClick={() => onNavigateTab('summary')} className="cursor-pointer group">
         <div className="flex items-center justify-between pb-1">
           <span className="text-xs font-semibold text-[#8E8E93] uppercase tracking-wider">
@@ -257,30 +367,88 @@ export function DashboardView({
           </span>
         </div>
 
+        {/* 1. How much did I eat? (Primary Number) */}
         <div className="flex items-baseline gap-2 mt-1">
-          <span className="text-[44px] font-semibold tracking-tight text-white leading-none">
-            {caloriesConsumed.toLocaleString()}
+          <span className="text-[40px] sm:text-[44px] font-semibold tracking-tight text-white leading-none">
+            {foodCalories.toLocaleString()}
           </span>
           <span className="text-base text-[#8E8E93] font-normal">
-            / {calorieTarget.toLocaleString()} kcal
+            kcal eaten
           </span>
         </div>
 
-        <p className="text-xs text-[#8E8E93] mt-1.5 font-normal">
-          {remainingCalories > 0 ? (
-            <span>
-              <span className="text-white font-medium">{remainingCalories} kcal</span> remaining today
+        {/* 2 & 3. What is my net balance? & How much room do I have left? */}
+        <div className="flex items-center gap-2 mt-1.5 text-sm font-medium">
+          <span className="text-white font-semibold">
+            {netCalories.toLocaleString()} kcal net
+          </span>
+          <span className="text-[#8E8E93]">·</span>
+          {isOverTarget ? (
+            <span className="text-[#FF9F0A] font-semibold">
+              {overCalories.toLocaleString()} kcal above target
             </span>
           ) : (
-            <span className="text-[#30D158] font-medium">Daily calorie target achieved</span>
+            <span className="text-[#8E8E93]">
+              <span className="text-white font-semibold">{remainingCalories.toLocaleString()} kcal</span> remaining
+            </span>
           )}
+        </div>
+
+        {/* Subtractive / Overlay Calorie Lane (Total lane represents Daily Target; Blue overlays food offset) */}
+        <div className="w-full bg-[#2C2C2E] h-2 rounded-full overflow-hidden mt-3.5 relative">
+          <div
+            className="h-full flex rounded-full transition-all duration-500 overflow-hidden"
+            style={{
+              width: `${Math.min(100, Math.max(0, (foodCalories / calorieTarget) * 100))}%`,
+            }}
+          >
+            {/* Net calories consumed (Solid Nuvia Green) */}
+            <div
+              className="bg-[#30D158] h-full transition-all duration-500"
+              style={{
+                width: foodCalories > 0
+                  ? `${Math.min(100, Math.max(0, (netCalories / foodCalories) * 100))}%`
+                  : '0%',
+              }}
+            />
+            {/* Activity credit offset (Subtle Blue subtraction overlay) */}
+            {exerciseCalories > 0 && foodCalories > 0 && (
+              <div
+                className="bg-[#0A84FF] h-full transition-all duration-500 opacity-90"
+                style={{
+                  width: `${Math.min(100, Math.max(0, (Math.min(exerciseCalories, foodCalories) / foodCalories) * 100))}%`,
+                }}
+                title={`-${exerciseCalories} kcal activity credit offset`}
+              />
+            )}
+          </div>
+        </div>
+
+        {/* Direct Supporting Equation */}
+        <p className="text-xs text-[#8E8E93] mt-2 font-normal">
+          {foodCalories.toLocaleString()} eaten
+          {exerciseCalories > 0 ? ` − ${exerciseCalories.toLocaleString()} activity` : ' − 0 activity'}
+          {' = '}
+          <span className="text-white font-medium">{netCalories.toLocaleString()} net</span>
         </p>
 
-        <div className="w-full bg-[#2C2C2E] h-1.5 rounded-full overflow-hidden mt-3">
-          <div
-            className="bg-[#30D158] h-full rounded-full transition-all duration-500"
-            style={{ width: `${Math.min(100, (caloriesConsumed / calorieTarget) * 100)}%` }}
-          />
+        {/* 4. Why is my target this value? (Daily target & maintenance secondary context) */}
+        <div className="flex items-center justify-between text-xs text-[#8E8E93] mt-2 pt-2.5 border-t border-white/[0.05]">
+          <span>
+            Daily target: <span className="text-white font-medium">{calorieTarget.toLocaleString()} kcal</span>
+          </span>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onNavigateTab('goals');
+            }}
+            className="text-[11px] text-[#8E8E93] hover:text-white flex items-center gap-0.5 transition-colors cursor-pointer"
+            title="Why this target?"
+          >
+            <span>Why this target?</span>
+            <ChevronRight className="w-3 h-3" />
+          </button>
         </div>
 
         <div className="pt-3">
@@ -385,7 +553,7 @@ export function DashboardView({
         <div className="flex items-baseline justify-between mt-1">
           <div>
             <span className="text-2xl font-semibold text-white tracking-tight">
-              {caloriesBurned}{' '}
+              {exerciseCalories.toLocaleString()}{' '}
               <span className="text-sm text-[#8E8E93] font-normal">kcal burned</span>
             </span>
           </div>
@@ -393,108 +561,281 @@ export function DashboardView({
         </div>
       </div>
 
-      {/* SECTION 3B: WORKOUT ROUTINE PREVIEW */}
+      {/* SECTION 3B: WORKOUT ROUTINE SCHEDULING (AUTHORITATIVE SESSION & STRICT DAY MATCHING) */}
       {(() => {
-        const todayRoutine =
-          routines.find((r) =>
-            r.days.some((d) => d.toLowerCase() === todayDayName.toLowerCase())
-          ) || routines[0];
+        const isRoutineScheduledForDay = (r: WorkoutRoutine, dayName: string) => {
+          if (!r.days || !Array.isArray(r.days)) return false;
+          const targetFull = dayName.toLowerCase();
+          const targetShort = targetFull.slice(0, 3);
+          return r.days.some((d) => {
+            const dLower = d.trim().toLowerCase();
+            return dLower === targetFull || dLower.startsWith(targetShort);
+          });
+        };
 
-        if (!todayRoutine) return null;
-
-        const matchingExecutedLog = recentExercises.find(
-          (e) =>
-            e.exercise_type === todayRoutine.title ||
-            e.source === 'routine' ||
-            (e.description || '').includes(todayRoutine.title) ||
-            (e.description || '').toLowerCase().includes('routine')
+        const scheduledRoutinesToday = routines.filter((r) =>
+          isRoutineScheduledForDay(r, todayDayName)
         );
 
+        // Authoritative workout-session status inspection
+        const getRoutineSessionStatus = (routine: WorkoutRoutine) => {
+          const matchingLog = recentExercises.find((e) => {
+            const logRoutineId = e.ai_analysis?.routine_id;
+            if (logRoutineId && logRoutineId === routine.id) return true;
+            if (e.exercise_type?.toLowerCase() === routine.title.toLowerCase()) return true;
+            if (e.source === 'routine' && (e.description || '').toLowerCase().includes(routine.title.toLowerCase())) return true;
+            return false;
+          });
+
+          if (!matchingLog) {
+            return { status: 'unstarted' as const, log: null, executedCount: 0, totalExercises: routine.exercises?.length || 0 };
+          }
+
+          const executedCount = matchingLog.ai_analysis?.executed_count;
+          const totalExercises = matchingLog.ai_analysis?.total_exercises || routine.exercises?.length || 0;
+
+          if (executedCount !== undefined && totalExercises > 0 && executedCount < totalExercises) {
+            return {
+              status: 'partial' as const,
+              log: matchingLog,
+              executedCount,
+              totalExercises,
+            };
+          }
+
+          return {
+            status: 'completed' as const,
+            log: matchingLog,
+            executedCount: totalExercises,
+            totalExercises,
+          };
+        };
+
+        // If today has scheduled routines:
+        if (scheduledRoutinesToday.length > 0) {
+          return (
+            <div className="space-y-3">
+              {scheduledRoutinesToday.map((routine) => {
+                const sessionStatus = getRoutineSessionStatus(routine);
+                const isFinished = sessionStatus.status === 'completed';
+                const isPartial = sessionStatus.status === 'partial';
+                const hasLogged = isFinished || isPartial;
+
+                return (
+                  <div
+                    key={routine.id}
+                    onClick={() => onNavigateTab('exercise')}
+                    className={`rounded-2xl p-4 border transition-all cursor-pointer space-y-3.5 group ${
+                      isFinished
+                        ? 'bg-[#1C1C1E] border-[#30D158]/40 shadow-sm'
+                        : isPartial
+                        ? 'bg-[#1C1C1E] border-[#0A84FF]/40 shadow-sm'
+                        : 'bg-[#1C1C1E] border-white/[0.08] hover:border-[#30D158]/40'
+                    }`}
+                  >
+                    {/* Top Bar: Routine Header & Status Badge */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`w-6 h-6 rounded-lg flex items-center justify-center ${
+                            isFinished
+                              ? 'bg-[#30D158]/20 text-[#30D158]'
+                              : isPartial
+                              ? 'bg-[#0A84FF]/20 text-[#0A84FF]'
+                              : 'bg-[#30D158]/15 text-[#30D158]'
+                          }`}
+                        >
+                          {isFinished ? (
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                          ) : (
+                            <Dumbbell className="w-3.5 h-3.5" />
+                          )}
+                        </div>
+                        <span className="text-xs font-bold uppercase tracking-wider text-white">
+                          Today's Workout
+                        </span>
+                        {isFinished && sessionStatus.log && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#30D158] text-black flex items-center gap-1">
+                            <CheckCircle2 className="w-3 h-3" />
+                            <span>Completed ({sessionStatus.log.calories_burned} kcal)</span>
+                          </span>
+                        )}
+                        {isPartial && sessionStatus.log && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#0A84FF] text-white flex items-center gap-1">
+                            <span>Partially completed ({sessionStatus.executedCount}/{sessionStatus.totalExercises})</span>
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-xs text-[#30D158] font-medium flex items-center gap-0.5 group-hover:underline">
+                        <span>{hasLogged ? 'View Details' : 'Start Workout'}</span>
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </span>
+                    </div>
+
+                    {/* Main Routine Row with Hero Visual Thumbnail */}
+                    <div className="flex items-center gap-3.5">
+                      <div className="w-16 h-16 rounded-2xl overflow-hidden bg-black/60 border border-white/[0.1] shrink-0 relative shadow-md group-hover:border-[#30D158]/40 transition-colors">
+                        {routine.exercises?.[0] ? (
+                          <ExerciseThumbnail
+                            exercise={routine.exercises[0]}
+                            aspectRatio="1/1"
+                            className="w-full h-full"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-[#2C2C2E] text-[#8E8E93]">
+                            <Dumbbell className="w-6 h-6" />
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm font-bold text-white group-hover:text-[#30D158] transition-colors truncate">
+                          {isFinished
+                            ? `✓ ${cleanActivityTitle(routine.title).title}`
+                            : cleanActivityTitle(routine.title).title}
+                        </h4>
+                        <p className="text-[11px] text-[#8E8E93] mt-0.5">
+                          {hasLogged && sessionStatus.log
+                            ? `${sessionStatus.log.duration_minutes || 45} min · ${sessionStatus.log.calories_burned} kcal burned`
+                            : `${routine.exercises?.length || 0} movements · ${routine.focus || 'Training'}`}
+                        </p>
+                        {routine.days && routine.days.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1.5">
+                            {routine.days.map((day) => (
+                              <span
+                                key={day}
+                                className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${
+                                  isRoutineScheduledForDay(routine, day) && day.toLowerCase() === todayDayName.toLowerCase()
+                                    ? 'bg-[#30D158]/20 text-[#30D158] border border-[#30D158]/30 font-semibold'
+                                    : 'bg-white/[0.05] text-[#8E8E93]'
+                                }`}
+                              >
+                                {day}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Exercise Movements Strip with Individual Thumbnails */}
+                    {routine.exercises && routine.exercises.length > 0 && (
+                      <div className="flex items-center gap-2 overflow-x-auto pt-0.5 no-scrollbar scroll-smooth">
+                        {routine.exercises.map((ex, idx) => (
+                          <div
+                            key={ex.id || idx}
+                            className="w-10 h-10 rounded-xl overflow-hidden bg-black/40 border border-white/[0.08] shrink-0 relative group-hover:border-[#30D158]/30 transition-colors"
+                            title={ex.name}
+                          >
+                            <ExerciseThumbnail exercise={ex} aspectRatio="1/1" className="w-full h-full" />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        }
+
+        // If today has NO workout scheduled: Date-aware recovery day state
+        const ALL_WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const currentDayIdx = today.getDay();
+        let nextScheduled: { routines: WorkoutRoutine[]; day: string } | null = null;
+        for (let offset = 1; offset <= 7; offset++) {
+          const checkDay = ALL_WEEKDAYS[(currentDayIdx + offset) % 7];
+          const found = routines.filter((r) => isRoutineScheduledForDay(r, checkDay));
+          if (found.length > 0) {
+            nextScheduled = { routines: found, day: checkDay };
+            break;
+          }
+        }
+
         return (
-          <div
-            onClick={() => onNavigateTab('exercise')}
-            className={`rounded-2xl p-4 border transition-all cursor-pointer space-y-3.5 group ${
-              matchingExecutedLog
-                ? 'bg-[#1C1C1E] border-[#30D158]/40 shadow-sm'
-                : 'bg-[#1C1C1E] border-white/[0.08] hover:border-[#30D158]/40'
-            }`}
-          >
-            {/* Top Bar: Routine Header & Status Badge */}
+          <div className="rounded-2xl p-4 bg-[#1C1C1E] border border-white/[0.08] space-y-3.5">
+            {/* Header: Recovery Day */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div
-                  className={`w-6 h-6 rounded-lg flex items-center justify-center ${
-                    matchingExecutedLog
-                      ? 'bg-[#30D158]/20 text-[#30D158]'
-                      : 'bg-[#30D158]/15 text-[#30D158]'
-                  }`}
-                >
-                  <Dumbbell className="w-3.5 h-3.5" />
+                <div className="w-6 h-6 rounded-lg bg-[#0A84FF]/15 text-[#0A84FF] flex items-center justify-center">
+                  <Moon className="w-3.5 h-3.5" />
                 </div>
                 <span className="text-xs font-bold uppercase tracking-wider text-white">
-                  Workout Routine
+                  Today's Workout
                 </span>
-                {matchingExecutedLog && (
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#30D158] text-black flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3" />
-                    <span>Completed (+{matchingExecutedLog.calories_burned} kcal)</span>
-                  </span>
-                )}
               </div>
-              <span className="text-xs text-[#30D158] font-medium flex items-center gap-0.5 group-hover:underline">
-                <span>{matchingExecutedLog ? 'View Details' : 'Start Workout'}</span>
-                <ChevronRight className="w-3.5 h-3.5" />
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/[0.06] text-[#8E8E93]">
+                Recovery day
               </span>
             </div>
 
-            {/* Main Routine Row with Hero Visual Thumbnail */}
-            <div className="flex items-center gap-3.5">
-              <div className="w-16 h-16 rounded-2xl overflow-hidden bg-black/60 border border-white/[0.1] shrink-0 relative shadow-md group-hover:border-[#30D158]/40 transition-colors">
-                <ExerciseThumbnail
-                  exercise={todayRoutine.exercises[0]}
-                  aspectRatio="1/1"
-                  className="w-full h-full"
-                />
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <h4 className="text-sm font-bold text-white group-hover:text-[#30D158] transition-colors truncate">
-                  {todayRoutine.title}
-                </h4>
-                <p className="text-[11px] text-[#8E8E93] mt-0.5">
-                  {todayRoutine.exercises.length} movements · {todayRoutine.focus || 'Training'}
-                </p>
-                {todayRoutine.days && todayRoutine.days.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-1.5">
-                    {todayRoutine.days.map((day) => (
-                      <span
-                        key={day}
-                        className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${
-                          day.toLowerCase() === todayDayName.toLowerCase()
-                            ? 'bg-[#30D158]/20 text-[#30D158] border border-[#30D158]/30 font-semibold'
-                            : 'bg-white/[0.05] text-[#8E8E93]'
-                        }`}
-                      >
-                        {day}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
+            <div>
+              <h4 className="text-sm font-semibold text-white">No workout scheduled today</h4>
+              <p className="text-[11px] text-[#8E8E93] mt-0.5">
+                Today is a recovery/rest day. Focus on balanced nutrition, hydration, and muscle repair.
+              </p>
             </div>
 
-            {/* Exercise Movements Strip with Individual Thumbnails */}
-            <div className="flex items-center gap-2 overflow-x-auto pt-0.5 no-scrollbar scroll-smooth">
-              {todayRoutine.exercises.map((ex, idx) => (
-                <div
-                  key={ex.id || idx}
-                  className="w-10 h-10 rounded-xl overflow-hidden bg-black/40 border border-white/[0.08] shrink-0 relative group-hover:border-[#30D158]/30 transition-colors"
-                  title={ex.name}
-                >
-                  <ExerciseThumbnail exercise={ex} aspectRatio="1/1" className="w-full h-full" />
+            {/* UP NEXT ROUTINE PREVIEW (Handles multiple routines on the next scheduled day) */}
+            {nextScheduled ? (
+              <div className="pt-2 border-t border-white/[0.06] space-y-2">
+                <div className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider text-[#8E8E93]">
+                  <span>Up Next</span>
+                  <span className="text-[#30D158]">{nextScheduled.day}</span>
                 </div>
-              ))}
-            </div>
+
+                <div className="space-y-2">
+                  {nextScheduled.routines.map((nextRoutine) => (
+                    <div
+                      key={nextRoutine.id}
+                      onClick={() => onNavigateTab('exercise')}
+                      className="flex items-center justify-between p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-white/[0.15] transition-all cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-12 h-12 rounded-xl overflow-hidden bg-black/50 border border-white/[0.08] shrink-0">
+                          {nextRoutine.exercises?.[0] ? (
+                            <ExerciseThumbnail
+                              exercise={nextRoutine.exercises[0]}
+                              aspectRatio="1/1"
+                              className="w-full h-full"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-[#8E8E93]">
+                              <Dumbbell className="w-5 h-5" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <h5 className="text-xs font-bold text-white group-hover:text-[#30D158] transition-colors truncate">
+                            {cleanActivityTitle(nextRoutine.title).title}
+                          </h5>
+                          <p className="text-[11px] text-[#8E8E93] mt-0.5">
+                            {nextRoutine.exercises?.length || 0} movements · {nextRoutine.focus || 'Training'}
+                          </p>
+                        </div>
+                      </div>
+
+                      <span className="text-xs text-[#8E8E93] group-hover:text-white flex items-center gap-0.5 shrink-0 ml-2 font-medium transition-colors">
+                        <span>View workout</span>
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : routines.length > 0 ? (
+              <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between">
+                <span className="text-[11px] text-[#8E8E93]">Explore your training routines</span>
+                <button
+                  type="button"
+                  onClick={() => onNavigateTab('exercise')}
+                  className="text-xs text-[#30D158] hover:underline flex items-center gap-0.5 font-medium cursor-pointer"
+                >
+                  <span>See routines</span>
+                  <ChevronRight className="w-3 h-3" />
+                </button>
+              </div>
+            ) : null}
           </div>
         );
       })()}

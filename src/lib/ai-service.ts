@@ -134,7 +134,9 @@ export const AiService = {
     goals: any;
     profile: any;
     recentMeals: any[];
+    recentExercises?: string[];
     chatMessage?: string;
+    fitnessContext?: any;
   }): Promise<{ reply?: string; advice?: CoachAdviceResult }> {
     try {
       if (isSupabaseConfigured()) {

@@ -1,7 +1,18 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import {
+  ArrowLeft,
+  Flame,
+  Sparkles,
+  Zap,
+  Beef,
+  Wheat,
+  Droplets,
+  Target,
+  Scale,
+  Activity,
+} from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { calculateTargets, CalculationResult } from '@/lib/calculator';
 import { DataService } from '@/lib/data-service';
@@ -13,7 +24,7 @@ interface OnboardingWizardProps {
 }
 
 export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps) {
-  const { user, profile, refreshProfileAndGoals } = useAuth();
+  const { user, profile, hasCompletedOnboarding, refreshProfileAndGoals } = useAuth();
 
   const [step, setStep] = useState(1);
   const [sex, setSex] = useState<'male' | 'female'>(profile?.sex === 'female' ? 'female' : 'male');
@@ -96,16 +107,30 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
     onComplete();
   };
 
+  const getGoalStrategy = (g: UserGoal) => {
+    switch (g) {
+      case 'lose_weight':
+        return { label: '-450 kcal Deficit', tag: 'Fat Loss', color: 'text-amber-400 bg-amber-400/15 border-amber-400/30' };
+      case 'build_muscle':
+        return { label: '+200 kcal Surplus', tag: 'Muscle Growth', color: 'text-[#30D158] bg-[#30D158]/15 border-[#30D158]/30' };
+      case 'gain_weight':
+        return { label: '+400 kcal Surplus', tag: 'Weight Gain', color: 'text-sky-400 bg-sky-400/15 border-sky-400/30' };
+      case 'maintain_weight':
+      default:
+        return { label: 'Energy Balance', tag: 'Maintenance', color: 'text-white bg-white/10 border-white/20' };
+    }
+  };
+
   return (
     <div className="min-h-screen bg-black text-white flex flex-col justify-between px-6 py-6 max-w-md mx-auto">
       {/* Navigation & Progress */}
       <div className="flex items-center justify-between">
         {step > 1 ? (
-          <button onClick={() => setStep(step - 1)} className="p-1 text-[#8E8E93] hover:text-white">
+          <button onClick={() => setStep(step - 1)} className="p-1 text-[#8E8E93] hover:text-white transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </button>
         ) : onCancel ? (
-          <button onClick={onCancel} className="text-xs text-[#8E8E93] hover:text-white">
+          <button onClick={onCancel} className="text-xs text-[#8E8E93] hover:text-white transition-colors">
             Cancel
           </button>
         ) : (
@@ -118,11 +143,15 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
 
       {/* Step 1: Body Metrics */}
       {step === 1 && (
-        <div className="space-y-6 my-auto py-6">
+        <div className="space-y-6 my-auto py-4">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight text-white">About You</h2>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-[#30D158]/15 text-[#30D158] border border-[#30D158]/30 uppercase">
+              <Sparkles className="w-3 h-3" />
+              Biometrics
+            </span>
+            <h2 className="text-3xl font-bold tracking-tight text-white mt-2">About You</h2>
             <p className="text-xs text-[#8E8E93] mt-1">
-              Used to calculate scientifically accurate baseline targets.
+              Used to calculate scientifically accurate metabolic targets.
             </p>
           </div>
 
@@ -137,8 +166,8 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                     key={opt}
                     type="button"
                     onClick={() => setSex(opt)}
-                    className={`py-3 rounded-2xl text-xs font-medium capitalize transition-colors ${
-                      sex === opt ? 'bg-white text-black font-semibold' : 'bg-[#1C1C1E] text-[#8E8E93]'
+                    className={`py-3 rounded-2xl text-xs font-semibold capitalize transition-colors ${
+                      sex === opt ? 'bg-white text-black font-bold shadow-md' : 'bg-[#1C1C1E] text-[#8E8E93] hover:text-white'
                     }`}
                   >
                     {opt}
@@ -150,26 +179,33 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-semibold text-[#8E8E93] uppercase tracking-wider mb-1.5">
-                  Height (cm)
+                  Height
                 </label>
-                <input
-                  type="number"
-                  value={heightCm}
-                  onChange={(e) => setHeightCm(e.target.value)}
-                  className="w-full px-3.5 py-3 rounded-2xl bg-[#1C1C1E] border border-white/[0.06] text-sm text-white focus:outline-none"
-                />
+                <div className="relative">
+                  <input
+                    type="number"
+                    value={heightCm}
+                    onChange={(e) => setHeightCm(e.target.value)}
+                    className="w-full px-3.5 py-3 rounded-2xl bg-[#1C1C1E] border border-white/[0.08] text-sm text-white font-semibold focus:outline-none focus:border-[#30D158]"
+                  />
+                  <span className="absolute right-3.5 top-3.5 text-xs text-[#8E8E93] font-medium pointer-events-none">cm</span>
+                </div>
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-[#8E8E93] uppercase tracking-wider mb-1.5">
-                  Weight (kg)
+                  Weight
                 </label>
-                <input
-                  type="number"
-                  value={weightKg}
-                  onChange={(e) => setWeightKg(e.target.value)}
-                  className="w-full px-3.5 py-3 rounded-2xl bg-[#1C1C1E] border border-white/[0.06] text-sm text-white focus:outline-none"
-                />
+                <div className="relative">
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={weightKg}
+                    onChange={(e) => setWeightKg(e.target.value)}
+                    className="w-full px-3.5 py-3 rounded-2xl bg-[#1C1C1E] border border-white/[0.08] text-sm text-white font-semibold focus:outline-none focus:border-[#30D158]"
+                  />
+                  <span className="absolute right-3.5 top-3.5 text-xs text-[#8E8E93] font-medium pointer-events-none">kg</span>
+                </div>
               </div>
             </div>
 
@@ -181,7 +217,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                 type="date"
                 value={dob}
                 onChange={(e) => setDob(e.target.value)}
-                className="w-full px-3.5 py-3 rounded-2xl bg-[#1C1C1E] border border-white/[0.06] text-sm text-white focus:outline-none"
+                className="w-full px-3.5 py-3 rounded-2xl bg-[#1C1C1E] border border-white/[0.08] text-sm text-white font-semibold focus:outline-none focus:border-[#30D158]"
               />
             </div>
           </div>
@@ -190,11 +226,15 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
 
       {/* Step 2: Goal & Activity */}
       {step === 2 && (
-        <div className="space-y-6 my-auto py-6">
+        <div className="space-y-6 my-auto py-4">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight text-white">Goals & Activity</h2>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-[#30D158]/15 text-[#30D158] border border-[#30D158]/30 uppercase">
+              <Target className="w-3 h-3" />
+              Activity &amp; Goal
+            </span>
+            <h2 className="text-3xl font-bold tracking-tight text-white mt-2">Goals &amp; Activity</h2>
             <p className="text-xs text-[#8E8E93] mt-1">
-              Helps calibrate daily calories and macronutrient ratios.
+              Calibrates daily energy expenditure (TDEE) and macro ratios.
             </p>
           </div>
 
@@ -214,8 +254,8 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                     key={g.id}
                     type="button"
                     onClick={() => setGoal(g.id)}
-                    className={`p-3 rounded-2xl text-xs font-medium transition-colors ${
-                      goal === g.id ? 'bg-white text-black font-semibold' : 'bg-[#1C1C1E] text-[#8E8E93]'
+                    className={`p-3 rounded-2xl text-xs font-semibold transition-colors ${
+                      goal === g.id ? 'bg-white text-black font-bold shadow-md' : 'bg-[#1C1C1E] text-[#8E8E93] hover:text-white'
                     }`}
                   >
                     {g.label}
@@ -226,15 +266,19 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
 
             <div>
               <label className="block text-xs font-semibold text-[#8E8E93] uppercase tracking-wider mb-1.5">
-                Target Weight (kg)
+                Target Weight
               </label>
-              <input
-                type="number"
-                value={targetWeightKg}
-                onChange={(e) => setTargetWeightKg(e.target.value)}
-                placeholder="68"
-                className="w-full px-3.5 py-3 rounded-2xl bg-[#1C1C1E] border border-white/[0.06] text-sm text-white focus:outline-none"
-              />
+              <div className="relative">
+                <input
+                  type="number"
+                  step="0.1"
+                  value={targetWeightKg}
+                  onChange={(e) => setTargetWeightKg(e.target.value)}
+                  placeholder="68"
+                  className="w-full px-3.5 py-3 rounded-2xl bg-[#1C1C1E] border border-white/[0.08] text-sm text-white font-semibold focus:outline-none focus:border-[#30D158]"
+                />
+                <span className="absolute right-3.5 top-3.5 text-xs text-[#8E8E93] font-medium pointer-events-none">kg</span>
+              </div>
             </div>
 
             <div>
@@ -252,8 +296,8 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                     key={act.id}
                     type="button"
                     onClick={() => setActivityLevel(act.id)}
-                    className={`p-3 rounded-2xl text-xs font-medium transition-colors ${
-                      activityLevel === act.id ? 'bg-white text-black font-semibold' : 'bg-[#1C1C1E] text-[#8E8E93]'
+                    className={`p-3 rounded-2xl text-xs font-semibold transition-colors ${
+                      activityLevel === act.id ? 'bg-white text-black font-bold shadow-md' : 'bg-[#1C1C1E] text-[#8E8E93] hover:text-white'
                     }`}
                   >
                     {act.label}
@@ -265,55 +309,127 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
         </div>
       )}
 
-      {/* Step 3: Review Plan */}
+      {/* Step 3: Scientific Calculation Results UI */}
       {step === 3 && calculatedTargets && (
-        <div className="space-y-6 my-auto py-6">
+        <div className="space-y-4 my-auto py-2">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight text-white">Your Plan</h2>
-            <p className="text-xs text-[#8E8E93] mt-1">
-              Calculated using the Mifflin-St Jeor formula based on your profile.
+            <div className="flex items-center justify-between">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-[#30D158]/15 text-[#30D158] border border-[#30D158]/30 uppercase">
+                <Sparkles className="w-3 h-3" />
+                Mifflin-St Jeor Engine
+              </span>
+              {(() => {
+                const strat = getGoalStrategy(goal);
+                return (
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${strat.color}`}>
+                    {strat.label}
+                  </span>
+                );
+              })()}
+            </div>
+            <h2 className="text-2xl font-bold tracking-tight text-white mt-1.5">Your Plan</h2>
+            <p className="text-[11px] text-[#8E8E93]">
+              Personalized metabolic targets based on your biometrics.
             </p>
           </div>
 
-          <div className="ios-card p-5 space-y-4">
-            <div>
-              <p className="text-xs font-semibold text-[#8E8E93] uppercase tracking-wider">
+          {/* Primary Calorie Target Card */}
+          <div className="p-4 rounded-2xl bg-gradient-to-br from-[#1C1C1E] to-[#2C2C2E] border border-white/[0.1] shadow-xl space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-[#8E8E93] uppercase tracking-wider flex items-center gap-1.5">
+                <Flame className="w-4 h-4 text-[#FF9500]" />
                 Daily Calorie Target
-              </p>
-              <div className="flex items-baseline gap-1 mt-1">
-                <span className="text-4xl font-bold text-white tracking-tight">
-                  {calculatedTargets.calorie_target.toLocaleString()}
-                </span>
-                <span className="text-sm text-[#8E8E93]">kcal / day</span>
+              </span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#30D158]/20 text-[#30D158]">
+                Recommended
+              </span>
+            </div>
+
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-4xl font-extrabold text-white tracking-tight">
+                {calculatedTargets.calorie_target.toLocaleString()}
+              </span>
+              <span className="text-sm text-[#8E8E93] font-normal">kcal / day</span>
+            </div>
+
+            {/* Metabolic Breakdown Cards (BMR & TDEE) */}
+            <div className="grid grid-cols-2 gap-2 pt-1 border-t border-white/[0.08]">
+              <div className="p-2 rounded-xl bg-black/40 border border-white/[0.05]">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-[#8E8E93] uppercase tracking-wider">Base (BMR)</span>
+                  <Activity className="w-3 h-3 text-zinc-500" />
+                </div>
+                <p className="text-sm font-bold text-white mt-0.5">{calculatedTargets.bmr.toLocaleString()} <span className="text-[10px] text-[#8E8E93] font-normal">kcal</span></p>
+                <p className="text-[9px] text-[#8E8E93]">Resting burn</p>
+              </div>
+
+              <div className="p-2 rounded-xl bg-black/40 border border-white/[0.05]">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-[#8E8E93] uppercase tracking-wider">Daily (TDEE)</span>
+                  <Flame className="w-3 h-3 text-orange-400" />
+                </div>
+                <p className="text-sm font-bold text-white mt-0.5">{calculatedTargets.tdee.toLocaleString()} <span className="text-[10px] text-[#8E8E93] font-normal">kcal</span></p>
+                <p className="text-[9px] text-[#8E8E93]">Maintenance burn</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Macronutrients Breakdown Card */}
+          <div className="p-4 rounded-2xl bg-[#1C1C1E] border border-white/[0.08] space-y-3">
+            <span className="text-xs font-semibold text-[#8E8E93] uppercase tracking-wider block">
+              Macronutrient Allocation
+            </span>
+
+            <div className="grid grid-cols-3 gap-2 text-center">
+              {/* Protein */}
+              <div className="p-2.5 rounded-xl bg-black/30 border border-white/[0.05]">
+                <div className="flex items-center justify-center gap-1 text-[11px] font-medium text-emerald-400">
+                  <Beef className="w-3 h-3" />
+                  <span>Protein</span>
+                </div>
+                <p className="text-base font-bold text-white mt-1">{calculatedTargets.protein_target}g</p>
+                <p className="text-[9px] text-[#8E8E93] mt-0.5">~{calculatedTargets.protein_target * 4} kcal</p>
+              </div>
+
+              {/* Carbs */}
+              <div className="p-2.5 rounded-xl bg-black/30 border border-white/[0.05]">
+                <div className="flex items-center justify-center gap-1 text-[11px] font-medium text-amber-400">
+                  <Wheat className="w-3 h-3" />
+                  <span>Carbs</span>
+                </div>
+                <p className="text-base font-bold text-white mt-1">{calculatedTargets.carbohydrate_target}g</p>
+                <p className="text-[9px] text-[#8E8E93] mt-0.5">~{calculatedTargets.carbohydrate_target * 4} kcal</p>
+              </div>
+
+              {/* Fats */}
+              <div className="p-2.5 rounded-xl bg-black/30 border border-white/[0.05]">
+                <div className="flex items-center justify-center gap-1 text-[11px] font-medium text-sky-400">
+                  <Droplets className="w-3 h-3" />
+                  <span>Fats</span>
+                </div>
+                <p className="text-base font-bold text-white mt-1">{calculatedTargets.fat_target}g</p>
+                <p className="text-[9px] text-[#8E8E93] mt-0.5">~{calculatedTargets.fat_target * 9} kcal</p>
               </div>
             </div>
 
-            <div className="ios-divider" />
-
-            <div className="grid grid-cols-3 gap-2 text-center text-xs">
-              <div>
-                <p className="text-[#8E8E93]">Protein</p>
-                <p className="text-lg font-bold text-white mt-0.5">{calculatedTargets.protein_target}g</p>
+            {/* Exercise Target */}
+            <div className="p-2.5 rounded-xl bg-black/20 border border-white/[0.04] flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2">
+                <Zap className="w-4 h-4 text-[#30D158]" />
+                <span className="text-[#8E8E93]">Daily Activity Target:</span>
               </div>
-              <div>
-                <p className="text-[#8E8E93]">Carbs</p>
-                <p className="text-lg font-bold text-white mt-0.5">{calculatedTargets.carbohydrate_target}g</p>
-              </div>
-              <div>
-                <p className="text-[#8E8E93]">Fat</p>
-                <p className="text-lg font-bold text-white mt-0.5">{calculatedTargets.fat_target}g</p>
-              </div>
+              <span className="font-bold text-white">{calculatedTargets.exercise_minutes_target} mins/day</span>
             </div>
           </div>
         </div>
       )}
 
-      {/* Bottom Button */}
+      {/* Bottom Action Button */}
       <div className="pb-2">
         {step < 3 ? (
           <button
             onClick={handleNextStep}
-            className="w-full py-4 rounded-full bg-white text-black font-semibold text-sm transition-transform active:scale-[0.98]"
+            className="w-full py-3.5 rounded-full bg-white text-black font-semibold text-sm transition-transform active:scale-[0.98] cursor-pointer"
           >
             Continue
           </button>
@@ -321,9 +437,9 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
           <button
             onClick={handleFinalSave}
             disabled={saving}
-            className="w-full py-4 rounded-full bg-[#30D158] text-black font-semibold text-sm transition-transform active:scale-[0.98]"
+            className="w-full py-3.5 rounded-full bg-[#30D158] text-black font-bold text-sm transition-transform active:scale-[0.98] cursor-pointer shadow-lg shadow-[#30D158]/20"
           >
-            {saving ? 'Saving...' : 'Enter Nuvia'}
+            {saving ? 'Saving Targets...' : hasCompletedOnboarding ? 'Save & Apply Calculated Targets' : 'Enter Nuvia'}
           </button>
         )}
       </div>
