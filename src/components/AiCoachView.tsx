@@ -6,6 +6,8 @@ import { useAuth } from '@/lib/auth-context';
 import { DataService } from '@/lib/data-service';
 import { AiService, CoachAdviceResult } from '@/lib/ai-service';
 import { FitnessContextService } from '@/lib/fitness-context-service';
+import { IntentProposalCard } from '@/components/adaptive/IntentProposalCard';
+import { RescheduleProposal, AdaptiveScheduleChange } from '@/types/adaptive-training';
 
 export function AiCoachView() {
   const { user, profile, goals } = useAuth();
@@ -16,6 +18,8 @@ export function AiCoachView() {
   const [query, setQuery] = useState('');
   const [answering, setAnswering] = useState(false);
   const [answer, setAnswer] = useState<string | null>(null);
+  const [activeProposal, setActiveProposal] = useState<RescheduleProposal | null>(null);
+  const [lastAdaptedChange, setLastAdaptedChange] = useState<AdaptiveScheduleChange | null>(null);
 
   useEffect(() => {
     async function loadInsights() {
@@ -79,6 +83,7 @@ export function AiCoachView() {
 
     setAnswering(true);
     setAnswer(null);
+    setActiveProposal(null);
 
     try {
       const [summary, meals, fitnessCtx] = await Promise.all([
@@ -97,10 +102,50 @@ export function AiCoachView() {
       });
 
       setAnswer(res.reply || "You're making steady progress today! Keep staying consistent with your protein and movement.");
+      if (res.proposal) {
+        setActiveProposal(res.proposal);
+      }
     } catch {
       setAnswer("Nuvia is briefly catching up. Prioritize hitting your remaining protein target and stay hydrated!");
     } finally {
       setAnswering(false);
+    }
+  };
+
+  const handleAcceptProposal = async (selectedOption: any) => {
+    if (!user?.id || !activeProposal) return;
+    try {
+      const targetDate = selectedOption.to_date || activeProposal.suggested_date || new Date().toISOString().split('T')[0];
+      const change = await DataService.saveScheduleAdaptation({
+        user_id: user.id,
+        routine_id: activeProposal.routine_id,
+        routine_title: activeProposal.routine_title,
+        date: targetDate,
+        original_date: activeProposal.from_date,
+        target_date: targetDate,
+        action: selectedOption.action === 'move' ? 'move_workout' : selectedOption.action === 'add_activity' ? 'add_activity' : 'cancel_workout',
+        reason: activeProposal.reason,
+        status: 'accepted',
+        user_confirmed: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+      setLastAdaptedChange(change);
+      setActiveProposal(null);
+      FitnessContextService.invalidateFitnessContext(user.id);
+    } catch (e) {
+      console.error('Failed to accept proposal', e);
+    }
+  };
+
+  const handleUndo = async () => {
+    if (!lastAdaptedChange) return;
+    try {
+      await DataService.undoScheduleAdaptation(lastAdaptedChange.id);
+      setLastAdaptedChange(null);
+      FitnessContextService.invalidateFitnessContext(user?.id);
+    } catch (e) {
+      console.error('Failed to undo proposal', e);
     }
   };
 
@@ -177,10 +222,11 @@ export function AiCoachView() {
         {/* Quick Suggestion Pills */}
         <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
           {[
+            'I want to run today',
             'What workout should I do today?',
+            'I missed yesterday’s workout',
+            'I only have 30 minutes today',
             'How should I progress my squats?',
-            'Can I still eat dinner?',
-            'What high-protein snack should I eat?',
           ].map((prompt, i) => (
             <button
               key={i}
@@ -199,14 +245,38 @@ export function AiCoachView() {
         {/* Nuvia Response */}
         {answering && (
           <div className="p-4 rounded-2xl bg-[#1C1C1E] text-xs text-[#8E8E93] animate-pulse">
-            Analyzing your daily logs...
+            Analyzing your training plan & recovery...
           </div>
         )}
 
         {answer && !answering && (
-          <div className="p-4 rounded-2xl bg-[#1C1C1E] border border-white/[0.08] text-xs text-white leading-relaxed space-y-1">
-            <p className="font-semibold text-[#30D158]">Nuvia</p>
-            <p className="text-[#D1D1D6]">{answer}</p>
+          <div className="p-4 rounded-2xl bg-[#1C1C1E] border border-white/[0.08] text-xs text-white leading-relaxed space-y-3">
+            <div className="space-y-1">
+              <p className="font-semibold text-[#30D158]">Nuvia</p>
+              <p className="text-[#D1D1D6]">{answer}</p>
+            </div>
+
+            {activeProposal && (
+              <div className="pt-2 border-t border-white/[0.06]">
+                <IntentProposalCard
+                  proposal={activeProposal}
+                  onAccept={handleAcceptProposal}
+                  onReject={() => setActiveProposal(null)}
+                />
+              </div>
+            )}
+
+            {lastAdaptedChange && !activeProposal && (
+              <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between text-xs text-[#8E8E93]">
+                <span>Plan adjusted ({lastAdaptedChange.routine_title || 'Workout'} {lastAdaptedChange.action}).</span>
+                <button
+                  onClick={handleUndo}
+                  className="text-xs font-semibold text-amber-400 hover:text-amber-300 underline"
+                >
+                  Undo
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

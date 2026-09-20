@@ -17,6 +17,9 @@ import {
 import { ExerciseThumbnail } from './ExerciseThumbnail';
 import { calculateTargets, getUserCalculationContext } from '@/lib/calculator';
 import { cleanActivityTitle } from '@/lib/activity-utils';
+import { FitnessContextService } from '@/lib/fitness-context-service';
+import { NuviaFitnessContext } from '@/types/fitness-context';
+import { NuviaNextActionCard } from './adaptive/NuviaNextActionCard';
 
 interface DashboardViewProps {
   onOpenAddMeal: () => void;
@@ -40,6 +43,7 @@ export function DashboardView({
   const [recentMeals, setRecentMeals] = useState<Meal[]>([]);
   const [recentExercises, setRecentExercises] = useState<ExerciseLog[]>([]);
   const [routines, setRoutines] = useState<WorkoutRoutine[]>([]);
+  const [fitnessContext, setFitnessContext] = useState<NuviaFitnessContext | null>(null);
 
   // Separate loading state for first-ever load vs background refetch
   const [isInitialLoading, setIsInitialLoading] = useState(true);
@@ -77,11 +81,12 @@ export function DashboardView({
         setIsFetching(true);
       }
       try {
-        const [s, m, e, r] = await Promise.all([
+        const [s, m, e, r, fitCtx] = await Promise.all([
           DataService.getDailySummary(userId, todayStr),
           DataService.getMeals(userId, todayStr),
           DataService.getExerciseLogs(userId, todayStr),
           DataService.getWorkoutRoutines(userId),
+          FitnessContextService.getFitnessContext(userId),
         ]);
 
         // Write each result to the cache with a 90-second stale window
@@ -92,6 +97,7 @@ export function DashboardView({
         NuviaCache.set(workoutRoutinesKey(userId), r, opts);
 
         applyData(s, m, e, r);
+        setFitnessContext(fitCtx);
       } finally {
         setIsInitialLoading(false);
         setIsFetching(false);
@@ -561,7 +567,40 @@ export function DashboardView({
         </div>
       </div>
 
-      {/* SECTION 3B: WORKOUT ROUTINE SCHEDULING (AUTHORITATIVE SESSION & STRICT DAY MATCHING) */}
+      {/* SECTION 3B: ADAPTIVE TRAINING ENGINE NEXT ACTION */}
+      {fitnessContext?.adaptive?.next_action && (
+        <NuviaNextActionCard
+          action={fitnessContext.adaptive.next_action}
+          onActionClick={() => onNavigateTab('exercise')}
+          onAcceptProposal={async (prop: any, opt: any) => {
+            if (!userId) return;
+            const targetDate = opt.to_date || prop.suggested_date || todayStr;
+            await DataService.saveScheduleAdaptation({
+              user_id: userId,
+              routine_id: prop.routine_id,
+              routine_title: prop.routine_title,
+              date: targetDate,
+              original_date: prop.from_date,
+              target_date: targetDate,
+              action: opt.action === 'move' ? 'move_workout' : opt.action === 'add_activity' ? 'add_activity' : 'cancel_workout',
+              reason: prop.reason,
+              status: 'accepted',
+              user_confirmed: true,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            });
+            FitnessContextService.invalidateFitnessContext(userId);
+            fetchAndCache(false);
+          }}
+          onUndoProposal={async (changeId: string) => {
+            await DataService.undoScheduleAdaptation(changeId);
+            FitnessContextService.invalidateFitnessContext(userId);
+            fetchAndCache(false);
+          }}
+        />
+      )}
+
+      {/* SECTION 3C: WORKOUT ROUTINE SCHEDULING (AUTHORITATIVE SESSION & STRICT DAY MATCHING) */}
       {(() => {
         const isRoutineScheduledForDay = (r: WorkoutRoutine, dayName: string) => {
           if (!r.days || !Array.isArray(r.days)) return false;

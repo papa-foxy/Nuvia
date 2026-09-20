@@ -66,6 +66,9 @@ export function AboutYouSection({
   const initialFp = useMemo(() => FitnessContextService.getStoredPreferences(profile?.id), [profile?.id]);
   const [currentPhysique, setCurrentPhysique] = useState(initialFp.current_physique || 'soft_low_muscle');
   const [desiredPhysique, setDesiredPhysique] = useState(initialFp.desired_physique || 'athletic');
+  const [adaptivePlanMode, setAdaptivePlanMode] = useState<'ask_first' | 'auto_adjust'>(
+    initialFp.adaptive_plan_mode || 'ask_first'
+  );
 
   // Synchronize edit form when profile updates
   useEffect(() => {
@@ -80,6 +83,7 @@ export function AboutYouSection({
     const fp = FitnessContextService.getStoredPreferences(profile?.id);
     setCurrentPhysique(fp.current_physique || 'soft_low_muscle');
     setDesiredPhysique(fp.desired_physique || 'athletic');
+    setAdaptivePlanMode(fp.adaptive_plan_mode || 'ask_first');
   }, [profile]);
 
   const age = useMemo(() => {
@@ -111,6 +115,8 @@ export function AboutYouSection({
     setActivityLevel(profile?.activity_level || 'moderately_active');
     setGoal(profile?.goal || 'lose_weight');
     setDietaryPreference(profile?.dietary_preference || 'Halal / Balanced');
+    const fp = FitnessContextService.getStoredPreferences(profile?.id);
+    setAdaptivePlanMode(fp.adaptive_plan_mode || 'ask_first');
     setSyncTargets(true);
     setInternalIsEditing(true);
     onOpenEdit?.();
@@ -236,6 +242,7 @@ export function AboutYouSection({
               : desiredPhysique === 'strong_powerful'
               ? 'Strong'
               : 'General Fitness',
+          adaptive_plan_mode: adaptivePlanMode,
         },
         profile?.id
       );
@@ -436,6 +443,13 @@ export function AboutYouSection({
                   {(fp.constraints.available_equipment || ['dumbbells', 'bodyweight']).slice(0, 3).join(', ')}
                 </span>
               </div>
+
+              <div className="flex justify-between items-center text-[11px] pt-1 text-left">
+                <span className="text-[#8E8E93]">Adaptive Training</span>
+                <span className="font-semibold text-white">
+                  {fp.adaptive_plan_mode === 'auto_adjust' ? 'Auto-adjust minor changes' : 'Ask me before changing'}
+                </span>
+              </div>
             </div>
           );
         })()}
@@ -616,6 +630,52 @@ export function AboutYouSection({
                   <PhysiqueIllustration sex={sex} type={desiredPhysique} className="w-full h-full" selected />
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Adaptive Training Plan Strategy */}
+          <div className="space-y-1.5 pt-2 border-t border-white/[0.08]">
+            <label className="block text-[#8E8E93] font-medium">Adaptive Training Strategy</label>
+            <div className="space-y-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setAdaptivePlanMode('ask_first')}
+                className={`w-full p-3 rounded-xl border text-left flex items-start justify-between transition-all ${
+                  adaptivePlanMode === 'ask_first'
+                    ? 'bg-[#30D158]/10 border-[#30D158]/40 text-white'
+                    : 'bg-white/5 border-white/10 text-[#8E8E93] hover:text-white'
+                }`}
+              >
+                <div>
+                  <p className="text-xs font-semibold text-white">Ask me before changing my plan</p>
+                  <p className="text-[10px] text-[#8E8E93] mt-0.5">
+                    Recommended. Proposals include explanation, recovery reasoning, and clear options.
+                  </p>
+                </div>
+                {adaptivePlanMode === 'ask_first' && (
+                  <CheckCircle2 className="w-4 h-4 text-[#30D158] shrink-0 mt-0.5" />
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setAdaptivePlanMode('auto_adjust')}
+                className={`w-full p-3 rounded-xl border text-left flex items-start justify-between transition-all ${
+                  adaptivePlanMode === 'auto_adjust'
+                    ? 'bg-[#30D158]/10 border-[#30D158]/40 text-white'
+                    : 'bg-white/5 border-white/10 text-[#8E8E93] hover:text-white'
+                }`}
+              >
+                <div>
+                  <p className="text-xs font-semibold text-white">Automatically adjust minor schedule changes</p>
+                  <p className="text-[10px] text-[#8E8E93] mt-0.5">
+                    Adapts missed workouts automatically with transparent inline [Undo].
+                  </p>
+                </div>
+                {adaptivePlanMode === 'auto_adjust' && (
+                  <CheckCircle2 className="w-4 h-4 text-[#30D158] shrink-0 mt-0.5" />
+                )}
+              </button>
             </div>
           </div>
 

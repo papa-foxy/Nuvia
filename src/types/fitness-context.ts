@@ -6,6 +6,14 @@
  */
 
 import { LoggedSet } from './routine';
+import {
+  TrainingDayState,
+  NextTrainingAction,
+  RescheduleProposal,
+  WeeklyDayPlan,
+  WeeklyTrainingReport,
+  AdaptivePlanMode,
+} from './adaptive-training';
 
 export interface PhysiqueVisualSelection {
   visual_category: string;
@@ -78,6 +86,7 @@ export interface TrainingPreferences {
   preferred_exercises: string[]; // e.g. ["Goblet Squat", "Dumbbell Row"]
   disliked_exercises: string[]; // e.g. ["Bulgarian Split Squat"]
   custom_starting_weights?: Record<string, string>;
+  adaptive_plan_mode?: AdaptivePlanMode; // 'ask_first' (default) | 'auto_adjust'
 }
 
 export interface ExercisePerformanceRecord {
@@ -124,4 +133,12 @@ export interface NuviaFitnessContext {
     focus: string;
     exercise_names: string[];
   }[];
+  adaptive?: {
+    today_state: TrainingDayState;
+    next_action: NextTrainingAction;
+    pending_proposals: RescheduleProposal[];
+    weekly_view: WeeklyDayPlan[];
+    weekly_report?: WeeklyTrainingReport;
+    auto_adjust_mode: AdaptivePlanMode;
+  };
 }

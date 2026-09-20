@@ -38,6 +38,11 @@ import { DayDetailsModal } from './DayDetailsModal';
 import { ActivityDetailsModal } from './ActivityDetailsModal';
 import { TabType } from './Navigation';
 import { cleanActivityTitle, getActivityDisplayData } from '@/lib/activity-utils';
+import { FitnessContextService } from '@/lib/fitness-context-service';
+import { NuviaFitnessContext } from '@/types/fitness-context';
+import { NuviaNextActionCard } from './adaptive/NuviaNextActionCard';
+import { WeeklyAdaptationStrip } from './adaptive/WeeklyAdaptationStrip';
+import { WeeklyReportModal } from './adaptive/WeeklyReportModal';
 
 interface ExerciseListViewProps {
   onOpenAddExercise: () => void;
@@ -93,6 +98,10 @@ export function ExerciseListView({
 
   // Feedback banner
   const [successBanner, setSuccessBanner] = useState<string | null>(null);
+
+  // Adaptive Engine State
+  const [fitnessContext, setFitnessContext] = useState<NuviaFitnessContext | null>(null);
+  const [isWeeklyReportOpen, setIsWeeklyReportOpen] = useState(false);
 
   // Calendar & History State
   const today = new Date();
@@ -197,13 +206,15 @@ export function ExerciseListView({
     setLoadingRoutines(true);
     setLoadingLogs(true);
 
-    const [routinesData, logsData] = await Promise.all([
+    const [routinesData, logsData, fitCtx] = await Promise.all([
       DataService.getWorkoutRoutines(user?.id),
       DataService.getExerciseLogs(user?.id),
+      FitnessContextService.getFitnessContext(user?.id),
     ]);
 
     setRoutines(routinesData);
     setExercises(logsData);
+    setFitnessContext(fitCtx);
     setLoadingRoutines(false);
     setLoadingLogs(false);
   };
@@ -364,6 +375,58 @@ export function ExerciseListView({
       await DataService.deleteExerciseLog(id, user?.id);
       await loadAll();
       showNotification('Exercise log removed.');
+    }
+  };
+
+  const handleNextActionClick = (action: any) => {
+    if (action.type === 'start_workout') {
+      const routine = routines.find((r) => r.id === action.routineId);
+      if (routine) {
+        handleStartWorkoutDirect(routine);
+      }
+    } else if (action.type === 'continue_workout') {
+      handleResumeActiveSession();
+    } else if (action.type === 'recovery') {
+      setShowRecoverySheet(true);
+    } else if (action.type === 'optional_activity') {
+      onOpenAddExercise();
+    }
+  };
+
+  const handleAcceptAdaptiveProposal = async (proposal: any, selectedOption: any) => {
+    if (!user?.id) return;
+    try {
+      const targetDate = selectedOption.to_date || proposal.suggested_date || todayStr;
+      await DataService.saveScheduleAdaptation({
+        user_id: user.id,
+        routine_id: proposal.routine_id,
+        routine_title: proposal.routine_title,
+        date: targetDate,
+        original_date: proposal.from_date,
+        target_date: targetDate,
+        action: selectedOption.action === 'move' ? 'move_workout' : selectedOption.action === 'add_activity' ? 'add_activity' : 'cancel_workout',
+        reason: proposal.reason,
+        status: 'accepted',
+        user_confirmed: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+      FitnessContextService.invalidateFitnessContext(user.id);
+      await loadAll();
+      showNotification('Schedule adapted successfully.');
+    } catch (e) {
+      console.error('Failed to accept adaptive proposal', e);
+    }
+  };
+
+  const handleUndoAdaptation = async (changeId: string) => {
+    try {
+      await DataService.undoScheduleAdaptation(changeId);
+      FitnessContextService.invalidateFitnessContext(user?.id);
+      await loadAll();
+      showNotification('Schedule adaptation undone.');
+    } catch (e) {
+      console.error('Failed to undo schedule adaptation', e);
     }
   };
 
@@ -579,6 +642,22 @@ export function ExerciseListView({
       {/* ══════════════════════════════════════════════════════════════════ */}
       {viewMode === 'today' && (
         <div className="space-y-6">
+          {/* ── WEEKLY ADAPTATION STRIP ──────────────────────────────────── */}
+          <WeeklyAdaptationStrip
+            days={fitnessContext?.adaptive?.weekly_view || []}
+            onOpenWeeklyReport={() => setIsWeeklyReportOpen(true)}
+          />
+
+          {/* ── NUVIA NEXT ACTION CARD ──────────────────────────────────── */}
+          {fitnessContext?.adaptive?.next_action && (
+            <NuviaNextActionCard
+              action={fitnessContext.adaptive.next_action}
+              onActionClick={handleNextActionClick}
+              onAcceptProposal={handleAcceptAdaptiveProposal}
+              onUndoProposal={handleUndoAdaptation}
+            />
+          )}
+
           {/* ── ACTIVITY SUMMARY HERO (Large Typography) ─────────────────── */}
           <div className="space-y-1">
             <span className="text-[11px] font-bold tracking-wider text-[#8E8E93] uppercase block">
@@ -877,6 +956,28 @@ export function ExerciseListView({
       {/* ══════════════════════════════════════════════════════════════════ */}
       {viewMode === 'plans' && (
         <div className="space-y-4">
+          {/* Weekly Schedule Strip */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold tracking-wider text-[#8E8E93] uppercase">
+                Adapted Weekly Plan
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsWeeklyReportOpen(true)}
+                className="text-[11px] font-semibold text-[#30D158] hover:underline"
+              >
+                Weekly Report →
+              </button>
+            </div>
+            <WeeklyAdaptationStrip
+              days={fitnessContext?.adaptive?.weekly_view || []}
+              onOpenWeeklyReport={() => setIsWeeklyReportOpen(true)}
+            />
+          </div>
+
+          <div className="h-px bg-white/[0.06] w-full" />
+
           {/* Header Action Strip */}
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold tracking-wider text-[#8E8E93] uppercase">
@@ -1361,6 +1462,12 @@ export function ExerciseListView({
           }}
         />
       )}
+
+      <WeeklyReportModal
+        isOpen={isWeeklyReportOpen}
+        onClose={() => setIsWeeklyReportOpen(false)}
+        report={fitnessContext?.adaptive?.weekly_report}
+      />
     </div>
   );
 }

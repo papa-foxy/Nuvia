@@ -137,7 +137,12 @@ export const AiService = {
     recentExercises?: string[];
     chatMessage?: string;
     fitnessContext?: any;
-  }): Promise<{ reply?: string; advice?: CoachAdviceResult }> {
+  }): Promise<{
+    reply?: string;
+    advice?: CoachAdviceResult;
+    intentAnalysis?: any;
+    proposal?: any;
+  }> {
     try {
       if (isSupabaseConfigured()) {
         const supabase = createClient();
@@ -147,7 +152,13 @@ export const AiService = {
             body: params,
           });
           if (!error && data?.success) {
-            if (data.mode === 'chat') return { reply: data.reply };
+            if (data.mode === 'chat') {
+              return {
+                reply: data.reply,
+                intentAnalysis: data.intentAnalysis,
+                proposal: data.intentAnalysis?.proposal,
+              };
+            }
             return { advice: data.data };
           }
         }
@@ -169,7 +180,11 @@ export const AiService = {
       }
 
       if (json.mode === 'chat') {
-        return { reply: json.reply };
+        return {
+          reply: json.reply,
+          intentAnalysis: json.intentAnalysis,
+          proposal: json.intentAnalysis?.proposal,
+        };
       }
       return { advice: json.data };
     } catch {

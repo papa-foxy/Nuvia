@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { calculateTargets, getUserCalculationContext } from '@/lib/calculator';
+import { AdaptiveTrainingEngine } from '@/lib/adaptive-training-engine';
 
 const GEMINI_MODELS = [
   'gemini-3.5-flash',
@@ -64,6 +65,11 @@ ${schedStr}
 - Current Day Reality:
   * Scheduled Today: ${rec.scheduled_today?.has_routine ? `WORKOUT DAY (${rec.scheduled_today?.routine_title})` : 'REST / CARDIO DAY'}
   * Completed Today: ${rec.scheduled_today?.is_completed ? 'YES (Routine already logged today!)' : 'NO'}
+- Adaptive Training Engine Status (AUTHORITATIVE):
+  * Deterministic State Today: ${fc.adaptive?.today_state ? fc.adaptive.today_state.toUpperCase() : 'Not evaluated'}
+  * Recommended Next Action: ${fc.adaptive?.next_action?.type ? fc.adaptive.next_action.type.toUpperCase() : 'None'} (${fc.adaptive?.next_action?.reason || ''})
+  * Auto-Adjust Mode: ${fc.adaptive?.auto_adjust_mode || 'ask_first'}
+  * Pending Reschedule Proposals: ${fc.adaptive?.pending_proposals?.length ? fc.adaptive.pending_proposals.map((p: any) => `${p.routine_title} from ${p.from_date} to ${p.suggested_date} (${p.reason})`).join('; ') : 'None'}
 - Recovery Context:
   * Muscles trained in last 48h: ${(rec.trained_in_last_48h || []).join(', ') || 'None (fully recovered)'}
 - Personal Preferences & Progression Rules:
@@ -150,6 +156,31 @@ ${fitnessContextBlock}
 `;
 
       if (chatMessage) {
+        const todayDayName = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+        const todayRoutine = fitnessContext?.active_routines?.find((r: any) =>
+          r.days?.some((d: string) => d.toLowerCase() === todayDayName.toLowerCase())
+        );
+
+        const intentAnalysis = AdaptiveTrainingEngine.evaluateUserIntent({
+          message: chatMessage,
+          todayRoutine,
+          recentMuscles: fitnessContext?.recovery?.trained_in_last_48h || [],
+          routines: fitnessContext?.active_routines || [],
+          logs: recentExercises || [],
+        });
+
+        let intentContext = '';
+        if (intentAnalysis.classification !== 'GENERAL_QUESTION') {
+          intentContext = `
+USER INTENT DETECTED (AUTHORITATIVE):
+- Intent: ${intentAnalysis.intentSummary}
+- Classification: ${intentAnalysis.classification}
+- Recommendation: ${intentAnalysis.proposal ? intentAnalysis.proposal.reason : 'Review schedule'}
+- Recovery Analysis: ${intentAnalysis.proposal ? intentAnalysis.proposal.recovery_analysis : 'Sufficient recovery'}
+STRICT RULE: Explain this recommendation directly and concisely in 2-3 sentences based strictly on the facts provided. Do NOT claim the user trained or is sore unless stated in context. Reassure the user they have full control.
+`;
+        }
+
         const systemPrompt = `You are Nuvia's intelligent AI Coach, specialized in progressive resistance training, practical macro tracking, and Malaysian/Southeast Asian lifestyles (e.g. eating out at mamak stalls, hawker centers, Ayam Gepuk, Nasi Kandar, ordering 'kurang manis' or 'kosong' drinks, finding high-protein options locally).
 IMPORTANT NUTRITION RULE: Nuvia uses a net calorie budgeting model (dailyTarget: ${authoritativeCalorieTarget} kcal, food: ${foodCalories} kcal, activity: -${exerciseCalories} kcal, net: ${netCalories} kcal, remaining: ${remainingCalories} kcal). Do NOT say the user only consumed ${netCalories} kcal.
 IMPORTANT WORKOUT RULE: Never generate a generic workout. Always check the user's Weekly Training Structure, Available Equipment, Recovery Status, and Previous Performance. Follow the WORKOUT GENERATION & MODIFICATION RULES strictly.
@@ -167,7 +198,7 @@ Respond warmly, directly, concisely, and practically in 2-4 focused sentences or
                     {
                       parts: [
                         { text: systemPrompt },
-                        { text: userContext },
+                        { text: userContext + intentContext },
                         { text: `User message: "${chatMessage}"` },
                       ],
                     },
@@ -181,7 +212,12 @@ Respond warmly, directly, concisely, and practically in 2-4 focused sentences or
               const data = await res.json();
               const reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
               if (reply) {
-                return NextResponse.json({ success: true, mode: 'chat', reply });
+                return NextResponse.json({
+                  success: true,
+                  mode: 'chat',
+                  reply,
+                  intentAnalysis: intentAnalysis.classification !== 'GENERAL_QUESTION' ? intentAnalysis : undefined,
+                });
               }
             }
           } catch (modelErr) {

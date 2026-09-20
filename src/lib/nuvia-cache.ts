@@ -142,3 +142,12 @@ export function workoutRoutinesKey(userId: string | undefined) {
 export function exerciseLogsKey(userId: string | undefined) {
   return `exercise-logs:${userId ?? 'demo'}`;
 }
+
+export function scheduleAdaptationsKey(userId: string | undefined) {
+  return `schedule-adaptations:${userId ?? 'demo'}`;
+}
+
+export function adaptiveTrainingKey(userId: string | undefined) {
+  return `adaptive-training:${userId ?? 'demo'}`;
+}
+

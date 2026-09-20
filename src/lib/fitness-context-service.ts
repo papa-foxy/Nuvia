@@ -16,6 +16,7 @@
 import { DataService, getLocalDateString } from './data-service';
 import { NuviaCache } from './nuvia-cache';
 import { cleanActivityTitle } from './activity-utils';
+import { AdaptiveTrainingEngine } from './adaptive-training-engine';
 import {
   NuviaFitnessContext,
   TrainingConstraints,
@@ -138,6 +139,7 @@ export interface StoredFitnessPreferences {
   user_estimated_target_bf_percent?: number;
   user_estimated_bf_percent?: number;
   physique_photo_url?: string;
+  adaptive_plan_mode?: 'ask_first' | 'auto_adjust';
 }
 
 export class FitnessContextService {
@@ -150,7 +152,14 @@ export class FitnessContextService {
       try {
         const raw = localStorage.getItem(key);
         if (raw) {
-          return JSON.parse(raw);
+          const parsed = JSON.parse(raw);
+          return {
+            ...parsed,
+            preferences: {
+              adaptive_plan_mode: 'ask_first',
+              ...(parsed.preferences || {}),
+            },
+          };
         }
       } catch (err) {
         console.warn('Failed to parse stored fitness preferences:', err);
@@ -171,6 +180,7 @@ export class FitnessContextService {
       desired_look: 'Athletic, lean, and functional',
       user_estimated_target_bf_percent: 15,
       user_estimated_bf_percent: 28,
+      adaptive_plan_mode: 'ask_first',
       constraints: {
         preferred_split: 'Upper / Lower',
         workout_duration_minutes: 45,
@@ -195,6 +205,7 @@ export class FitnessContextService {
         easy_hard_areas: ['Upper body feels easier', 'Core feels difficult'],
         preferred_exercises: ['Goblet Squat', 'Dumbbell Row', 'Push-up', 'Dumbbell Bicep Curl'],
         disliked_exercises: ['Bulgarian Split Squat'],
+        adaptive_plan_mode: 'ask_first',
         custom_starting_weights: {
           'Goblet Squat': '12-20 kg total',
           'Dumbbell Row': '10-14 kg',
@@ -242,12 +253,13 @@ export class FitnessContextService {
       return cached.data;
     }
 
-    const [profile, goals, routines, allLogs, recentMuscles] = await Promise.all([
+    const [profile, goals, routines, allLogs, recentMuscles, adaptations] = await Promise.all([
       DataService.getProfile(userId),
       DataService.getGoals(userId),
       DataService.getWorkoutRoutines(userId),
       DataService.getExerciseLogs(userId),
       DataService.getRecentMuscleTrainingHistory(userId),
+      DataService.getScheduleAdaptations(userId),
     ]);
 
     const storedPrefs = this.getStoredPreferences(userId);
@@ -443,9 +455,79 @@ export class FitnessContextService {
       })),
     };
 
+    // 4. Deterministic Adaptive Training Engine Orchestration
+    let activeSession = null;
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = localStorage.getItem(`nuvia_active_workout_${userId || 'demo'}`);
+        if (raw) activeSession = JSON.parse(raw);
+      } catch {
+        // ignore
+      }
+    }
+
+    const trainedMusclesLast48h = Array.from(new Set(recentMuscles.map((m) => m.muscle)));
+    const cardioHabitDays = storedPrefs.constraints.cardio_habits?.typical_days || [];
+
+    const todayTrainingState = AdaptiveTrainingEngine.determineDailyTrainingState({
+      targetDate: todayStr,
+      routines,
+      logs: allLogs,
+      adaptations,
+      activeSession,
+      cardioHabitDays,
+    });
+
+    const nextAction = AdaptiveTrainingEngine.calculateNextTrainingAction({
+      routines,
+      logs: allLogs,
+      adaptations,
+      activeSession,
+      trainedMusclesLast48h,
+      cardioHabitDays,
+    });
+
+    const missedProposals = AdaptiveTrainingEngine.detectMissedWorkouts({
+      routines,
+      logs: allLogs,
+      adaptations,
+      trainedMusclesLast48h,
+    });
+
+    const weeklyView = AdaptiveTrainingEngine.generateWeeklyAdaptationView({
+      routines,
+      logs: allLogs,
+      adaptations,
+      cardioHabitDays,
+    });
+
+    const weeklyReport = AdaptiveTrainingEngine.generateWeeklyReport({
+      routines,
+      logs: allLogs,
+      adaptations,
+      cardioHabitDays,
+    });
+
+    context.adaptive = {
+      today_state: todayTrainingState,
+      next_action: nextAction,
+      pending_proposals: missedProposals,
+      weekly_view: weeklyView,
+      weekly_report: weeklyReport,
+      auto_adjust_mode: storedPrefs.preferences.adaptive_plan_mode || 'ask_first',
+    };
+
     // Cache with 2-minute TTL
     NuviaCache.set(cacheKey, context, { staleTime: 120_000, gcTime: 300_000 });
 
     return context;
+  }
+
+  /**
+   * Invalidates cached fitness context for a user.
+   */
+  static invalidateFitnessContext(userId?: string): void {
+    const effectiveUserId = userId || DataService.getDemoUserId();
+    NuviaCache.invalidate(`fitness_context_${effectiveUserId}`);
   }
 }

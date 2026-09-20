@@ -15,10 +15,16 @@ import {
   ExercisePerformance,
 } from '@/types/routine';
 import { StreakData, StreakDay, MilestoneBadge } from '@/types/streak';
+import { AdaptiveScheduleChange } from '@/types/adaptive-training';
 import { matchExercise, PLAYLIST_ID } from './exercise-catalog';
 import { createClient, isSupabaseConfigured } from './supabase/client';
 import { calculateTargets } from './calculator';
-import { NuviaCache, workoutRoutinesKey } from './nuvia-cache';
+import {
+  NuviaCache,
+  workoutRoutinesKey,
+  scheduleAdaptationsKey,
+  adaptiveTrainingKey,
+} from './nuvia-cache';
 
 const DEMO_USER_ID = 'demo-user-001';
 
@@ -135,6 +141,7 @@ interface LocalState {
   dailySummaries: Record<string, DailySummary>;
   recommendations: AiRecommendation[];
   customExercises: CustomExercise[];
+  scheduleAdaptations?: AdaptiveScheduleChange[];
 }
 
 function getLocalState(): LocalState {
@@ -148,6 +155,7 @@ function getLocalState(): LocalState {
       dailySummaries: {},
       recommendations: [],
       customExercises: [],
+      scheduleAdaptations: [],
     };
   }
 
@@ -158,6 +166,9 @@ function getLocalState(): LocalState {
       if (!parsed.workoutRoutines || parsed.workoutRoutines.length === 0) {
         parsed.workoutRoutines = DEFAULT_ROUTINES;
         saveLocalState(parsed);
+      }
+      if (!parsed.scheduleAdaptations) {
+        parsed.scheduleAdaptations = [];
       }
       return parsed;
     } catch {
@@ -174,6 +185,7 @@ function getLocalState(): LocalState {
     dailySummaries: {},
     recommendations: [],
     customExercises: [],
+    scheduleAdaptations: [],
   };
 
   saveLocalState(initial);
@@ -1526,5 +1538,100 @@ export const DataService = {
     const state = getLocalState();
     state.customExercises = (state.customExercises || []).filter((e) => e.id !== id);
     saveLocalState(state);
+  },
+
+  // =========================================================================
+  // ADAPTIVE SCHEDULE CHANGES (Non-Destructive Date-Specific Adaptations)
+  // =========================================================================
+  async getScheduleAdaptations(userId?: string): Promise<AdaptiveScheduleChange[]> {
+    const effectiveUserId = userId || DEMO_USER_ID;
+    const cacheKey = scheduleAdaptationsKey(effectiveUserId);
+    const cached = NuviaCache.get<AdaptiveScheduleChange[]>(cacheKey);
+    if (cached && !cached.isStale) {
+      return cached.data;
+    }
+
+    const state = getLocalState();
+    const adaptations = (state.scheduleAdaptations || []).filter(
+      (a) => a.user_id === effectiveUserId
+    );
+
+    NuviaCache.set(cacheKey, adaptations, { staleTime: 60_000, gcTime: 300_000 });
+    return adaptations;
+  },
+
+  async saveScheduleAdaptation(
+    adaptation: Omit<AdaptiveScheduleChange, 'id'> & { id?: string },
+    userId?: string
+  ): Promise<AdaptiveScheduleChange> {
+    const effectiveUserId = userId || adaptation.user_id || DEMO_USER_ID;
+    const itemToSave: AdaptiveScheduleChange = {
+      ...adaptation,
+      id: adaptation.id || `adapt-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      user_id: effectiveUserId,
+      updated_at: new Date().toISOString(),
+      created_at: adaptation.created_at || new Date().toISOString(),
+    };
+
+    const state = getLocalState();
+    if (!state.scheduleAdaptations) {
+      state.scheduleAdaptations = [];
+    }
+
+    const idx = state.scheduleAdaptations.findIndex((a) => a.id === itemToSave.id);
+    if (idx >= 0) {
+      state.scheduleAdaptations[idx] = itemToSave;
+    } else {
+      state.scheduleAdaptations.push(itemToSave);
+    }
+    saveLocalState(state);
+
+    NuviaCache.invalidate(scheduleAdaptationsKey(effectiveUserId));
+    NuviaCache.invalidate(adaptiveTrainingKey(effectiveUserId));
+    NuviaCache.invalidate(`fitness-context:${effectiveUserId}`);
+
+    return itemToSave;
+  },
+
+  async deleteScheduleAdaptation(adaptationId: string, userId?: string): Promise<void> {
+    const effectiveUserId = userId || DEMO_USER_ID;
+    const state = getLocalState();
+    if (state.scheduleAdaptations) {
+      state.scheduleAdaptations = state.scheduleAdaptations.filter((a) => a.id !== adaptationId);
+      saveLocalState(state);
+    }
+    NuviaCache.invalidate(scheduleAdaptationsKey(effectiveUserId));
+    NuviaCache.invalidate(adaptiveTrainingKey(effectiveUserId));
+    NuviaCache.invalidate(`fitness-context:${effectiveUserId}`);
+  },
+
+  async undoScheduleAdaptation(adaptationId: string, userId?: string): Promise<void> {
+    const effectiveUserId = userId || DEMO_USER_ID;
+    const state = getLocalState();
+    if (state.scheduleAdaptations) {
+      const idx = state.scheduleAdaptations.findIndex((a) => a.id === adaptationId);
+      if (idx >= 0) {
+        state.scheduleAdaptations[idx].status = 'undone';
+        state.scheduleAdaptations[idx].updated_at = new Date().toISOString();
+        saveLocalState(state);
+      }
+    }
+    NuviaCache.invalidate(scheduleAdaptationsKey(effectiveUserId));
+    NuviaCache.invalidate(adaptiveTrainingKey(effectiveUserId));
+    NuviaCache.invalidate(`fitness-context:${effectiveUserId}`);
+  },
+
+  async clearScheduleAdaptations(userId?: string): Promise<void> {
+    const effectiveUserId = userId || DEMO_USER_ID;
+    const state = getLocalState();
+    if (state.scheduleAdaptations) {
+      state.scheduleAdaptations = state.scheduleAdaptations.filter(
+        (a) => a.user_id !== effectiveUserId
+      );
+      saveLocalState(state);
+    }
+    NuviaCache.invalidate(scheduleAdaptationsKey(effectiveUserId));
+    NuviaCache.invalidate(adaptiveTrainingKey(effectiveUserId));
+    NuviaCache.invalidate(`fitness-context:${effectiveUserId}`);
   },
 };
