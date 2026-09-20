@@ -379,49 +379,66 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
   });
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col justify-between px-5 py-5 max-w-md mx-auto">
+    <div
+      className="w-full max-w-md mx-auto bg-black text-white flex flex-col overflow-hidden"
+      style={{
+        height: '100dvh',
+        minHeight: '-webkit-fill-available',
+      }}
+    >
       {/* ── TOP NAVIGATION & STEP PROGRESS ─────────────────────────────────── */}
-      <div className="flex items-center justify-between pb-2 border-b border-white/[0.06]">
-        {step > 1 ? (
-          <button
-            onClick={() => setStep((s) => s - 1)}
-            className="p-1.5 -ml-1 text-[#8E8E93] hover:text-white transition-colors rounded-xl bg-white/[0.05]"
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </button>
-        ) : onCancel ? (
-          <button onClick={onCancel} className="text-xs text-[#8E8E93] hover:text-white transition-colors">
-            Cancel
-          </button>
-        ) : (
-          <div className="w-5" />
-        )}
+      <div
+        className="shrink-0 px-5 pb-3 border-b border-white/[0.06] bg-black/95 backdrop-blur-md z-10"
+        style={{ paddingTop: 'max(16px, env(safe-area-inset-top, 16px))' }}
+      >
+        <div className="flex items-center justify-between">
+          {step > 1 ? (
+            <button
+              onClick={() => setStep((s) => s - 1)}
+              className="p-1.5 -ml-1 text-[#8E8E93] hover:text-white transition-colors rounded-xl bg-white/[0.05]"
+              aria-label="Back"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+          ) : onCancel ? (
+            <button onClick={onCancel} className="text-xs text-[#8E8E93] hover:text-white transition-colors">
+              Cancel
+            </button>
+          ) : (
+            <div className="w-5" />
+          )}
 
-        <div className="flex items-center gap-1.5">
-          {Array.from({ length: totalSteps }).map((_, i) => (
-            <div
-              key={i}
-              className={`h-1.5 rounded-full transition-all ${
-                i + 1 === step
-                  ? 'w-6 bg-[#30D158]'
-                  : i + 1 < step
-                  ? 'w-2 bg-[#30D158]/50'
-                  : 'w-2 bg-white/10'
-              }`}
-            />
-          ))}
+          <div className="flex items-center gap-1.5">
+            {Array.from({ length: totalSteps }).map((_, i) => (
+              <div
+                key={i}
+                className={`h-1.5 rounded-full transition-all ${
+                  i + 1 === step
+                    ? 'w-6 bg-[#30D158]'
+                    : i + 1 < step
+                    ? 'w-2 bg-[#30D158]/50'
+                    : 'w-2 bg-white/10'
+                }`}
+              />
+            ))}
+          </div>
+
+          <span className="text-[11px] font-mono font-semibold text-[#8E8E93]">
+            {step}/{totalSteps}
+          </span>
         </div>
-
-        <span className="text-[11px] font-mono font-semibold text-[#8E8E93]">
-          {step}/{totalSteps}
-        </span>
       </div>
 
-      {/* ===================================================================== */}
-      {/* STEP 1: BIOMETRICS (Deterministic Calorie Anchor)                      */}
-      {/* ===================================================================== */}
-      {step === 1 && (
-        <div className="space-y-5 my-auto py-3 animate-fadeIn">
+      {/* ── SCROLLABLE CONTENT BODY ─────────────────────────────────────────── */}
+      <div
+        className="flex-1 overflow-y-auto px-5 py-4 overscroll-contain"
+        style={{ WebkitOverflowScrolling: 'touch' }}
+      >
+        {/* ===================================================================== */}
+        {/* STEP 1: BIOMETRICS (Deterministic Calorie Anchor)                      */}
+        {/* ===================================================================== */}
+        {step === 1 && (
+          <div className="space-y-4 py-1 animate-fadeIn">
           <div>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-[#30D158]/15 text-[#30D158] border border-[#30D158]/30 uppercase">
               <Sparkles className="w-3 h-3" />
@@ -506,7 +523,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
       {/* STEP 2: ACTIVITY & WEIGHT TARGET (Deterministic Calorie Multiplier)   */}
       {/* ===================================================================== */}
       {step === 2 && (
-        <div className="space-y-5 my-auto py-3 animate-fadeIn">
+        <div className="space-y-4 py-1 animate-fadeIn">
           <div>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-[#30D158]/15 text-[#30D158] border border-[#30D158]/30 uppercase">
               <Target className="w-3 h-3" />
@@ -592,7 +609,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
       {/* STEP 3: UNDERSTAND YOUR BODY (Current Physique Assessment)            */}
       {/* ===================================================================== */}
       {step === 3 && (
-        <div className="space-y-4 my-auto py-2 animate-fadeIn">
+        <div className="space-y-4 py-1 animate-fadeIn">
           <div>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-amber-500/15 text-[#FF9F0A] border border-[#FF9F0A]/30 uppercase">
               <User className="w-3 h-3" />
@@ -669,7 +686,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
       {/* STEP 4: DESIRED PHYSIQUE & VISION                                     */}
       {/* ===================================================================== */}
       {step === 4 && (
-        <div className="space-y-4 my-auto py-2 animate-fadeIn">
+        <div className="space-y-4 py-1 animate-fadeIn">
           <div>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-sky-500/15 text-sky-400 border border-sky-500/30 uppercase">
               <Compass className="w-3 h-3" />
@@ -769,7 +786,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
       {/* STEP 5: TRAINING REALITY & HARD CONSTRAINTS                          */}
       {/* ===================================================================== */}
       {step === 5 && (
-        <div className="space-y-4 my-auto py-2 animate-fadeIn">
+        <div className="space-y-4 py-1 animate-fadeIn">
           <div>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-purple-500/15 text-purple-400 border border-purple-500/30 uppercase">
               <Dumbbell className="w-3 h-3" />
@@ -897,7 +914,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
       {/* STEP 6: PREFERENCES, CARDIO & ADHERENCE                               */}
       {/* ===================================================================== */}
       {step === 6 && (
-        <div className="space-y-4 my-auto py-2 animate-fadeIn">
+        <div className="space-y-4 py-1 animate-fadeIn">
           <div>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-emerald-500/15 text-[#30D158] border border-[#30D158]/30 uppercase">
               <Clock className="w-3 h-3" />
@@ -1005,7 +1022,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
       {/* STEP 7: YOUR PERSONALIZED PLAN & VERIFICATION                        */}
       {/* ===================================================================== */}
       {step === 7 && (
-        <div className="space-y-3.5 my-auto py-1 animate-fadeIn">
+        <div className="space-y-3.5 py-1 animate-fadeIn">
           <div>
             <div className="flex items-center justify-between">
               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-[#30D158]/15 text-[#30D158] border border-[#30D158]/30 uppercase">
@@ -1132,9 +1149,13 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
           </div>
         </div>
       )}
+      </div>
 
       {/* ── BOTTOM ACTION BUTTON ───────────────────────────────────────────── */}
-      <div className="pt-2 border-t border-white/[0.06]">
+      <div
+        className="shrink-0 px-5 pt-3 border-t border-white/[0.08] bg-black/95 backdrop-blur-md z-10"
+        style={{ paddingBottom: 'max(20px, env(safe-area-inset-bottom, 20px))' }}
+      >
         {step < totalSteps ? (
           <button
             onClick={handleNextStep}
