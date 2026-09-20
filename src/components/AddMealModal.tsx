@@ -139,8 +139,8 @@ export function AddMealModal({
 
   return (
     <>
-      <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end justify-center p-0 sm:p-4 pb-[calc(68px+env(safe-area-inset-bottom,0px))]">
-        <div className="w-full max-w-md bg-[#1C1C1E] border border-white/[0.08] rounded-[28px] max-h-[calc(100dvh-68px-env(safe-area-inset-bottom,0px)-1rem)] flex flex-col overflow-hidden shadow-2xl animate-slideUp">
+      <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end justify-center p-0 sm:p-4 pb-[calc(56px+env(safe-area-inset-bottom,0px))]">
+        <div className="w-full max-w-md bg-[#1C1C1E] border-t border-x border-b-0 border-white/[0.08] rounded-t-[28px] rounded-b-none max-h-[calc(100dvh-56px-env(safe-area-inset-bottom,0px)-0.5rem)] flex flex-col overflow-hidden shadow-2xl animate-slideUp">
           {/* Header */}
           <div className="px-5 py-4 border-b border-white/[0.08] flex items-center justify-between">
             <div className="flex items-center gap-2">

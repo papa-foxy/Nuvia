@@ -229,7 +229,7 @@ export function DayDetailsModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:p-4 pb-[calc(68px+env(safe-area-inset-bottom,0px))]">
+    <div className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:p-4 pb-[calc(56px+env(safe-area-inset-bottom,0px))]">
       {/* Backdrop */}
       <div
         onClick={triggerClose}
@@ -248,7 +248,7 @@ export function DayDetailsModal({
             : `translateY(${dragY}px)`,
           transition: isDragging ? 'none' : 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
-        className="relative z-10 w-full max-w-md bg-[#1C1C1E] border border-white/10 rounded-[28px] max-h-[calc(100dvh-68px-env(safe-area-inset-bottom,0px)-1rem)] flex flex-col shadow-2xl overflow-hidden will-change-transform"
+        className="relative z-10 w-full max-w-md bg-[#1C1C1E] border-t border-x border-b-0 border-white/10 rounded-t-[28px] rounded-b-none max-h-[calc(100dvh-56px-env(safe-area-inset-bottom,0px)-0.5rem)] flex flex-col shadow-2xl overflow-hidden will-change-transform"
       >
         {/* iOS Drag Handle */}
         <div

@@ -116,7 +116,7 @@ export function StreakCalendarModal({
   const isTodayLogged = activeDatesSet.has(todayStr);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:p-4 pb-[calc(68px+env(safe-area-inset-bottom,0px))] animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:p-4 pb-[calc(56px+env(safe-area-inset-bottom,0px))] animate-in fade-in duration-200">
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/80 backdrop-blur-md"
@@ -124,7 +124,7 @@ export function StreakCalendarModal({
       />
 
       {/* Modal Sheet */}
-      <div className="relative w-full max-w-md bg-[#161618] border border-white/10 rounded-[28px] max-h-[calc(100dvh-68px-env(safe-area-inset-bottom,0px)-1rem)] flex flex-col overflow-hidden shadow-2xl z-10 animate-slideUp">
+      <div className="relative w-full max-w-md bg-[#161618] border-t border-x border-b-0 border-white/10 rounded-t-[28px] rounded-b-none max-h-[calc(100dvh-56px-env(safe-area-inset-bottom,0px)-0.5rem)] flex flex-col overflow-hidden shadow-2xl z-10 animate-slideUp">
         {/* Grab Handle */}
         <div className="flex justify-center pt-3 pb-1">
           <div className="w-10 h-1 rounded-full bg-white/20" />
