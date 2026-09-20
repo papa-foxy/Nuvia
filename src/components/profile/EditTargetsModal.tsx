@@ -94,8 +94,8 @@ export function EditTargetsModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
-      <div className="w-full max-w-md bg-[#1C1C1E] border-t sm:border border-white/10 rounded-t-3xl sm:rounded-3xl p-5 space-y-4 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end justify-center p-0 sm:p-4 pb-[calc(68px+env(safe-area-inset-bottom,0px))] animate-fadeIn">
+      <div className="w-full max-w-md bg-[#1C1C1E] border border-white/10 rounded-[28px] p-5 space-y-4 max-h-[calc(100dvh-68px-env(safe-area-inset-bottom,0px)-1rem)] overflow-y-auto">
         <div className="flex items-center justify-between pb-2 border-b border-white/10">
           <div>
             <h3 className="text-base font-bold text-white">Adjust Daily Targets</h3>

@@ -83,7 +83,7 @@ export function BottomNav({
   return (
     <>
       <nav
-        className="fixed md:absolute bottom-0 left-0 right-0 z-40 w-full bg-black border-t border-white/[0.08] px-4 pt-1.5 pb-1 flex items-center justify-between"
+        className="fixed md:absolute bottom-0 left-0 right-0 z-[60] w-full bg-black border-t border-white/[0.08] px-4 pt-1.5 pb-1 flex items-center justify-between"
       >
         {/* Destination 1: Today */}
         <button
@@ -158,7 +158,7 @@ export function BottomNav({
 
       {/* iOS-Style Contextual Log Action Sheet */}
       {showLogSheet && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end justify-center p-4">
+        <div className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm flex items-end justify-center p-4 pb-[calc(68px+env(safe-area-inset-bottom,0px))]">
           <div className="w-full max-w-sm ios-sheet border border-white/[0.12] rounded-3xl p-5 shadow-2xl space-y-4 animate-slideUp">
             <div className="flex items-center justify-between pb-1">
               <span className="text-xs font-bold uppercase tracking-wider text-[#8E8E93]">

@@ -189,9 +189,9 @@ export function NuviaBottomSheet({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 pb-[calc(56px+env(safe-area-inset-bottom,0px))] sm:pb-0"
+      className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:p-4 pb-[calc(68px+env(safe-area-inset-bottom,0px))]"
     >
-      {/* Backdrop: covers page background above bottom nav on mobile, full on sm */}
+      {/* Backdrop: covers page background above bottom nav */}
       <div
         className="fixed inset-0 bg-black/80 backdrop-blur-md transition-opacity"
         style={{
@@ -215,7 +215,7 @@ export function NuviaBottomSheet({
             ? 'transform 0.32s cubic-bezier(0.16, 1, 0.3, 1)'
             : 'transform 0.22s cubic-bezier(0.2, 0.9, 0.3, 1)',
         }}
-        className={`relative w-full ${maxWidth} bg-[#161618] border border-white/10 rounded-t-[28px] sm:rounded-[28px] max-h-[calc(100dvh-56px-env(safe-area-inset-bottom,0px)-0.75rem)] sm:max-h-[85vh] flex flex-col overflow-hidden shadow-2xl z-10 will-change-transform`}
+        className={`relative w-full ${maxWidth} bg-[#161618] border border-white/10 rounded-[28px] max-h-[calc(100dvh-68px-env(safe-area-inset-bottom,0px)-1rem)] flex flex-col overflow-hidden shadow-2xl z-10 will-change-transform`}
       >
         {/* Grab Handle */}
         {showGrabHandle && (

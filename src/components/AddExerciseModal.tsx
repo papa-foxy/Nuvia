@@ -131,8 +131,8 @@ export function AddExerciseModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="w-full max-w-md bg-[#1C1C1E] border border-white/[0.08] rounded-t-3xl sm:rounded-3xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl animate-slideUp">
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end justify-center p-0 sm:p-4 pb-[calc(68px+env(safe-area-inset-bottom,0px))]">
+      <div className="w-full max-w-md bg-[#1C1C1E] border border-white/[0.08] rounded-[28px] max-h-[calc(100dvh-68px-env(safe-area-inset-bottom,0px)-1rem)] flex flex-col overflow-hidden shadow-2xl animate-slideUp">
         {/* Header */}
         <div className="px-5 py-4 border-b border-white/[0.08] flex items-center justify-between">
           <h3 className="text-base font-semibold text-white">Log Activity</h3>

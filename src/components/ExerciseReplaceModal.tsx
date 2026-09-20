@@ -71,8 +71,8 @@ export function ExerciseReplaceModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
-      <div className="w-full max-w-md bg-[#1C1C1E] border-t sm:border border-white/10 rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl animate-slideUp max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-end justify-center p-0 sm:p-4 pb-[calc(68px+env(safe-area-inset-bottom,0px))] animate-fadeIn">
+      <div className="w-full max-w-md bg-[#1C1C1E] border border-white/10 rounded-[28px] p-5 shadow-2xl animate-slideUp max-h-[calc(100dvh-68px-env(safe-area-inset-bottom,0px)-1rem)] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-white/10 shrink-0">
           <div className="flex items-center gap-2">
