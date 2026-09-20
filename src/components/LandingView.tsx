@@ -188,49 +188,78 @@ export function LandingView({ onStartOnboarding, onEnterDashboard }: LandingView
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col justify-between px-6 py-10 max-w-md mx-auto">
-      {/* Top Brand Mark */}
-      <div className="pt-2">
-        <span className="text-xl font-bold tracking-tight text-white">
-          Nuvia
-        </span>
+    <div className="relative min-h-screen w-full bg-black text-white overflow-hidden flex flex-col justify-between">
+      {/* Ambient background with glowing emerald waves & dot matrix */}
+      <div
+        className="fixed inset-0 pointer-events-none z-0 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: "url('/onboarding-bg.webp'), url('/onboarding-bg.png')",
+        }}
+      >
+        {/* Soft vignette/gradient overlay for contrast */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/30 to-black/65 backdrop-blur-[1px]" />
       </div>
 
-      {/* Hero Body */}
-      <div className="my-auto py-12 space-y-4">
-        <p className="text-xs font-semibold uppercase tracking-widest text-[#8E8E93]">
-          Intelligent Nutrition & Fitness
-        </p>
-        <h1 className="text-4xl font-bold tracking-tight text-white leading-tight">
-          Your Health,<br />
-          Smarter.
-        </h1>
-        <p className="text-sm text-[#8E8E93] leading-relaxed max-w-xs font-normal">
-          Track what you eat with a photo or natural prompt, record movement, and let Nuvia provide clear, actionable daily nutrition advice.
-        </p>
-      </div>
+      {/* Main Container */}
+      <div className="relative z-10 w-full max-w-md mx-auto min-h-screen flex flex-col justify-between px-6 py-10">
+        {/* Top Brand Mark */}
+        <div className="pt-2 flex items-center gap-2.5">
+          <img
+            src="/icon.png"
+            alt="Nuvia Logo"
+            className="w-8 h-8 rounded-xl shadow-lg shadow-emerald-500/25 border border-emerald-400/20"
+          />
+          <span className="text-xl font-bold tracking-tight text-white">
+            Nuvia
+          </span>
+        </div>
 
-      {/* Action Buttons */}
-      <div className="space-y-3 pb-4">
-        <button
-          onClick={() => openModal('signup')}
-          className="w-full py-4 rounded-full bg-white hover:bg-[#F5F5F7] text-black font-semibold text-sm transition-transform active:scale-[0.98]"
-        >
-          Get Started
-        </button>
+        {/* Hero Body */}
+        <div className="my-auto py-12 space-y-4">
+          <p className="text-xs font-semibold uppercase tracking-widest text-emerald-400/90 flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            Intelligent Nutrition &amp; Fitness
+          </p>
+          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight">
+            Your Health,<br />
+            <span className="bg-gradient-to-r from-white via-emerald-200 to-emerald-400 bg-clip-text text-transparent">
+              Smarter.
+            </span>
+          </h1>
+          <p className="text-sm text-[#A1A1A6] leading-relaxed max-w-xs font-normal">
+            Track what you eat with a photo or natural prompt, record movement, and let Nuvia provide clear, actionable daily nutrition advice.
+          </p>
+        </div>
 
-        <button
-          onClick={() => openModal('login')}
-          className="w-full py-4 rounded-full bg-[#1C1C1E] hover:bg-[#2C2C2E] text-white font-medium text-sm transition-colors"
-        >
-          Log In
-        </button>
+        {/* Action Buttons */}
+        <div className="space-y-3 pb-4">
+          <button
+            onClick={() => openModal('signup')}
+            className="w-full py-4 rounded-full bg-white hover:bg-[#F5F5F7] text-black font-bold text-sm transition-all shadow-xl shadow-white/10 active:scale-[0.98]"
+          >
+            Get Started
+          </button>
+
+          <button
+            onClick={() => openModal('login')}
+            className="w-full py-4 rounded-full bg-black/40 hover:bg-black/60 text-white font-semibold text-sm transition-colors border border-white/15 backdrop-blur-md"
+          >
+            Log In
+          </button>
+
+          <button
+            onClick={onStartOnboarding}
+            className="w-full py-2.5 text-center text-xs text-[#8E8E93] hover:text-emerald-400 transition-colors font-medium"
+          >
+            Or preview onboarding as guest →
+          </button>
+        </div>
       </div>
 
       {/* Modal */}
       {showAuthModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="w-full max-w-sm bg-[#1C1C1E] border border-white/[0.08] rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl animate-slideUp">
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="w-full max-w-sm bg-[#0E1511]/95 border border-emerald-500/20 rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl shadow-emerald-950/60 backdrop-blur-2xl animate-slideUp">
             
             {/* Header */}
             <div className="mb-4">

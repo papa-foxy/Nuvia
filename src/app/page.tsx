@@ -49,13 +49,26 @@ export default function HomePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#070A13] flex flex-col items-center justify-center text-white">
-        <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-400 to-teal-500 flex items-center justify-center animate-bounce shadow-xl shadow-emerald-500/25">
-          <Flame className="w-7 h-7 text-slate-950 fill-slate-950" />
+      <div className="relative min-h-screen bg-black flex flex-col items-center justify-center text-white overflow-hidden">
+        {/* Ambient glowing wave background */}
+        <div
+          className="fixed inset-0 pointer-events-none z-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: "url('/onboarding-bg.webp'), url('/onboarding-bg.png')",
+          }}
+        >
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px]" />
         </div>
-        <p className="mt-4 text-xs font-bold tracking-widest text-emerald-400 uppercase">
-          Nuvia AI Fitness
-        </p>
+        <div className="relative z-10 flex flex-col items-center justify-center">
+          <img
+            src="/icon.png"
+            alt="Nuvia"
+            className="w-16 h-16 rounded-2xl shadow-xl shadow-emerald-500/25 animate-pulse border border-emerald-400/20"
+          />
+          <p className="mt-4 text-xs font-bold tracking-widest text-emerald-400 uppercase">
+            Nuvia AI Fitness
+          </p>
+        </div>
       </div>
     );
   }

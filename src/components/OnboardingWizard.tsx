@@ -384,15 +384,26 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
 
   return (
     <div
-      className="w-full max-w-md mx-auto bg-black text-white flex flex-col overflow-hidden"
+      className="relative w-full max-w-md mx-auto bg-black text-white flex flex-col overflow-hidden"
       style={{
         height: '100dvh',
         minHeight: '-webkit-fill-available',
       }}
     >
+      {/* Ambient glowing emerald wave background */}
+      <div
+        className="fixed inset-0 pointer-events-none z-0 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: "url('/onboarding-bg.webp'), url('/onboarding-bg.png')",
+        }}
+      >
+        {/* Subtle dark gradient overlay for optimal readability & contrast */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70 backdrop-blur-[1px]" />
+      </div>
+
       {/* ── TOP NAVIGATION & STEP PROGRESS ─────────────────────────────────── */}
       <div
-        className="shrink-0 px-5 pb-3 border-b border-white/[0.06] bg-black/95 backdrop-blur-md z-10"
+        className="shrink-0 px-5 pb-3 border-b border-white/[0.08] bg-black/75 backdrop-blur-xl z-10"
         style={{ paddingTop: 'max(16px, env(safe-area-inset-top, 16px))' }}
       >
         <div className="flex items-center justify-between">
@@ -435,7 +446,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
 
       {/* ── SCROLLABLE CONTENT BODY ─────────────────────────────────────────── */}
       <div
-        className="flex-1 overflow-y-auto px-5 py-4 overscroll-contain"
+        className="relative z-10 flex-1 overflow-y-auto px-5 py-4 overscroll-contain"
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         {/* ===================================================================== */}
@@ -1314,7 +1325,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
 
       {/* ── BOTTOM ACTION BUTTON ───────────────────────────────────────────── */}
       <div
-        className="shrink-0 px-5 pt-3 border-t border-white/[0.08] bg-black/95 backdrop-blur-md z-10"
+        className="shrink-0 px-5 pt-3 border-t border-white/[0.08] bg-black/80 backdrop-blur-xl z-10"
         style={{ paddingBottom: 'max(20px, env(safe-area-inset-bottom, 20px))' }}
       >
         {step < totalSteps ? (
