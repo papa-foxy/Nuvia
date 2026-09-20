@@ -283,6 +283,8 @@ export function AboutYouSection({
 
   const formatGoal = (g?: string | null) => {
     switch (g) {
+      case 'recomposition':
+        return 'Lose fat & build muscle';
       case 'lose_weight':
         return 'Lose weight';
       case 'maintain_weight':
@@ -543,10 +545,11 @@ export function AboutYouSection({
               onChange={(e) => setGoal(e.target.value as UserGoal)}
               className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white font-semibold focus:outline-none focus:border-[#30D158]"
             >
+              <option value="recomposition" className="bg-[#1C1C1E]">Lose Fat &amp; Build Muscle (Recomposition)</option>
               <option value="lose_weight" className="bg-[#1C1C1E]">Lose Weight</option>
+              <option value="build_muscle" className="bg-[#1C1C1E]">Build Muscle</option>
               <option value="maintain_weight" className="bg-[#1C1C1E]">Maintain Weight</option>
               <option value="gain_weight" className="bg-[#1C1C1E]">Gain Weight</option>
-              <option value="build_muscle" className="bg-[#1C1C1E]">Build Muscle</option>
             </select>
           </div>
 

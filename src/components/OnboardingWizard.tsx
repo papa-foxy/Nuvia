@@ -353,6 +353,8 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
 
   const getGoalStrategy = (g: UserGoal) => {
     switch (g) {
+      case 'recomposition':
+        return { label: 'Recomp (-200 kcal)', tag: 'Lose Fat & Build Muscle', color: 'text-emerald-400 bg-emerald-400/15 border-emerald-400/30' };
       case 'lose_weight':
         return { label: '-450 kcal Deficit', tag: 'Fat Loss', color: 'text-amber-400 bg-amber-400/15 border-amber-400/30' };
       case 'build_muscle':
@@ -542,11 +544,46 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
               <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-2">
                 Primary Goal
               </label>
+
+              {/* Featured: Lose Fat & Build Muscle (Body Recomposition) */}
+              <button
+                type="button"
+                onClick={() => setGoal('recomposition')}
+                className={`w-full mb-2 p-3 rounded-2xl text-left transition-all flex items-center justify-between border cursor-pointer active:scale-[0.98] ${
+                  goal === 'recomposition'
+                    ? 'bg-white text-black font-bold shadow-md border-white'
+                    : 'bg-[#1C1C1E] text-[#8E8E93] hover:text-white border-white/[0.04]'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <div
+                    className={`w-7 h-7 rounded-xl flex items-center justify-center ${
+                      goal === 'recomposition' ? 'bg-black text-white' : 'bg-white/5 text-[#30D158]'
+                    }`}
+                  >
+                    <Zap className="w-3.5 h-3.5 fill-current" />
+                  </div>
+                  <div>
+                    <p className={`text-xs font-bold ${goal === 'recomposition' ? 'text-black' : 'text-white'}`}>
+                      Lose Fat &amp; Build Muscle
+                    </p>
+                    <p className={`text-[10px] ${goal === 'recomposition' ? 'text-zinc-700 font-medium' : 'text-[#8E8E93]'}`}>
+                      Body Recomposition (simultaneous fat loss &amp; muscle gain)
+                    </p>
+                  </div>
+                </div>
+                {goal === 'recomposition' && (
+                  <div className="w-5 h-5 rounded-full bg-black text-white flex items-center justify-center">
+                    <Check className="w-3 h-3 stroke-[3]" />
+                  </div>
+                )}
+              </button>
+
               <div className="grid grid-cols-2 gap-2">
                 {[
                   { id: 'lose_weight' as UserGoal, label: 'Lose Weight' },
-                  { id: 'maintain_weight' as UserGoal, label: 'Maintain Weight' },
                   { id: 'build_muscle' as UserGoal, label: 'Build Muscle' },
+                  { id: 'maintain_weight' as UserGoal, label: 'Maintain Weight' },
                   { id: 'gain_weight' as UserGoal, label: 'Gain Weight' },
                 ].map((g) => (
                   <button

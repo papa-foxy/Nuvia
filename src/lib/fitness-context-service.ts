@@ -92,7 +92,11 @@ export function generateTrainingStrategy(params: {
   );
 
   // 4. Energy & Nutrition Synergy
-  if (params.goal === 'lose_weight') {
+  if (params.goal === 'recomposition') {
+    points.push(
+      `Metabolic Support: Body recomposition strategy (~2.0-2.2 g/kg protein, modest -200 kcal deficit) to fuel progressive muscle protein synthesis while mobilizing adipose fat stores.`
+    );
+  } else if (params.goal === 'lose_weight') {
     points.push(
       `Metabolic Support: Moderate, sustainable calorie deficit paired with high dietary protein (~1.8-2.2 g/kg) to maximize fat loss while preserving lean mass.`
     );

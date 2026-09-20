@@ -58,6 +58,12 @@ export function calculateTargets(input: CalculationInput): CalculationResult {
   const minSafeCalories = sex === 'female' ? 1200 : 1500;
 
   switch (goal) {
+    case 'recomposition': {
+      // Body recomposition: slight gentle deficit / near-maintenance (-200 kcal) with high protein
+      adjustment = -200;
+      calorieTarget = Math.max(minSafeCalories, tdee + adjustment);
+      break;
+    }
     case 'lose_weight': {
       // 1 kg fat ≈ 7,700 kcal -> weekly pace * 7700 / 7 ≈ pace * 1100 kcal/day (normalized to ~1000)
       const targetDeficit = Math.round(pace * 1000);
@@ -88,9 +94,9 @@ export function calculateTargets(input: CalculationInput): CalculationResult {
   calorieTarget = Math.round(calorieTarget);
 
   // Macronutrient breakdown
-  // Protein: higher for muscle preservation/building (~2.0g/kg for muscle/loss, 1.8g/kg for maintain)
+  // Protein: higher for muscle preservation/building (~2.0g/kg for muscle/loss/recomp, 1.8g/kg for maintain)
   let proteinPerKg = 1.8;
-  if (goal === 'build_muscle' || goal === 'lose_weight') {
+  if (goal === 'build_muscle' || goal === 'lose_weight' || goal === 'recomposition') {
     proteinPerKg = 2.0;
   }
   let proteinGrams = Math.round(weight_kg * proteinPerKg);

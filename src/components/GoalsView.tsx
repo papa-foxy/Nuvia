@@ -36,9 +36,10 @@ interface GoalsViewProps {
 }
 
 const GOAL_OPTIONS: { id: UserGoal; label: string; desc: string }[] = [
+  { id: 'recomposition', label: 'Lose fat & build muscle', desc: 'Body recomposition: high protein to lose fat while building muscle' },
   { id: 'lose_weight', label: 'Lose weight', desc: 'Calorie deficit to burn fat steadily' },
-  { id: 'maintain_weight', label: 'Maintain', desc: 'Sustain current weight & stay energized' },
   { id: 'build_muscle', label: 'Build muscle', desc: 'Lean surplus with elevated protein' },
+  { id: 'maintain_weight', label: 'Maintain', desc: 'Sustain current weight & stay energized' },
   { id: 'gain_weight', label: 'Gain weight', desc: 'Calorie surplus for healthy weight gain' },
 ];
 

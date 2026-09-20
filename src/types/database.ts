@@ -6,6 +6,7 @@ export type ActivityLevel =
   | 'extremely_active';
 
 export type UserGoal =
+  | 'recomposition'
   | 'lose_weight'
   | 'maintain_weight'
   | 'gain_weight'
