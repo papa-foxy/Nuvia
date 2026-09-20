@@ -1,8 +1,9 @@
 'use client';
 
 import React from 'react';
-import { X, CheckCircle2, Award, Sparkles, Dumbbell, Calendar, Heart, ArrowRight } from 'lucide-react';
+import { CheckCircle2, Award, Sparkles, Dumbbell, Calendar, Heart, ArrowRight } from 'lucide-react';
 import { WeeklyTrainingReport } from '@/types/adaptive-training';
+import { NuviaBottomSheet } from '../NuviaBottomSheet';
 
 interface WeeklyReportModalProps {
   report?: WeeklyTrainingReport | null;
@@ -14,26 +15,23 @@ export function WeeklyReportModal({ report, isOpen, onClose }: WeeklyReportModal
   if (!isOpen || !report) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
-      <div className="w-full max-w-sm bg-[#1C1C1E] border border-white/[0.08] rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl animate-slideUp space-y-5">
-        <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
-          <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[#30D158]">
-              Weekly Review
-            </span>
-            <h3 className="text-lg font-bold text-white tracking-tight mt-0.5">
-              Training Summary
-            </h3>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1.5 rounded-full text-[#8E8E93] hover:text-white bg-white/[0.06] transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
+    <NuviaBottomSheet
+      isOpen={isOpen}
+      onClose={onClose}
+      title={
+        <div>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-[#30D158]">
+            Weekly Review
+          </span>
+          <h3 className="text-base font-bold text-white tracking-tight leading-snug mt-0.5">
+            Training Summary
+          </h3>
         </div>
-
+      }
+      subtitle="Consistency, volume, and schedule adaptations"
+      maxWidth="max-w-md"
+    >
+      <div className="space-y-4 pb-2">
         {/* ── STATS GRID ─────────────────────────────────────────────────── */}
         <div className="grid grid-cols-2 gap-2.5">
           <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.06]">
@@ -101,27 +99,38 @@ export function WeeklyReportModal({ report, isOpen, onClose }: WeeklyReportModal
         </div>
 
         {/* ── ADAPTATIONS LOG ────────────────────────────────────────────── */}
-        {report.adaptationsSummary.length > 0 && (
-          <div className="p-3 rounded-2xl bg-[#0A84FF]/10 border border-[#0A84FF]/20 text-xs space-y-1">
+        {report.adaptationsSummary && report.adaptationsSummary.length > 0 && (
+          <div className="p-3.5 rounded-2xl bg-[#0A84FF]/10 border border-[#0A84FF]/20 text-xs space-y-1.5">
             <span className="font-bold text-[#0A84FF] text-[11px] block">
               Adaptations ({report.adaptationsSummary.length}):
             </span>
             {report.adaptationsSummary.map((item, idx) => (
-              <p key={idx} className="text-[#E5E5EA] text-[11px] leading-relaxed">
-                • {item}
+              <p key={idx} className="text-[#E5E5EA] text-[11px] leading-relaxed flex items-start gap-1.5">
+                <span className="text-[#0A84FF]">•</span>
+                <span>{item}</span>
               </p>
             ))}
           </div>
         )}
 
+        {/* ── NEUTRAL COACH NOTE ────────────────────────────────────────── */}
+        <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.06] text-xs text-[#8E8E93] leading-relaxed space-y-1">
+          <span className="font-bold text-white text-xs block">Coach Note</span>
+          <p>
+            {report.completedWorkouts >= report.plannedWorkouts
+              ? 'Outstanding consistency this week. Muscle stimulus targets were reached cleanly while respecting recovery.'
+              : 'Good training balance this week. Any adapted or missed sessions were factored into your upcoming volume.'}
+          </p>
+        </div>
+
         <button
           type="button"
           onClick={onClose}
-          className="w-full py-3 rounded-full bg-white text-black font-bold text-xs hover:bg-[#F5F5F7] transition-all"
+          className="w-full py-3.5 rounded-2xl bg-white text-black font-extrabold text-xs hover:bg-[#F5F5F7] transition-all cursor-pointer shadow-lg"
         >
-          Close Review
+          Done
         </button>
       </div>
-    </div>
+    </NuviaBottomSheet>
   );
 }
