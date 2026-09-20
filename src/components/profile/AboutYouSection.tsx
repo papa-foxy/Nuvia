@@ -11,12 +11,14 @@ import {
   Pencil,
   CheckCircle2,
   AlertCircle,
+  ArrowRight,
 } from 'lucide-react';
 import { Profile, ActivityLevel, UserGoal, Goal } from '@/types/database';
 import { DataService } from '@/lib/data-service';
 import { calculateTargets } from '@/lib/calculator';
 import { NuviaBottomSheet } from '../NuviaBottomSheet';
 import { FitnessContextService } from '@/lib/fitness-context-service';
+import { PhysiqueIllustration } from '../physique/PhysiqueIllustration';
 
 interface AboutYouSectionProps {
   profile: Profile | null;
@@ -60,6 +62,11 @@ export function AboutYouSection({
   );
   const [syncTargets, setSyncTargets] = useState(true);
 
+  // Stored visual physique preferences
+  const initialFp = useMemo(() => FitnessContextService.getStoredPreferences(profile?.id), [profile?.id]);
+  const [currentPhysique, setCurrentPhysique] = useState(initialFp.current_physique || 'soft_low_muscle');
+  const [desiredPhysique, setDesiredPhysique] = useState(initialFp.desired_physique || 'athletic');
+
   // Synchronize edit form when profile updates
   useEffect(() => {
     setName(profile?.name || '');
@@ -70,6 +77,9 @@ export function AboutYouSection({
     setActivityLevel(profile?.activity_level || 'moderately_active');
     setGoal(profile?.goal || 'lose_weight');
     setDietaryPreference(profile?.dietary_preference || 'Halal / Balanced');
+    const fp = FitnessContextService.getStoredPreferences(profile?.id);
+    setCurrentPhysique(fp.current_physique || 'soft_low_muscle');
+    setDesiredPhysique(fp.desired_physique || 'athletic');
   }, [profile]);
 
   const age = useMemo(() => {
@@ -198,6 +208,37 @@ export function AboutYouSection({
       };
 
       await DataService.saveProfile(updatedProfile);
+
+      // Save updated visual physique preferences
+      FitnessContextService.saveStoredPreferences(
+        {
+          current_physique: currentPhysique as any,
+          desired_physique: desiredPhysique as any,
+          current_physique_label:
+            currentPhysique === 'lean'
+              ? 'Lean'
+              : currentPhysique === 'average'
+              ? 'Average'
+              : currentPhysique === 'higher_body_fat'
+              ? 'Higher body fat'
+              : currentPhysique === 'muscular_some_fat'
+              ? 'Muscular'
+              : 'Soft',
+          desired_look:
+            desiredPhysique === 'lean'
+              ? 'Lean'
+              : desiredPhysique === 'athletic'
+              ? 'Athletic'
+              : desiredPhysique === 'lean_muscular'
+              ? 'Lean + Muscular'
+              : desiredPhysique === 'muscular'
+              ? 'Muscular'
+              : desiredPhysique === 'strong_powerful'
+              ? 'Strong'
+              : 'General Fitness',
+        },
+        profile?.id
+      );
 
       // Auto-sync calculated targets if requested
       if (syncTargets) {
@@ -344,32 +385,56 @@ export function AboutYouSection({
           </span>
         </div>
 
-        {/* Qualitative Fitness Context Rows */}
+        {/* Qualitative Fitness Context & Transformation Direction */}
         {(() => {
           const fp = FitnessContextService.getStoredPreferences(profile?.id);
+          const currentType = fp.current_physique || 'soft_low_muscle';
+          const desiredType = fp.desired_physique || 'athletic';
           return (
-            <>
-              <div className="w-full p-3.5 flex justify-between items-center text-left">
-                <span className="text-[#8E8E93]">Starting Physique</span>
-                <span className="font-semibold text-white truncate max-w-[170px]">
-                  {fp.current_physique_label || 'Soft / little muscle'}
+            <div className="p-3.5 bg-black/40 border-b border-white/[0.04] space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider">
+                  Transformation Direction
+                </span>
+                <span className="text-[10px] text-[#30D158] bg-[#30D158]/10 px-2 py-0.5 rounded-full border border-[#30D158]/20">
+                  Visual Baseline
                 </span>
               </div>
 
-              <div className="w-full p-3.5 flex justify-between items-center text-left">
-                <span className="text-[#8E8E93]">Target Vision</span>
-                <span className="font-semibold text-[#30D158] truncate max-w-[170px]">
-                  {fp.desired_look || 'Athletic'}
-                </span>
+              <div className="flex items-center justify-around py-1 bg-white/[0.02] rounded-xl border border-white/[0.04]">
+                <div className="flex flex-col items-center">
+                  <span className="text-[9px] uppercase font-semibold text-[#8E8E93] mb-1">Starting</span>
+                  <div className="w-12 h-18 rounded-lg bg-black/50 border border-white/10 p-0.5 flex items-center justify-center">
+                    <PhysiqueIllustration sex={profile?.sex || 'male'} type={currentType} className="w-full h-full" />
+                  </div>
+                  <span className="text-[10px] font-semibold text-white mt-1 text-center truncate max-w-[90px]">
+                    {fp.current_physique_label || 'Soft'}
+                  </span>
+                </div>
+
+                <div className="flex flex-col items-center text-[#30D158]">
+                  <ArrowRight className="w-4 h-4" />
+                  <span className="text-[8px] text-[#8E8E93] mt-0.5">Target</span>
+                </div>
+
+                <div className="flex flex-col items-center">
+                  <span className="text-[9px] uppercase font-semibold text-[#30D158] mb-1">Desired</span>
+                  <div className="w-12 h-18 rounded-lg bg-[#30D158]/10 border border-[#30D158]/30 p-0.5 flex items-center justify-center">
+                    <PhysiqueIllustration sex={profile?.sex || 'male'} type={desiredType} className="w-full h-full" selected />
+                  </div>
+                  <span className="text-[10px] font-semibold text-[#30D158] mt-1 text-center truncate max-w-[90px]">
+                    {fp.desired_look || 'Athletic'}
+                  </span>
+                </div>
               </div>
 
-              <div className="w-full p-3.5 flex justify-between items-center text-left">
+              <div className="flex justify-between items-center text-[11px] pt-1 text-left">
                 <span className="text-[#8E8E93]">Equipment Limits</span>
-                <span className="font-semibold text-white truncate max-w-[170px]">
+                <span className="font-semibold text-white truncate max-w-[190px]">
                   {(fp.constraints.available_equipment || ['dumbbells', 'bodyweight']).slice(0, 3).join(', ')}
                 </span>
               </div>
-            </>
+            </div>
           );
         })()}
 
@@ -495,6 +560,60 @@ export function AboutYouSection({
               className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white font-semibold focus:outline-none focus:border-[#30D158]"
               placeholder="e.g. Halal, High-Protein, Low-Carb, Peanut Allergy"
             />
+          </div>
+
+          {/* Starting & Target Physique Visual Selector */}
+          <div className="space-y-2 pt-2 border-t border-white/[0.08]">
+            <label className="block text-[#8E8E93] font-medium">Starting &amp; Target Physique</label>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <span className="text-[10px] text-[#8E8E93] mb-1 block">Current</span>
+                <select
+                  value={currentPhysique}
+                  onChange={(e) => setCurrentPhysique(e.target.value as any)}
+                  className="w-full px-2.5 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs font-semibold focus:outline-none focus:border-[#30D158]"
+                >
+                  <option value="lean" className="bg-[#1C1C1E]">Lean</option>
+                  <option value="average" className="bg-[#1C1C1E]">Average</option>
+                  <option value="soft_low_muscle" className="bg-[#1C1C1E]">Soft</option>
+                  <option value="higher_body_fat" className="bg-[#1C1C1E]">Higher body fat</option>
+                  <option value="muscular_some_fat" className="bg-[#1C1C1E]">Muscular</option>
+                  <option value="not_sure" className="bg-[#1C1C1E]">Not sure</option>
+                </select>
+              </div>
+
+              <div>
+                <span className="text-[10px] text-[#8E8E93] mb-1 block">Desired</span>
+                <select
+                  value={desiredPhysique}
+                  onChange={(e) => setDesiredPhysique(e.target.value as any)}
+                  className="w-full px-2.5 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs font-semibold focus:outline-none focus:border-[#30D158]"
+                >
+                  <option value="lean" className="bg-[#1C1C1E]">Lean</option>
+                  <option value="athletic" className="bg-[#1C1C1E]">Athletic</option>
+                  <option value="lean_muscular" className="bg-[#1C1C1E]">Lean + Muscular</option>
+                  <option value="muscular" className="bg-[#1C1C1E]">Muscular</option>
+                  <option value="strong_powerful" className="bg-[#1C1C1E]">Strong</option>
+                  <option value="general_fitness" className="bg-[#1C1C1E]">General Fitness</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-around py-1.5 bg-black/40 rounded-xl border border-white/[0.04]">
+              <div className="flex flex-col items-center">
+                <span className="text-[8px] text-[#8E8E93] mb-0.5 uppercase font-medium">Current</span>
+                <div className="w-10 h-16 rounded bg-white/[0.03] p-0.5 flex items-center justify-center">
+                  <PhysiqueIllustration sex={sex} type={currentPhysique} className="w-full h-full" />
+                </div>
+              </div>
+              <ArrowRight className="w-3.5 h-3.5 text-[#30D158]" />
+              <div className="flex flex-col items-center">
+                <span className="text-[8px] text-[#30D158] mb-0.5 uppercase font-medium">Desired</span>
+                <div className="w-10 h-16 rounded bg-[#30D158]/5 p-0.5 border border-[#30D158]/20 flex items-center justify-center">
+                  <PhysiqueIllustration sex={sex} type={desiredPhysique} className="w-full h-full" selected />
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Scientific Live Calculation Preview */}

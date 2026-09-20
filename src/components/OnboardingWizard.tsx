@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import {
   ArrowLeft,
+  ArrowRight,
   Flame,
   Sparkles,
   Zap,
@@ -28,6 +29,7 @@ import {
   X,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
+import { PhysiqueIllustration } from '@/components/physique/PhysiqueIllustration';
 import { calculateTargets, CalculationResult } from '@/lib/calculator';
 import { DataService } from '@/lib/data-service';
 import { ActivityLevel, UserGoal, Profile, Goal } from '@/types/database';
@@ -126,12 +128,12 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
   };
 
   const currentPhysiqueOptions = [
-    { id: 'lean', label: 'Lean', desc: 'Low body fat, visible vascularity or lean lines' },
-    { id: 'average', label: 'Average', desc: 'Moderate body fat, moderate natural muscle' },
-    { id: 'soft_low_muscle', label: 'Soft / little muscle definition', desc: 'Holding some fat, looking to tone and build muscle' },
-    { id: 'higher_body_fat', label: 'Higher body fat', desc: 'Focusing on fat loss and sustainable energy' },
-    { id: 'muscular_some_fat', label: 'Muscular with some body fat', desc: 'Solid base of strength, carrying extra padding' },
-    { id: 'not_sure', label: 'Not sure', desc: 'Ready for Nuvia to assess baseline as I train' },
+    { id: 'lean', label: 'Lean', desc: 'Slender, minimal body fat' },
+    { id: 'average', label: 'Average', desc: 'Moderate natural build' },
+    { id: 'soft_low_muscle', label: 'Soft', desc: 'Holding fat, looking to tone' },
+    { id: 'higher_body_fat', label: 'Higher body fat', desc: 'Steady recomposition focus' },
+    { id: 'muscular_some_fat', label: 'Muscular', desc: 'Solid muscular foundation' },
+    { id: 'not_sure', label: 'Not sure', desc: 'Discover baseline through training' },
   ] as const;
 
   const priorityAreaOptions = [
@@ -146,13 +148,13 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
   ];
 
   const desiredPhysiqueOptions = [
-    { id: 'lean', label: 'Lean', desc: 'Slender, low body fat, toned' },
-    { id: 'athletic', label: 'Athletic', desc: 'Balanced muscle, functional fitness, agile' },
-    { id: 'lean_muscular', label: 'Lean + Muscular', desc: 'Defined muscle bellies with low waist fat' },
-    { id: 'muscular', label: 'Muscular', desc: 'Pronounced hypertrophy, fuller shoulders and chest' },
-    { id: 'strong_powerful', label: 'Strong / Powerful', desc: 'Maximal strength and structural density' },
-    { id: 'general_fitness', label: 'General Fitness', desc: 'Feel energetic, move pain-free, healthy' },
-    { id: 'custom', label: 'Custom Vision', desc: 'Describe your own aesthetic ideal' },
+    { id: 'lean', label: 'Lean', desc: 'Slender, toned, low body fat' },
+    { id: 'athletic', label: 'Athletic', desc: 'Balanced muscle, agile & functional' },
+    { id: 'lean_muscular', label: 'Lean + Muscular', desc: 'Defined muscle bellies, trim waist' },
+    { id: 'muscular', label: 'Muscular', desc: 'Fuller chest, delts & arms' },
+    { id: 'strong_powerful', label: 'Strong', desc: 'Maximal strength & structural density' },
+    { id: 'general_fitness', label: 'General Fitness', desc: 'Daily energy, stamina & health' },
+    { id: 'custom', label: 'Other / Describe', desc: 'Custom aesthetic vision' },
   ] as const;
 
   const experienceOptions = [
@@ -623,30 +625,51 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
 
           <div className="space-y-3">
             <div>
-              <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-1.5">
+              <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-2">
                 How would you describe your current physique?
               </label>
-              <div className="space-y-1.5">
-                {currentPhysiqueOptions.map((opt) => (
-                  <button
-                    key={opt.id}
-                    type="button"
-                    onClick={() => setCurrentPhysique(opt.id)}
-                    className={`w-full p-2.5 rounded-xl text-left transition-all flex items-center justify-between cursor-pointer border ${
-                      currentPhysique === opt.id
-                        ? 'bg-white/[0.08] border-[#30D158] text-white shadow-sm'
-                        : 'bg-[#1C1C1E] border-white/[0.04] text-[#8E8E93] hover:text-white'
-                    }`}
-                  >
-                    <div>
-                      <p className="text-xs font-semibold text-white">{opt.label}</p>
-                      <p className="text-[10px] text-[#8E8E93]">{opt.desc}</p>
-                    </div>
-                    {currentPhysique === opt.id && (
-                      <CheckCircle2 className="w-4 h-4 text-[#30D158] shrink-0" />
-                    )}
-                  </button>
-                ))}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                {currentPhysiqueOptions.map((opt) => {
+                  const isSelected = currentPhysique === opt.id;
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => setCurrentPhysique(opt.id)}
+                      className={`relative p-2.5 rounded-2xl text-center transition-all cursor-pointer border flex flex-col items-center justify-between active:scale-[0.98] ${
+                        isSelected
+                          ? 'bg-white/[0.08] border-[#30D158] ring-1 ring-[#30D158]/40 shadow-sm scale-[1.02]'
+                          : 'bg-[#1C1C1E] border-white/[0.05] hover:border-white/20'
+                      }`}
+                    >
+                      {isSelected && (
+                        <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-[#30D158] flex items-center justify-center text-black shadow-sm">
+                          <Check className="w-2.5 h-2.5 stroke-[3]" />
+                        </div>
+                      )}
+                      <div className="w-16 h-28 flex items-center justify-center py-1">
+                        <PhysiqueIllustration sex={sex} type={opt.id} selected={isSelected} />
+                      </div>
+                      <div className="w-full mt-1 pt-1.5 border-t border-white/[0.04]">
+                        <p className={`text-xs font-bold leading-tight ${isSelected ? 'text-[#30D158]' : 'text-white'}`}>
+                          {opt.label}
+                        </p>
+                        <p className="text-[9px] text-[#8E8E93] mt-0.5 truncate">
+                          {opt.desc}
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Why we ask disclaimer */}
+            <div className="rounded-xl bg-white/[0.02] border border-white/[0.05] p-2.5 flex items-start gap-2">
+              <Info className="w-3.5 h-3.5 text-[#8E8E93] shrink-0 mt-0.5" />
+              <div className="text-[10px] text-[#8E8E93] leading-relaxed">
+                <span className="font-semibold text-zinc-300">Why we ask: </span>
+                This helps Nuvia understand the starting shape and structure to personalize your training strategy. It does not estimate your exact body-fat percentage.
               </div>
             </div>
 
@@ -700,28 +723,89 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
 
           <div className="space-y-3">
             <div>
-              <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-1.5">
-                What kind of physique are you working toward?
+              <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-2">
+                What would you like your physique to look like?
               </label>
-              <div className="grid grid-cols-2 gap-2">
-                {desiredPhysiqueOptions.map((opt) => (
-                  <button
-                    key={opt.id}
-                    type="button"
-                    onClick={() => setDesiredPhysique(opt.id)}
-                    className={`p-2.5 rounded-xl text-left transition-all border ${
-                      desiredPhysique === opt.id
-                        ? 'bg-white/[0.08] border-[#30D158] text-white shadow-sm'
-                        : 'bg-[#1C1C1E] border-white/[0.04] text-[#8E8E93] hover:text-white'
-                    }`}
-                  >
-                    <p className="text-xs font-semibold text-white">{opt.label}</p>
-                    <p className="text-[10px] text-[#8E8E93] line-clamp-1">{opt.desc}</p>
-                  </button>
-                ))}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                {desiredPhysiqueOptions.map((opt) => {
+                  const isSelected = desiredPhysique === opt.id;
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => setDesiredPhysique(opt.id)}
+                      className={`relative p-2.5 rounded-2xl text-center transition-all cursor-pointer border flex flex-col items-center justify-between active:scale-[0.98] ${
+                        isSelected
+                          ? 'bg-white/[0.08] border-[#30D158] ring-1 ring-[#30D158]/40 shadow-sm scale-[1.02]'
+                          : 'bg-[#1C1C1E] border-white/[0.05] hover:border-white/20'
+                      }`}
+                    >
+                      {isSelected && (
+                        <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-[#30D158] flex items-center justify-center text-black shadow-sm">
+                          <Check className="w-2.5 h-2.5 stroke-[3]" />
+                        </div>
+                      )}
+                      <div className="w-16 h-28 flex items-center justify-center py-1">
+                        <PhysiqueIllustration sex={sex} type={opt.id} selected={isSelected} />
+                      </div>
+                      <div className="w-full mt-1 pt-1.5 border-t border-white/[0.04]">
+                        <p className={`text-xs font-bold leading-tight ${isSelected ? 'text-[#30D158]' : 'text-white'}`}>
+                          {opt.label}
+                        </p>
+                        <p className="text-[9px] text-[#8E8E93] mt-0.5 truncate">
+                          {opt.desc}
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
+            {/* Live Interactive Transformation Preview Card */}
+            <div className="p-3.5 rounded-2xl bg-gradient-to-br from-[#1C1C1E] to-[#141416] border border-white/[0.08] shadow-lg">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#8E8E93]">
+                  Your Direction
+                </span>
+                <span className="text-[10px] font-medium text-[#30D158] bg-[#30D158]/10 px-2 py-0.5 rounded-full border border-[#30D158]/20">
+                  Personalized Path
+                </span>
+              </div>
+
+              <div className="flex items-center justify-around py-1">
+                <div className="flex flex-col items-center">
+                  <span className="text-[10px] uppercase font-semibold text-[#8E8E93] mb-1">Current</span>
+                  <div className="w-16 h-24 rounded-xl bg-black/40 border border-white/10 p-1 flex items-center justify-center">
+                    <PhysiqueIllustration sex={sex} type={currentPhysique} className="w-full h-full" />
+                  </div>
+                  <span className="text-[11px] font-semibold text-white mt-1 text-center">
+                    {currentPhysiqueOptions.find((c) => c.id === currentPhysique)?.label}
+                  </span>
+                </div>
+
+                <div className="flex flex-col items-center px-1 text-[#30D158]">
+                  <ArrowRight className="w-4 h-4" />
+                  <span className="text-[9px] font-medium text-[#8E8E93] mt-0.5">Focus</span>
+                </div>
+
+                <div className="flex flex-col items-center">
+                  <span className="text-[10px] uppercase font-semibold text-[#30D158] mb-1">Desired</span>
+                  <div className="w-16 h-24 rounded-xl bg-[#30D158]/10 border border-[#30D158]/30 p-1 flex items-center justify-center">
+                    <PhysiqueIllustration sex={sex} type={desiredPhysique} className="w-full h-full" selected />
+                  </div>
+                  <span className="text-[11px] font-semibold text-[#30D158] mt-1 text-center">
+                    {desiredPhysiqueOptions.find((d) => d.id === desiredPhysique)?.label}
+                  </span>
+                </div>
+              </div>
+
+              <p className="text-[10px] text-[#8E8E93] text-center mt-2 border-t border-white/[0.04] pt-2">
+                Nuvia will use this direction to personalize your training strategy and nutrition balance.
+              </p>
+            </div>
+
+            {/* Custom Description */}
             <div>
               <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-1">
                 Describe your ideal look in your own words (optional)
@@ -733,6 +817,15 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                 placeholder="e.g. Lean athletic with visible shoulders and less belly fat"
                 className="w-full px-3 py-2 rounded-xl bg-[#1C1C1E] border border-white/[0.08] text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-[#30D158]"
               />
+            </div>
+
+            {/* Why we ask disclaimer */}
+            <div className="rounded-xl bg-white/[0.02] border border-white/[0.05] p-2.5 flex items-start gap-2">
+              <Info className="w-3.5 h-3.5 text-[#8E8E93] shrink-0 mt-0.5" />
+              <div className="text-[10px] text-[#8E8E93] leading-relaxed">
+                <span className="font-semibold text-zinc-300">Why we ask: </span>
+                This guides exercise selection, repetition ranges, and volume bias so you progress toward your ideal build.
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -1114,31 +1207,62 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
             </div>
           </div>
 
-          {/* Quick Profile Confirmation Matrix */}
-          <div className="p-3 rounded-2xl bg-black/50 border border-white/[0.05] grid grid-cols-2 gap-2 text-[11px]">
-            <div>
-              <p className="text-[10px] text-[#8E8E93]">Starting Physique</p>
-              <p className="font-semibold text-white truncate">
-                {currentPhysiqueOptions.find((c) => c.id === currentPhysique)?.label}
-              </p>
+          {/* Visual Transformation Direction Card */}
+          <div className="p-3.5 rounded-2xl bg-[#1C1C1E] border border-white/[0.08] shadow-md space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#8E8E93]">
+                Your Transformation Direction
+              </span>
+              <button
+                type="button"
+                onClick={() => setStep(3)}
+                className="text-[10px] font-semibold text-[#8E8E93] hover:text-white flex items-center gap-1"
+              >
+                <Pencil className="w-3 h-3" />
+                <span>Edit</span>
+              </button>
             </div>
-            <div>
-              <p className="text-[10px] text-[#8E8E93]">Target Vision</p>
-              <p className="font-semibold text-white truncate">
-                {desiredPhysiqueOptions.find((d) => d.id === desiredPhysique)?.label}
-              </p>
+
+            <div className="flex items-center justify-around py-1">
+              <div className="flex flex-col items-center">
+                <span className="text-[9px] uppercase font-semibold text-[#8E8E93] mb-1">Current</span>
+                <div className="w-14 h-20 rounded-xl bg-black/50 border border-white/10 p-1 flex items-center justify-center">
+                  <PhysiqueIllustration sex={sex} type={currentPhysique} className="w-full h-full" />
+                </div>
+                <span className="text-[10px] font-semibold text-white mt-1 text-center">
+                  {currentPhysiqueOptions.find((c) => c.id === currentPhysique)?.label}
+                </span>
+              </div>
+
+              <div className="flex flex-col items-center px-1 text-[#30D158]">
+                <ArrowRight className="w-4 h-4" />
+                <span className="text-[8px] font-medium text-[#8E8E93] mt-0.5">Target</span>
+              </div>
+
+              <div className="flex flex-col items-center">
+                <span className="text-[9px] uppercase font-semibold text-[#30D158] mb-1">Desired</span>
+                <div className="w-14 h-20 rounded-xl bg-[#30D158]/10 border border-[#30D158]/30 p-1 flex items-center justify-center">
+                  <PhysiqueIllustration sex={sex} type={desiredPhysique} className="w-full h-full" selected />
+                </div>
+                <span className="text-[10px] font-semibold text-[#30D158] mt-1 text-center">
+                  {desiredPhysiqueOptions.find((d) => d.id === desiredPhysique)?.label}
+                </span>
+              </div>
             </div>
-            <div>
-              <p className="text-[10px] text-[#8E8E93]">Split &amp; Duration</p>
-              <p className="font-semibold text-white truncate">
-                {preferredSplit} · {durationMinutes}m
-              </p>
-            </div>
-            <div>
-              <p className="text-[10px] text-[#8E8E93]">Equipment Hard Limits</p>
-              <p className="font-semibold text-[#30D158] truncate">
-                {equipment.slice(0, 2).join(', ')}{equipment.length > 2 ? ` +${equipment.length - 2}` : ''}
-              </p>
+
+            <div className="pt-2 border-t border-white/[0.04] grid grid-cols-2 gap-2 text-[10px]">
+              <div>
+                <p className="text-[#8E8E93]">Split &amp; Duration</p>
+                <p className="font-semibold text-white truncate">
+                  {preferredSplit} · {durationMinutes}m
+                </p>
+              </div>
+              <div>
+                <p className="text-[#8E8E93]">Equipment Limits</p>
+                <p className="font-semibold text-[#30D158] truncate">
+                  {equipment.slice(0, 2).join(', ')}{equipment.length > 2 ? ` +${equipment.length - 2}` : ''}
+                </p>
+              </div>
             </div>
           </div>
 

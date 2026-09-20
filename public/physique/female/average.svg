@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 100 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="body-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2A2A2E" />
+      <stop offset="100%" stop-color="#18181B" />
+    </linearGradient>
+  </defs>
+  <ellipse cx="50" cy="20" rx="7.5" ry="9.5" fill="url(#body-grad)" stroke="#52525B" stroke-width="1.4" />
+  <path d="M46 29 C46 33 45 35 44 38 L56 38 C55 35 54 33 54 29 Z" fill="url(#body-grad)" stroke="#52525B" stroke-width="1.2" />
+  <path d="M45 38 C37 40 33 44 30 50 C27 57 25 73 23 87 C21 96 20 108 22 113 C23 115 25 115 27 113 C29 110 30 96 32 84 C35 77 38 78 39 82 C40 90 39 101 37 114 L35 152 L37 186 C37 189 40 191 43 191 C45 191 47 188 47 184 L48 140 L50 126 L52 140 L53 184 C53 188 55 191 57 191 C60 191 63 189 63 186 L65 152 L63 114 C61 101 60 90 61 82 C62 78 65 77 68 84 C70 96 71 110 73 113 C75 115 77 115 78 113 C80 108 79 96 77 87 C75 73 73 57 70 50 C67 44 63 40 55 38 Z" fill="url(#body-grad)" stroke="#52525B" stroke-width="1.4" />
+    <path d="M42 56 Q50 60 58 56" stroke="#71717A" stroke-width="1" stroke-linecap="round" />
+</svg>

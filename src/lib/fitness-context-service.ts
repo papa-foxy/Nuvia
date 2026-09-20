@@ -386,12 +386,18 @@ export class FitnessContextService {
         experience_level: storedPrefs.experience_level,
         consistency_level: storedPrefs.consistency_level,
         training_background: storedPrefs.training_background,
+        current_physique: storedPrefs.current_physique
+          ? { visual_category: storedPrefs.current_physique, source: 'user_selected' }
+          : undefined,
       },
       goal: {
         primary_goal: profile?.goal || 'lose_weight',
         objective: storedPrefs.objective || 'Body recomposition (fat loss with muscle retention)',
         target_weight_kg: goals?.target_weight_kg ?? undefined,
         goal_pace_kg: goalPace,
+        desired_physique: storedPrefs.desired_physique
+          ? { visual_category: storedPrefs.desired_physique, source: 'user_selected' }
+          : undefined,
         physique_preference: {
           current_physique: storedPrefs.current_physique,
           current_physique_label: storedPrefs.current_physique_label,

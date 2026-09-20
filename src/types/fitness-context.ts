@@ -7,6 +7,11 @@
 
 import { LoggedSet } from './routine';
 
+export interface PhysiqueVisualSelection {
+  visual_category: string;
+  source: 'user_selected';
+}
+
 export interface FitnessProfile {
   sex?: 'male' | 'female' | 'other';
   age?: number;
@@ -16,6 +21,7 @@ export interface FitnessProfile {
   experience_level?: 'completely_new' | 'beginner' | 'beginner_trained_before' | 'intermediate' | 'advanced' | 'returning_long_break';
   consistency_level?: 'very_consistent' | 'mostly_consistent' | 'on_and_off' | 'frequent_breaks' | 'getting_started';
   training_background?: string;
+  current_physique?: PhysiqueVisualSelection;
 }
 
 export interface FitnessGoal {
@@ -23,11 +29,12 @@ export interface FitnessGoal {
   objective: string;
   target_weight_kg?: number;
   goal_pace_kg?: number;
+  desired_physique?: PhysiqueVisualSelection;
   physique_preference?: {
-    current_physique?: 'lean' | 'average' | 'soft_low_muscle' | 'higher_body_fat' | 'muscular_some_fat' | 'not_sure';
+    current_physique?: 'lean' | 'average' | 'soft_low_muscle' | 'higher_body_fat' | 'muscular_some_fat' | 'not_sure' | PhysiqueVisualSelection;
     current_physique_label?: string;
     priority_areas?: string[];
-    desired_physique?: 'lean' | 'athletic' | 'lean_muscular' | 'muscular' | 'strong_powerful' | 'general_fitness' | 'custom';
+    desired_physique?: 'lean' | 'athletic' | 'lean_muscular' | 'muscular' | 'strong_powerful' | 'general_fitness' | 'custom' | PhysiqueVisualSelection;
     desired_physique_custom?: string;
     desired_look?: string;
     user_estimated_target_bf_percent?: number; // Target reference only, never used for calorie calculations
