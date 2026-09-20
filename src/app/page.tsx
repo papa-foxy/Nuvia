@@ -22,6 +22,7 @@ import {
   todayMealsKey,
   todayActivityKey,
   allMealsKey,
+  exerciseLogsKey,
 } from '@/lib/nuvia-cache';
 import { getLocalDateString } from '@/lib/data-service';
 import { Flame } from 'lucide-react';
@@ -141,9 +142,13 @@ export default function HomePage() {
       ai_analysis: exerciseData.ai_analysis || null,
     });
 
-    // Targeted invalidation — only clear the keys that an exercise log affects
+    // Targeted invalidation — clear keys that an exercise log affects
     NuviaCache.invalidate(todaySummaryKey(user.id, todayStr));
     NuviaCache.invalidate(todayActivityKey(user.id, todayStr));
+    NuviaCache.invalidate(exerciseLogsKey(user.id));
+    NuviaCache.invalidatePrefix('today-summary:');
+    NuviaCache.invalidatePrefix('today-activity:');
+    NuviaCache.invalidatePrefix('exercise-logs:');
 
     setRefreshKey((k) => k + 1);
     await refreshProfileAndGoals();
@@ -214,6 +219,8 @@ export default function HomePage() {
                 onOpenAddExercise={() => setIsAddExerciseOpen(true)}
                 onOpenAddMeal={() => setIsAddMealOpen(true)}
                 onNavigateTab={setActiveTab}
+                refreshKey={refreshKey}
+                onWorkoutFinished={() => setRefreshKey((k) => k + 1)}
               />
             </div>
 

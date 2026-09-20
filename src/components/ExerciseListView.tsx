@@ -44,6 +44,8 @@ interface ExerciseListViewProps {
   onOpenAddMeal?: () => void;
   onNavigateTab?: (tab: TabType) => void;
   initialViewMode?: 'today' | 'plans' | 'history';
+  refreshKey?: number;
+  onWorkoutFinished?: () => void;
 }
 
 function intensityColor(intensity: string) {
@@ -64,6 +66,8 @@ export function ExerciseListView({
   onOpenAddMeal,
   onNavigateTab,
   initialViewMode = 'today',
+  refreshKey,
+  onWorkoutFinished,
 }: ExerciseListViewProps) {
   const { user, goals } = useAuth();
   const [viewMode, setViewMode] = useState<'today' | 'plans' | 'history'>(initialViewMode);
@@ -204,9 +208,74 @@ export function ExerciseListView({
     setLoadingLogs(false);
   };
 
+  // Active in-progress workout session detector (for recovery if tab closed/switched)
+  const [activeSession, setActiveSession] = useState<{
+    routineId: string;
+    routineTitle: string;
+    routine: WorkoutRoutine;
+    status: 'active' | 'paused';
+    elapsedSeconds: number;
+    completedSetsCount: number;
+    totalSetsCount: number;
+  } | null>(null);
+
+  const checkActiveSession = () => {
+    try {
+      const raw = localStorage.getItem(`nuvia_active_workout_${user?.id || 'demo'}`);
+      if (raw) {
+        const saved = JSON.parse(raw);
+        const age = Date.now() - (saved.lastSavedAt || 0);
+        if (age < 18 * 60 * 60 * 1000 && saved.routine && saved.sessionSets) {
+          let totalSets = 0;
+          let doneSets = 0;
+          Object.values(saved.sessionSets as Record<string, any[]>).forEach((sets) => {
+            totalSets += sets.length;
+            doneSets += sets.filter((s: any) => s.completed).length;
+          });
+          setActiveSession({
+            routineId: saved.routineId,
+            routineTitle: saved.routineTitle || saved.routine.title,
+            routine: saved.routine,
+            status: saved.status || 'paused',
+            elapsedSeconds: saved.elapsedSeconds || 0,
+            completedSetsCount: doneSets,
+            totalSetsCount: totalSets,
+          });
+          return;
+        }
+      }
+      setActiveSession(null);
+    } catch {
+      setActiveSession(null);
+    }
+  };
+
   useEffect(() => {
     loadAll();
-  }, [user?.id]);
+    checkActiveSession();
+  }, [user?.id, refreshKey]);
+
+  useEffect(() => {
+    checkActiveSession();
+  }, [selectedRoutine]);
+
+  const handleResumeActiveSession = () => {
+    if (activeSession) {
+      setSelectedRoutine(activeSession.routine);
+      setRoutineInitialMode('workout');
+    }
+  };
+
+  const handleDiscardActiveSession = () => {
+    if (confirm('Discard this in-progress workout session?')) {
+      try {
+        localStorage.removeItem(`nuvia_active_workout_${user?.id || 'demo'}`);
+      } catch {
+        // ignore
+      }
+      setActiveSession(null);
+    }
+  };
 
   const showNotification = (msg: string) => {
     setSuccessBanner(msg);
@@ -378,7 +447,9 @@ export function ExerciseListView({
           onDuplicateRoutine={(id) => handleDuplicateRoutine(id)}
           onWorkoutFinished={() => {
             loadAll();
+            checkActiveSession();
             showNotification('Workout completed & calories calculated! Recorded on homepage.');
+            onWorkoutFinished?.();
           }}
           onNavigateHome={() => {
             setSelectedRoutine(null);
@@ -426,6 +497,41 @@ export function ExerciseListView({
         <div className="p-3 rounded-2xl bg-[#30D158]/15 border border-[#30D158]/30 text-[#30D158] text-xs font-semibold flex items-center gap-2 animate-fadeIn">
           <CheckCircle2 className="w-4 h-4 shrink-0" />
           <span>{successBanner}</span>
+        </div>
+      )}
+
+      {/* ── ACTIVE IN-PROGRESS WORKOUT RECOVERY BANNER ────────────────────── */}
+      {activeSession && (
+        <div className="p-3.5 rounded-2xl bg-gradient-to-r from-[#FF9F0A]/20 via-[#1C1C1E] to-[#1C1C1E] border border-[#FF9F0A]/40 shadow-xl flex items-center justify-between gap-3 animate-fadeIn">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-[#FF9F0A]/20 text-[#FF9F0A] flex items-center justify-center shrink-0">
+              <Play className="w-4 h-4 fill-[#FF9F0A]" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-white truncate">Session in Progress</p>
+              <p className="text-[11px] text-[#8E8E93] truncate">
+                {activeSession.routineTitle} · {activeSession.completedSetsCount}/{activeSession.totalSetsCount} sets
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              type="button"
+              onClick={handleDiscardActiveSession}
+              className="text-[11px] font-semibold text-[#8E8E93] hover:text-white px-2 py-1"
+            >
+              Discard
+            </button>
+            <button
+              type="button"
+              onClick={handleResumeActiveSession}
+              className="px-3 py-1.5 rounded-xl bg-[#FF9F0A] text-black text-xs font-bold hover:bg-[#FF9F0A]/90 transition-all flex items-center gap-1 shadow"
+            >
+              <span>Resume</span>
+              <ArrowRight className="w-3 h-3" />
+            </button>
+          </div>
         </div>
       )}
 

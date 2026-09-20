@@ -36,6 +36,12 @@ import { DataService, getLocalDateString } from '@/lib/data-service';
 import { useAuth } from '@/lib/auth-context';
 import { ExerciseThumbnail } from './ExerciseThumbnail';
 import { cleanActivityTitle } from '@/lib/activity-utils';
+import {
+  NuviaCache,
+  todaySummaryKey,
+  todayActivityKey,
+  exerciseLogsKey,
+} from '@/lib/nuvia-cache';
 
 interface RoutineDetailViewProps {
   routine: WorkoutRoutine;
@@ -114,21 +120,112 @@ export function RoutineDetailView({
   const isSavingRef = useRef(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Initialize session sets from routine definition
+  const ACTIVE_STORAGE_KEY = `nuvia_active_workout_${user?.id || 'demo'}`;
+
+  // Initialize or restore active workout session
   useEffect(() => {
-    const initialSetsMap: Record<string, LoggedSet[]> = {};
-    currentRoutine.exercises.forEach((ex) => {
-      const targetReps = parseTargetReps(ex.reps);
-      const setCount = Math.max(1, ex.sets || 3);
-      initialSetsMap[ex.id] = Array.from({ length: setCount }, (_, i) => ({
-        set_number: i + 1,
-        reps: targetReps,
-        weight_kg: ex.target_weight_kg || undefined,
-        completed: false,
-      }));
-    });
-    setSessionSets(initialSetsMap);
-  }, [currentRoutine]);
+    let restored = false;
+    try {
+      const savedRaw = localStorage.getItem(ACTIVE_STORAGE_KEY);
+      if (savedRaw) {
+        const saved = JSON.parse(savedRaw);
+        const age = Date.now() - (saved.lastSavedAt || 0);
+        const isFresh = age < 18 * 60 * 60 * 1000; // within 18h
+        if (isFresh && saved.routineId === currentRoutine.id && saved.sessionSets) {
+          setSessionSets(saved.sessionSets);
+          if (typeof saved.durationMinutes === 'number') setDurationMinutes(saved.durationMinutes);
+          if (typeof saved.hasManuallyAdjusted === 'boolean') setHasManuallyAdjusted(saved.hasManuallyAdjusted);
+
+          const timePassed = Math.floor(age / 1000);
+          if (saved.status === 'active') {
+            // Add background time elapsed (capped at 1 hour to prevent runaway timer if left open)
+            setElapsedSeconds((saved.elapsedSeconds || 0) + Math.min(Math.max(0, timePassed), 3600));
+            setStatus('active');
+            setViewMode('workout');
+          } else if (saved.status === 'paused') {
+            setElapsedSeconds(saved.elapsedSeconds || 0);
+            setStatus('paused');
+            setViewMode('workout');
+          }
+          restored = true;
+        }
+      }
+    } catch (e) {
+      console.warn('Could not restore active session from localStorage:', e);
+    }
+
+    if (!restored) {
+      const initialSetsMap: Record<string, LoggedSet[]> = {};
+      currentRoutine.exercises.forEach((ex) => {
+        const targetReps = parseTargetReps(ex.reps);
+        const setCount = Math.max(1, ex.sets || 3);
+        initialSetsMap[ex.id] = Array.from({ length: setCount }, (_, i) => ({
+          set_number: i + 1,
+          reps: targetReps,
+          weight_kg: ex.target_weight_kg || undefined,
+          completed: false,
+        }));
+      });
+      setSessionSets(initialSetsMap);
+    }
+  }, [currentRoutine.id, user?.id, ACTIVE_STORAGE_KEY]);
+
+  // Continuous autosave of active workout state to localStorage
+  useEffect(() => {
+    if (status === 'active' || status === 'paused') {
+      try {
+        localStorage.setItem(
+          ACTIVE_STORAGE_KEY,
+          JSON.stringify({
+            routineId: currentRoutine.id,
+            routineTitle: currentRoutine.title,
+            routine: currentRoutine,
+            sessionSets,
+            elapsedSeconds,
+            durationMinutes,
+            hasManuallyAdjusted,
+            status,
+            lastSavedAt: Date.now(),
+          })
+        );
+      } catch (err) {
+        console.warn('Failed to autosave active workout:', err);
+      }
+    }
+  }, [status, sessionSets, elapsedSeconds, durationMinutes, hasManuallyAdjusted, currentRoutine, ACTIVE_STORAGE_KEY]);
+
+  // Flush active workout state on visibilitychange (tab switch) or beforeunload (window close)
+  useEffect(() => {
+    const handleFlush = () => {
+      if (status === 'active' || status === 'paused') {
+        try {
+          localStorage.setItem(
+            ACTIVE_STORAGE_KEY,
+            JSON.stringify({
+              routineId: currentRoutine.id,
+              routineTitle: currentRoutine.title,
+              routine: currentRoutine,
+              sessionSets,
+              elapsedSeconds,
+              durationMinutes,
+              hasManuallyAdjusted,
+              status,
+              lastSavedAt: Date.now(),
+            })
+          );
+        } catch {
+          // ignore
+        }
+      }
+    };
+
+    window.addEventListener('beforeunload', handleFlush);
+    document.addEventListener('visibilitychange', handleFlush);
+    return () => {
+      window.removeEventListener('beforeunload', handleFlush);
+      document.removeEventListener('visibilitychange', handleFlush);
+    };
+  }, [status, currentRoutine, sessionSets, elapsedSeconds, durationMinutes, hasManuallyAdjusted, ACTIVE_STORAGE_KEY]);
 
   // Load real routine stats, recovery info, and progressive overload history
   useEffect(() => {
@@ -412,6 +509,23 @@ export function RoutineDetailView({
       },
     });
 
+    // Clear in-progress workout snapshot
+    try {
+      localStorage.removeItem(ACTIVE_STORAGE_KEY);
+    } catch {
+      // ignore
+    }
+
+    // Invalidate caches so other tabs/screens immediately see newly recorded exercises & calories
+    const uid = user?.id || 'demo-user-001';
+    const dateStr = getLocalDateString(new Date());
+    NuviaCache.invalidate(todaySummaryKey(uid, dateStr));
+    NuviaCache.invalidate(todayActivityKey(uid, dateStr));
+    NuviaCache.invalidate(exerciseLogsKey(uid));
+    NuviaCache.invalidatePrefix('today-summary:');
+    NuviaCache.invalidatePrefix('today-activity:');
+    NuviaCache.invalidatePrefix('exercise-logs:');
+
     await refreshProfileAndGoals();
     setShowCompletionModal(false);
     setIsSaving(false);
@@ -422,6 +536,31 @@ export function RoutineDetailView({
       onNavigateHome();
     } else {
       onBack();
+    }
+  };
+
+  const handleDiscardWorkout = () => {
+    if (confirm('Discard this in-progress workout session? Tracked progress for this session will be reset.')) {
+      try {
+        localStorage.removeItem(ACTIVE_STORAGE_KEY);
+      } catch {
+        // ignore
+      }
+      setStatus('idle');
+      setElapsedSeconds(0);
+      setViewMode('overview');
+      const initialSetsMap: Record<string, LoggedSet[]> = {};
+      currentRoutine.exercises.forEach((ex) => {
+        const targetReps = parseTargetReps(ex.reps);
+        const setCount = Math.max(1, ex.sets || 3);
+        initialSetsMap[ex.id] = Array.from({ length: setCount }, (_, i) => ({
+          set_number: i + 1,
+          reps: targetReps,
+          weight_kg: ex.target_weight_kg || undefined,
+          completed: false,
+        }));
+      });
+      setSessionSets(initialSetsMap);
     }
   };
 
@@ -840,6 +979,19 @@ export function RoutineDetailView({
             </>
           )}
         </div>
+
+        {status === 'paused' && (
+          <div className="pt-1 flex justify-center">
+            <button
+              type="button"
+              onClick={handleDiscardWorkout}
+              className="text-[11px] font-semibold text-rose-400 hover:text-rose-300 transition-colors flex items-center gap-1 py-1 px-2.5 rounded-lg hover:bg-rose-500/10"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Discard in-progress session</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Exercises with Set-by-Set Logging (Phase 4) */}

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Check, AlertCircle } from 'lucide-react';
 import { AiService, ExerciseAnalysisResult } from '@/lib/ai-service';
 import { useAuth } from '@/lib/auth-context';
@@ -34,6 +34,47 @@ export function AddExerciseModal({
   const [errorMsg, setErrorMsg] = useState('');
   const [parsedResult, setParsedResult] = useState<ExerciseAnalysisResult | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // Restore draft when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      try {
+        const raw = localStorage.getItem('nuvia_exercise_modal_draft');
+        if (raw) {
+          const draft = JSON.parse(raw);
+          if (draft.activeTab) setActiveTab(draft.activeTab);
+          if (draft.textPrompt) setTextPrompt(draft.textPrompt);
+          if (draft.exerciseType) setExerciseType(draft.exerciseType);
+          if (draft.durationMinutes) setDurationMinutes(draft.durationMinutes);
+          if (draft.intensity) setIntensity(draft.intensity);
+          if (draft.distanceKm) setDistanceKm(draft.distanceKm);
+        }
+      } catch {
+        // ignore
+      }
+    }
+  }, [isOpen]);
+
+  // Persist draft to localStorage on edit
+  useEffect(() => {
+    if (isOpen) {
+      try {
+        localStorage.setItem(
+          'nuvia_exercise_modal_draft',
+          JSON.stringify({
+            activeTab,
+            textPrompt,
+            exerciseType,
+            durationMinutes,
+            intensity,
+            distanceKm,
+          })
+        );
+      } catch {
+        // ignore
+      }
+    }
+  }, [isOpen, activeTab, textPrompt, exerciseType, durationMinutes, intensity, distanceKm]);
 
   if (!isOpen) return null;
 
@@ -79,6 +120,13 @@ export function AddExerciseModal({
       ai_analysis: parsedResult,
     });
     setSaving(false);
+    try {
+      localStorage.removeItem('nuvia_exercise_modal_draft');
+    } catch {
+      // ignore
+    }
+    setTextPrompt('');
+    setParsedResult(null);
     onClose();
   };
 
