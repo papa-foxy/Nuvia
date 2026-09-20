@@ -13,6 +13,8 @@ export interface FitnessProfile {
   height_cm?: number;
   weight_kg?: number;
   fitness_level?: 'beginner_inconsistent' | 'beginner_consistent' | 'intermediate' | 'advanced';
+  experience_level?: 'completely_new' | 'beginner' | 'beginner_trained_before' | 'intermediate' | 'advanced' | 'returning_long_break';
+  consistency_level?: 'very_consistent' | 'mostly_consistent' | 'on_and_off' | 'frequent_breaks' | 'getting_started';
   training_background?: string;
 }
 
@@ -22,8 +24,15 @@ export interface FitnessGoal {
   target_weight_kg?: number;
   goal_pace_kg?: number;
   physique_preference?: {
+    current_physique?: 'lean' | 'average' | 'soft_low_muscle' | 'higher_body_fat' | 'muscular_some_fat' | 'not_sure';
+    current_physique_label?: string;
+    priority_areas?: string[];
+    desired_physique?: 'lean' | 'athletic' | 'lean_muscular' | 'muscular' | 'strong_powerful' | 'general_fitness' | 'custom';
+    desired_physique_custom?: string;
     desired_look?: string;
-    user_estimated_bf_percent?: number; // User-estimated visual approximation (not medical diagnosis)
+    user_estimated_target_bf_percent?: number; // Target reference only, never used for calorie calculations
+    user_estimated_bf_percent?: number; // Legacy alias
+    physique_photo_url?: string; // Optional client-side visual reference
   };
 }
 
@@ -37,11 +46,13 @@ export interface WeeklyScheduleDay {
 }
 
 export interface TrainingConstraints {
-  preferred_split?: string; // e.g. "Upper / Lower"
-  workout_duration_minutes?: number; // e.g. 45-60
-  environment?: 'home' | 'apartment_gym' | 'commercial_gym' | 'outdoors';
-  available_equipment: string[]; // e.g. ['dumbbells', 'push_up_board', 'bodyweight']
-  available_space?: string; // e.g. "Living room floor"
+  preferred_split?: string; // e.g. "Upper / Lower", "Push / Pull / Legs", "Full body", "Cardio + strength"
+  workout_duration_minutes?: number; // e.g. 30, 45, 60
+  environment?: 'home' | 'gym' | 'both' | 'outdoors' | 'apartment_gym' | 'commercial_gym';
+  available_equipment: string[]; // e.g. ['dumbbells', 'push_up_board', 'bodyweight', 'resistance_bands', 'pull_up_bar', 'bench', 'barbell', 'cable_machine', 'machines']
+  available_space?: string;
+  training_time_of_day?: 'morning' | 'afternoon' | 'evening' | 'varies';
+  adherence_obstacles?: string[]; // e.g. ['lack_of_time', 'motivation', 'work_schedule', 'workout_too_hard', 'lose_track', 'boredom']
   cardio_habits?: {
     type: string;
     distance_km?: number;
@@ -51,12 +62,15 @@ export interface TrainingConstraints {
 }
 
 export interface TrainingPreferences {
-  effort_target?: string; // e.g. "1-3 RIR (challenging but sustainable)"
-  progression_rule?: string; // e.g. "Double progression (10-15 reps; raise weight when all sets reach 15)"
-  muscle_biases?: string[]; // e.g. ["Upper body feels easier than lower body"]
+  effort_target?: string; // e.g. "Challenging but manageable (1-3 RIR)"
+  target_rir?: string; // e.g. "1-3"
+  progression_preference?: 'reps_first_then_weight' | 'increase_weight_frequently' | 'gradual_stable' | 'let_nuvia_decide';
+  progression_rule?: string;
+  muscle_biases?: string[];
+  easy_hard_areas?: string[]; // e.g. ["Upper body feels easier", "Core feels difficult"]
   preferred_exercises: string[]; // e.g. ["Goblet Squat", "Dumbbell Row"]
   disliked_exercises: string[]; // e.g. ["Bulgarian Split Squat"]
-  custom_starting_weights?: Record<string, string>; // e.g. { "goblet_squat": "12-20 kg total", "bicep_curl": "6-8 kg each" }
+  custom_starting_weights?: Record<string, string>;
 }
 
 export interface ExercisePerformanceRecord {
@@ -72,7 +86,7 @@ export interface ExercisePerformanceRecord {
 }
 
 export interface RecoveryState {
-  trained_in_last_48h: string[]; // e.g. ['Chest', 'Triceps']
+  trained_in_last_48h: string[];
   last_workout_date: string | null;
   consecutive_training_days: number;
   today_is_rest_day: boolean;
@@ -89,6 +103,7 @@ export interface NuviaFitnessContext {
   goal: FitnessGoal;
   constraints: TrainingConstraints;
   preferences: TrainingPreferences;
+  synthesized_strategy?: string[];
   weekly_schedule: WeeklyScheduleDay[];
   performance: {
     recent_exercises: ExercisePerformanceRecord[];

@@ -28,19 +28,119 @@ import { ExercisePerformance, LoggedSet } from '@/types/routine';
 
 const PREFERENCES_STORAGE_KEY_PREFIX = 'nuvia_fitness_preferences_';
 
+/**
+ * Generates an individualized training & habit strategy deterministically
+ * based on the user's physique self-assessment, experience, equipment, and constraints.
+ */
+export function generateTrainingStrategy(params: {
+  goal: string;
+  current_physique?: string;
+  priority_areas?: string[];
+  desired_physique?: string;
+  experience_level?: string;
+  consistency_level?: string;
+  equipment: string[];
+  environment?: string;
+  duration_minutes?: number;
+  adherence_obstacles?: string[];
+  preferred_split?: string;
+}): string[] {
+  const points: string[] = [];
+
+  // 1. Structure & Frequency
+  const split = params.preferred_split || 'Upper / Lower';
+  const duration = params.duration_minutes || 45;
+  if (
+    params.consistency_level === 'on_and_off' ||
+    params.consistency_level === 'frequent_breaks' ||
+    params.consistency_level === 'getting_started'
+  ) {
+    points.push(
+      `Structure: 3-4 sessions/week (${split}, ~${duration} mins). Habit adherence and consistency take priority over maximal volume.`
+    );
+  } else {
+    points.push(
+      `Structure: 4 structured sessions/week (${split}, ~${duration} mins) with dedicated rest days between intensive loading blocks.`
+    );
+  }
+
+  // 2. Resistance Strategy & Equipment
+  const equipStr = params.equipment && params.equipment.length > 0 ? params.equipment.join(', ') : 'dumbbells & bodyweight';
+  const experience = params.experience_level || 'beginner';
+  if (experience === 'returning_long_break' || experience === 'beginner_trained_before') {
+    points.push(
+      `Resistance: Re-sensitize muscles using ${equipStr} with controlled tempo and 1-3 clean reps in reserve (RIR). Capitalize on muscle memory while avoiding early overtraining.`
+    );
+  } else if (experience === 'completely_new' || experience === 'beginner') {
+    points.push(
+      `Resistance: Master fundamental movement mechanics (squat, press, row, hinge) with ${equipStr}. Prioritize technique and neuromuscular control before increasing load.`
+    );
+  } else {
+    points.push(
+      `Resistance: Progressive overload through double progression with ${equipStr}. Increase repetitions (10-15 reps) before advancing working weights.`
+    );
+  }
+
+  // 3. Target Vision & Priority Focus
+  const priorities =
+    params.priority_areas && params.priority_areas.length > 0
+      ? params.priority_areas.join(', ')
+      : 'overall muscle definition';
+  const desired = params.desired_physique || 'Athletic';
+  points.push(
+    `Target Vision (${desired}): Prioritize progressive compound resistance while giving focused stimulus to ${priorities}. (Note: Overall systemic body composition drives fat loss; spot reduction is anatomically not possible).`
+  );
+
+  // 4. Energy & Nutrition Synergy
+  if (params.goal === 'lose_weight') {
+    points.push(
+      `Metabolic Support: Moderate, sustainable calorie deficit paired with high dietary protein (~1.8-2.2 g/kg) to maximize fat loss while preserving lean mass.`
+    );
+  } else if (params.goal === 'build_muscle') {
+    points.push(
+      `Metabolic Support: Slight clean energy surplus (+200-300 kcal) with adequate protein to fuel muscular hypertrophy and strength gains.`
+    );
+  } else {
+    points.push(
+      `Metabolic Support: Caloric balance with high nutrient density to optimize physical recovery, muscle tone, and body recomposition.`
+    );
+  }
+
+  // 5. Adherence Safeguard
+  if (params.adherence_obstacles && params.adherence_obstacles.length > 0) {
+    const obstacles = params.adherence_obstacles.join(', ');
+    points.push(
+      `Adherence Safeguard: Built-in flexibility to counter ${obstacles}—keep sessions under ${duration} mins and prioritize momentum over perfection.`
+    );
+  }
+
+  return points;
+}
+
+export interface StoredFitnessPreferences {
+  constraints: TrainingConstraints;
+  preferences: TrainingPreferences;
+  fitness_level?: 'beginner_inconsistent' | 'beginner_consistent' | 'intermediate' | 'advanced';
+  experience_level?: 'completely_new' | 'beginner' | 'beginner_trained_before' | 'intermediate' | 'advanced' | 'returning_long_break';
+  consistency_level?: 'very_consistent' | 'mostly_consistent' | 'on_and_off' | 'frequent_breaks' | 'getting_started';
+  training_background?: string;
+  objective?: string;
+  current_physique?: 'lean' | 'average' | 'soft_low_muscle' | 'higher_body_fat' | 'muscular_some_fat' | 'not_sure';
+  current_physique_label?: string;
+  priority_areas?: string[];
+  desired_physique?: 'lean' | 'athletic' | 'lean_muscular' | 'muscular' | 'strong_powerful' | 'general_fitness' | 'custom';
+  desired_physique_custom?: string;
+  desired_look?: string;
+  user_estimated_target_bf_percent?: number;
+  user_estimated_bf_percent?: number;
+  physique_photo_url?: string;
+}
+
 export class FitnessContextService {
   /**
    * Retrieves persistent fitness constraints and preferences (equipment, environment, etc.)
    */
-  static getStoredPreferences(userId?: string): {
-    constraints: TrainingConstraints;
-    preferences: TrainingPreferences;
-    fitness_level?: 'beginner_inconsistent' | 'beginner_consistent' | 'intermediate' | 'advanced';
-    training_background?: string;
-    objective?: string;
-    desired_look?: string;
-    user_estimated_bf_percent?: number;
-  } {
+  static getStoredPreferences(userId?: string): StoredFitnessPreferences {
     const key = `${PREFERENCES_STORAGE_KEY_PREFIX}${userId || 'demo'}`;
     if (typeof window !== 'undefined') {
       try {
@@ -56,9 +156,16 @@ export class FitnessContextService {
     // Default configuration (flexible, realistic starting baseline)
     return {
       fitness_level: 'beginner_inconsistent',
+      experience_level: 'beginner_trained_before',
+      consistency_level: 'on_and_off',
       training_background: 'Has trained periodically before; returning to consistency',
       objective: 'Reduce body fat while maintaining and building lean muscle',
+      current_physique: 'soft_low_muscle',
+      current_physique_label: 'Soft / little muscle definition',
+      priority_areas: ['Belly / waist', 'Overall muscle definition'],
+      desired_physique: 'athletic',
       desired_look: 'Athletic, lean, and functional',
+      user_estimated_target_bf_percent: 15,
       user_estimated_bf_percent: 28,
       constraints: {
         preferred_split: 'Upper / Lower',
@@ -66,6 +173,8 @@ export class FitnessContextService {
         environment: 'home',
         available_equipment: ['dumbbells', 'push_up_board', 'bodyweight'],
         available_space: 'Adequate room for floor and dumbbell exercises',
+        training_time_of_day: 'evening',
+        adherence_obstacles: ['lack_of_time', 'work_schedule'],
         cardio_habits: {
           type: 'Brisk walking',
           distance_km: 4.5,
@@ -74,9 +183,12 @@ export class FitnessContextService {
         },
       },
       preferences: {
-        effort_target: '1-3 RIR (challenging, with 1-3 clean reps in reserve)',
+        effort_target: 'Challenging but manageable (1-3 RIR)',
+        target_rir: '1-3',
+        progression_preference: 'let_nuvia_decide',
         progression_rule: 'Double progression: 10-15 rep range; increase resistance once all sets hit 15 reps with good technique',
         muscle_biases: ['Upper body exercises feel slightly more natural than lower body; ensure lower body is progressively loaded without overloading recovery'],
+        easy_hard_areas: ['Upper body feels easier', 'Core feels difficult'],
         preferred_exercises: ['Goblet Squat', 'Dumbbell Row', 'Push-up', 'Dumbbell Bicep Curl'],
         disliked_exercises: ['Bulgarian Split Squat'],
         custom_starting_weights: {
@@ -94,19 +206,11 @@ export class FitnessContextService {
    * Saves updated constraints or preferences
    */
   static saveStoredPreferences(
-    data: {
-      constraints?: Partial<TrainingConstraints>;
-      preferences?: Partial<TrainingPreferences>;
-      fitness_level?: 'beginner_inconsistent' | 'beginner_consistent' | 'intermediate' | 'advanced';
-      training_background?: string;
-      objective?: string;
-      desired_look?: string;
-      user_estimated_bf_percent?: number;
-    },
+    data: Partial<StoredFitnessPreferences>,
     userId?: string
   ): void {
     const existing = this.getStoredPreferences(userId);
-    const updated = {
+    const updated: StoredFitnessPreferences = {
       ...existing,
       ...data,
       constraints: { ...existing.constraints, ...(data.constraints || {}) },
@@ -258,6 +362,20 @@ export class FitnessContextService {
       if (age > 0) calculatedAge = age;
     }
 
+    const synthesizedStrategy = generateTrainingStrategy({
+      goal: profile?.goal || 'lose_weight',
+      current_physique: storedPrefs.current_physique,
+      priority_areas: storedPrefs.priority_areas,
+      desired_physique: storedPrefs.desired_physique,
+      experience_level: storedPrefs.experience_level,
+      consistency_level: storedPrefs.consistency_level,
+      equipment: storedPrefs.constraints.available_equipment,
+      environment: storedPrefs.constraints.environment,
+      duration_minutes: storedPrefs.constraints.workout_duration_minutes,
+      adherence_obstacles: storedPrefs.constraints.adherence_obstacles,
+      preferred_split: storedPrefs.constraints.preferred_split,
+    });
+
     const context: NuviaFitnessContext = {
       profile: {
         sex: (profile?.sex as any) ?? undefined,
@@ -265,6 +383,8 @@ export class FitnessContextService {
         height_cm: profile?.height_cm ?? undefined,
         weight_kg: profile?.weight_kg ?? undefined,
         fitness_level: storedPrefs.fitness_level || 'beginner_inconsistent',
+        experience_level: storedPrefs.experience_level,
+        consistency_level: storedPrefs.consistency_level,
         training_background: storedPrefs.training_background,
       },
       goal: {
@@ -273,12 +393,20 @@ export class FitnessContextService {
         target_weight_kg: goals?.target_weight_kg ?? undefined,
         goal_pace_kg: goalPace,
         physique_preference: {
+          current_physique: storedPrefs.current_physique,
+          current_physique_label: storedPrefs.current_physique_label,
+          priority_areas: storedPrefs.priority_areas,
+          desired_physique: storedPrefs.desired_physique,
+          desired_physique_custom: storedPrefs.desired_physique_custom,
           desired_look: storedPrefs.desired_look || 'Athletic, lean, and balanced',
+          user_estimated_target_bf_percent: storedPrefs.user_estimated_target_bf_percent,
           user_estimated_bf_percent: storedPrefs.user_estimated_bf_percent,
+          physique_photo_url: storedPrefs.physique_photo_url,
         },
       },
       constraints: storedPrefs.constraints,
       preferences: storedPrefs.preferences,
+      synthesized_strategy: synthesizedStrategy,
       weekly_schedule: weeklySchedule,
       performance: {
         recent_exercises: Array.from(exerciseHistoryMap.values()).slice(0, 15),

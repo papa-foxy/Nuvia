@@ -16,6 +16,7 @@ import { Profile, ActivityLevel, UserGoal, Goal } from '@/types/database';
 import { DataService } from '@/lib/data-service';
 import { calculateTargets } from '@/lib/calculator';
 import { NuviaBottomSheet } from '../NuviaBottomSheet';
+import { FitnessContextService } from '@/lib/fitness-context-service';
 
 interface AboutYouSectionProps {
   profile: Profile | null;
@@ -341,6 +342,47 @@ export function AboutYouSection({
           <span className="font-semibold text-white truncate max-w-[170px]">
             {profile?.dietary_preference || 'Halal / Balanced'}
           </span>
+        </div>
+
+        {/* Qualitative Fitness Context Rows */}
+        {(() => {
+          const fp = FitnessContextService.getStoredPreferences(profile?.id);
+          return (
+            <>
+              <div className="w-full p-3.5 flex justify-between items-center text-left">
+                <span className="text-[#8E8E93]">Starting Physique</span>
+                <span className="font-semibold text-white truncate max-w-[170px]">
+                  {fp.current_physique_label || 'Soft / little muscle'}
+                </span>
+              </div>
+
+              <div className="w-full p-3.5 flex justify-between items-center text-left">
+                <span className="text-[#8E8E93]">Target Vision</span>
+                <span className="font-semibold text-[#30D158] truncate max-w-[170px]">
+                  {fp.desired_look || 'Athletic'}
+                </span>
+              </div>
+
+              <div className="w-full p-3.5 flex justify-between items-center text-left">
+                <span className="text-[#8E8E93]">Equipment Limits</span>
+                <span className="font-semibold text-white truncate max-w-[170px]">
+                  {(fp.constraints.available_equipment || ['dumbbells', 'bodyweight']).slice(0, 3).join(', ')}
+                </span>
+              </div>
+            </>
+          );
+        })()}
+
+        {/* Recalibrate / Replay Onboarding Button */}
+        <div className="p-3 bg-white/[0.02] flex justify-center">
+          <button
+            type="button"
+            onClick={onReplayOnboarding}
+            className="w-full py-2.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] text-xs font-semibold text-zinc-300 hover:text-white transition-all flex items-center justify-center gap-1.5"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-[#30D158]" />
+            <span>Recalibrate Body &amp; Training Vision</span>
+          </button>
         </div>
       </div>
 

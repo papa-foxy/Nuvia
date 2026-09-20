@@ -12,11 +12,29 @@ import {
   Target,
   Scale,
   Activity,
+  Dumbbell,
+  Clock,
+  Heart,
+  Camera,
+  Check,
+  CheckCircle2,
+  Info,
+  Calendar,
+  ShieldCheck,
+  Pencil,
+  Compass,
+  TrendingUp,
+  User,
+  X,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { calculateTargets, CalculationResult } from '@/lib/calculator';
 import { DataService } from '@/lib/data-service';
 import { ActivityLevel, UserGoal, Profile, Goal } from '@/types/database';
+import {
+  FitnessContextService,
+  generateTrainingStrategy,
+} from '@/lib/fitness-context-service';
 
 interface OnboardingWizardProps {
   onComplete: () => void;
@@ -27,19 +45,76 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
   const { user, profile, hasCompletedOnboarding, refreshProfileAndGoals } = useAuth();
 
   const [step, setStep] = useState(1);
+  const totalSteps = 7;
+
+  // ── Step 1 & 2: Core Biometrics & Metabolism (Deterministic Calorie Inputs) ──
   const [sex, setSex] = useState<'male' | 'female'>(profile?.sex === 'female' ? 'female' : 'male');
-  const [dob, setDob] = useState(profile?.date_of_birth || '2003-06-16');
+  const [dob, setDob] = useState(profile?.date_of_birth || '2004-09-23');
   const [heightCm, setHeightCm] = useState(profile?.height_cm ? String(profile.height_cm) : '176');
-  const [weightKg, setWeightKg] = useState(profile?.weight_kg ? String(profile.weight_kg) : '73');
+  const [weightKg, setWeightKg] = useState(profile?.weight_kg ? String(profile.weight_kg) : '79');
   const [activityLevel, setActivityLevel] = useState<ActivityLevel>(
     profile?.activity_level || 'moderately_active'
   );
   const [goal, setGoal] = useState<UserGoal>(profile?.goal || 'build_muscle');
   const [targetWeightKg, setTargetWeightKg] = useState(
-    profile?.target_weight_kg ? String(profile.target_weight_kg) : '68'
+    profile?.target_weight_kg ? String(profile.target_weight_kg) : '72'
   );
-  const [dietaryPref, setDietaryPref] = useState(profile?.dietary_preference || 'None');
+  const [dietaryPref, setDietaryPref] = useState(profile?.dietary_preference || 'Halal');
 
+  // ── Step 3: Understand Your Body (Current Physique Self-Assessment) ─────────
+  const [currentPhysique, setCurrentPhysique] = useState<
+    'lean' | 'average' | 'soft_low_muscle' | 'higher_body_fat' | 'muscular_some_fat' | 'not_sure'
+  >('soft_low_muscle');
+  const [priorityAreas, setPriorityAreas] = useState<string[]>([
+    'Belly / waist',
+    'Overall muscle definition',
+  ]);
+
+  // ── Step 4: Desired Physique & Visual Vision ──────────────────────────────
+  const [desiredPhysique, setDesiredPhysique] = useState<
+    'lean' | 'athletic' | 'lean_muscular' | 'muscular' | 'strong_powerful' | 'general_fitness' | 'custom'
+  >('athletic');
+  const [desiredPhysiqueCustom, setDesiredPhysiqueCustom] = useState(
+    'Lean athletic with visible muscle definition and less belly fat'
+  );
+  const [targetBfRef, setTargetBfRef] = useState('15');
+  const [physiquePhotoPreview, setPhysiquePhotoPreview] = useState<string | null>(null);
+
+  // ── Step 5: Training Reality & Hard Constraints ───────────────────────────
+  const [experienceLevel, setExperienceLevel] = useState<
+    'completely_new' | 'beginner' | 'beginner_trained_before' | 'intermediate' | 'advanced' | 'returning_long_break'
+  >('beginner_trained_before');
+  const [consistencyLevel, setConsistencyLevel] = useState<
+    'very_consistent' | 'mostly_consistent' | 'on_and_off' | 'frequent_breaks' | 'getting_started'
+  >('on_and_off');
+  const [preferredSplit, setPreferredSplit] = useState<string>('Upper / Lower');
+  const [equipment, setEquipment] = useState<string[]>([
+    'Dumbbells',
+    'Push-up board',
+    'Bodyweight only',
+  ]);
+  const [environment, setEnvironment] = useState<'home' | 'gym' | 'both' | 'outdoors'>('home');
+  const [durationMinutes, setDurationMinutes] = useState<number>(45);
+
+  // ── Step 6: Preferences, Cardio & Adherence ───────────────────────────────
+  const [cardioHabit, setCardioHabit] = useState<string>('Walking');
+  const [cardioDescription, setCardioDescription] = useState<string>(
+    '4.5 km outdoor brisk walk every Saturday morning'
+  );
+  const [trainingIntensity, setTrainingIntensity] = useState<string>('Challenging but manageable (1-3 RIR)');
+  const [targetRir, setTargetRir] = useState<string>('1-3');
+  const [progressionPreference, setProgressionPreference] = useState<
+    'reps_first_then_weight' | 'increase_weight_frequently' | 'gradual_stable' | 'let_nuvia_decide'
+  >('let_nuvia_decide');
+  const [trainingTimeOfDay, setTrainingTimeOfDay] = useState<'morning' | 'afternoon' | 'evening' | 'varies'>(
+    'evening'
+  );
+  const [adherenceObstacles, setAdherenceObstacles] = useState<string[]>([
+    'Lack of time',
+    'Work/study schedule',
+  ]);
+
+  // ── Calculation & Save State ──────────────────────────────────────────────
   const [calculatedTargets, setCalculatedTargets] = useState<CalculationResult | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -50,31 +125,138 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
     return Math.abs(ageDate.getUTCFullYear() - 1970) || 22;
   };
 
-  const handleNextStep = () => {
-    if (step === 1) {
-      setStep(2);
-    } else if (step === 2) {
-      // Calculate
-      const age = calculateAge(dob);
-      const res = calculateTargets({
-        age,
-        sex,
-        height_cm: Number(heightCm) || 176,
-        weight_kg: Number(weightKg) || 73,
-        activity_level: activityLevel,
-        goal,
-        target_weight_kg: Number(targetWeightKg) || Number(weightKg),
-      });
-      setCalculatedTargets(res);
-      setStep(3);
+  const currentPhysiqueOptions = [
+    { id: 'lean', label: 'Lean', desc: 'Low body fat, visible vascularity or lean lines' },
+    { id: 'average', label: 'Average', desc: 'Moderate body fat, moderate natural muscle' },
+    { id: 'soft_low_muscle', label: 'Soft / little muscle definition', desc: 'Holding some fat, looking to tone and build muscle' },
+    { id: 'higher_body_fat', label: 'Higher body fat', desc: 'Focusing on fat loss and sustainable energy' },
+    { id: 'muscular_some_fat', label: 'Muscular with some body fat', desc: 'Solid base of strength, carrying extra padding' },
+    { id: 'not_sure', label: 'Not sure', desc: 'Ready for Nuvia to assess baseline as I train' },
+  ] as const;
+
+  const priorityAreaOptions = [
+    'Overall body fat',
+    'Belly / waist',
+    'Chest',
+    'Arms',
+    'Legs',
+    'Back',
+    'Overall muscle definition',
+    'General athletic appearance',
+  ];
+
+  const desiredPhysiqueOptions = [
+    { id: 'lean', label: 'Lean', desc: 'Slender, low body fat, toned' },
+    { id: 'athletic', label: 'Athletic', desc: 'Balanced muscle, functional fitness, agile' },
+    { id: 'lean_muscular', label: 'Lean + Muscular', desc: 'Defined muscle bellies with low waist fat' },
+    { id: 'muscular', label: 'Muscular', desc: 'Pronounced hypertrophy, fuller shoulders and chest' },
+    { id: 'strong_powerful', label: 'Strong / Powerful', desc: 'Maximal strength and structural density' },
+    { id: 'general_fitness', label: 'General Fitness', desc: 'Feel energetic, move pain-free, healthy' },
+    { id: 'custom', label: 'Custom Vision', desc: 'Describe your own aesthetic ideal' },
+  ] as const;
+
+  const experienceOptions = [
+    { id: 'completely_new', label: 'Completely new', desc: 'Never lifted or followed a fitness program' },
+    { id: 'beginner', label: 'Beginner', desc: 'A few weeks/months of casual training' },
+    { id: 'beginner_trained_before', label: 'Beginner but have trained before', desc: 'Know the basics, rebuilding consistency' },
+    { id: 'intermediate', label: 'Intermediate', desc: '1–2+ years of consistent progressive training' },
+    { id: 'advanced', label: 'Advanced', desc: '3+ years of systematic strength training' },
+    { id: 'returning_long_break', label: 'Returning after a long break', desc: 'Had good progress in past, restarting fresh' },
+  ] as const;
+
+  const consistencyOptions = [
+    { id: 'very_consistent', label: 'Very consistent', desc: 'Rarely miss planned sessions' },
+    { id: 'mostly_consistent', label: 'Mostly consistent', desc: 'Miss occasionally when life gets busy' },
+    { id: 'on_and_off', label: 'On and off', desc: 'Train for a few weeks, then stop' },
+    { id: 'frequent_breaks', label: 'I often stop for weeks/months', desc: 'Need an adherence-focused approach' },
+    { id: 'getting_started', label: 'Just getting started again', desc: 'Looking for a sustainable rhythm' },
+  ] as const;
+
+  const splitOptions = [
+    { id: 'Upper / Lower', label: 'Upper / Lower', desc: 'Balanced 4-day split, optimal recovery' },
+    { id: 'Push / Pull / Legs', label: 'Push / Pull / Legs', desc: 'High-focus 3-6 day bodybuilding split' },
+    { id: 'Full body', label: 'Full body', desc: 'Maximum frequency, 2-3 days/week' },
+    { id: 'Cardio + strength', label: 'Cardio + Strength', desc: 'Combined conditioning & resistance' },
+    { id: "I'm not sure", label: "I'm not sure", desc: 'Let Nuvia recommend the optimal split' },
+  ];
+
+  const equipmentOptions = [
+    'Dumbbells',
+    'Push-up board',
+    'Bodyweight only',
+    'Resistance bands',
+    'Pull-up bar',
+    'Bench',
+    'Barbell',
+    'Cable machine',
+    'Machines',
+    'Other',
+  ];
+
+  const obstacleOptions = [
+    'Lack of time',
+    'Motivation',
+    'Work/study schedule',
+    'Workout feels too hard',
+    'Lose track of routine',
+    'Get bored',
+    'Injury / physical aches',
+  ];
+
+  const toggleArrayItem = (list: string[], item: string, setter: (val: string[]) => void) => {
+    if (list.includes(item)) {
+      if (list.length > 1) {
+        setter(list.filter((x) => x !== item));
+      }
+    } else {
+      setter([...list, item]);
     }
   };
 
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhysiquePhotoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Re-calculate metabolic targets whenever advancing past step 2
+  const runCalorieCalculation = () => {
+    const age = calculateAge(dob);
+    const res = calculateTargets({
+      age,
+      sex,
+      height_cm: Number(heightCm) || 176,
+      weight_kg: Number(weightKg) || 73,
+      activity_level: activityLevel,
+      goal,
+      target_weight_kg: Number(targetWeightKg) || Number(weightKg),
+    });
+    setCalculatedTargets(res);
+  };
+
+  const handleNextStep = () => {
+    if (step === 2) {
+      runCalorieCalculation();
+    }
+    if (step < totalSteps) {
+      setStep((s) => s + 1);
+    }
+  };
+
+  // Final submission of all biometric, metabolic, and qualitative context
   const handleFinalSave = async () => {
-    if (!calculatedTargets) return;
+    if (!calculatedTargets) {
+      runCalorieCalculation();
+    }
     setSaving(true);
     const userId = user?.id || DataService.getDemoUserId();
 
+    // 1. Authoritative Biometric Profile
     const updatedProfile: Profile = {
       id: userId,
       name: profile?.name || 'Wann',
@@ -89,16 +271,76 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
       allergies: [],
     };
 
+    // 2. Authoritative Nutritional Goals (deterministic Mifflin-St Jeor)
+    const targets =
+      calculatedTargets ||
+      calculateTargets({
+        age: calculateAge(dob),
+        sex,
+        height_cm: Number(heightCm) || 176,
+        weight_kg: Number(weightKg) || 73,
+        activity_level: activityLevel,
+        goal,
+        target_weight_kg: Number(targetWeightKg) || 68,
+      });
+
     const newGoals: Goal = {
       id: `goal-${Date.now()}`,
       user_id: userId,
-      calorie_target: calculatedTargets.calorie_target,
-      protein_target: calculatedTargets.protein_target,
-      carbohydrate_target: calculatedTargets.carbohydrate_target,
-      fat_target: calculatedTargets.fat_target,
-      exercise_minutes_target: calculatedTargets.exercise_minutes_target,
+      calorie_target: targets.calorie_target,
+      protein_target: targets.protein_target,
+      carbohydrate_target: targets.carbohydrate_target,
+      fat_target: targets.fat_target,
+      exercise_minutes_target: targets.exercise_minutes_target,
       target_weight_kg: Number(targetWeightKg) || 68,
     };
+
+    // 3. Qualitative Personal Fitness Context (Physical reality, equipment limits, adherence)
+    FitnessContextService.saveStoredPreferences(
+      {
+        fitness_level:
+          consistencyLevel === 'very_consistent' || consistencyLevel === 'mostly_consistent'
+            ? 'beginner_consistent'
+            : 'beginner_inconsistent',
+        experience_level: experienceLevel,
+        consistency_level: consistencyLevel,
+        training_background: experienceOptions.find((e) => e.id === experienceLevel)?.desc,
+        current_physique: currentPhysique,
+        current_physique_label: currentPhysiqueOptions.find((c) => c.id === currentPhysique)?.label,
+        priority_areas: priorityAreas,
+        desired_physique: desiredPhysique,
+        desired_physique_custom: desiredPhysiqueCustom,
+        desired_look: desiredPhysiqueOptions.find((d) => d.id === desiredPhysique)?.label,
+        user_estimated_target_bf_percent: targetBfRef ? Number(targetBfRef) : undefined,
+        physique_photo_url: physiquePhotoPreview || undefined,
+        constraints: {
+          preferred_split: preferredSplit,
+          workout_duration_minutes: durationMinutes,
+          environment: environment,
+          available_equipment: equipment.map((e) => e.toLowerCase().replace(/\s+/g, '_')),
+          training_time_of_day: trainingTimeOfDay,
+          adherence_obstacles: adherenceObstacles,
+          cardio_habits: {
+            type: cardioHabit,
+            typical_days: ['Saturday'],
+            description: cardioDescription,
+          },
+        },
+        preferences: {
+          effort_target: trainingIntensity,
+          target_rir: targetRir,
+          progression_preference: progressionPreference,
+          progression_rule:
+            progressionPreference === 'reps_first_then_weight'
+              ? 'Double progression: advance reps (10-15) before adding weight'
+              : 'Let Nuvia decide based on logged workout performance',
+          preferred_exercises: ['Goblet Squat', 'Dumbbell Row', 'Push-up', 'Dumbbell Bicep Curl'],
+          disliked_exercises: ['Bulgarian Split Squat'],
+          easy_hard_areas: ['Upper body feels easier', 'Core feels difficult'],
+        },
+      },
+      userId
+    );
 
     await DataService.saveProfile(updatedProfile);
     await DataService.saveGoals(newGoals);
@@ -121,13 +363,31 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
     }
   };
 
+  // Synthesize dynamic strategy bullet points for Step 7 confirmation
+  const synthesizedStrategy = generateTrainingStrategy({
+    goal,
+    current_physique: currentPhysique,
+    priority_areas: priorityAreas,
+    desired_physique: desiredPhysique,
+    experience_level: experienceLevel,
+    consistency_level: consistencyLevel,
+    equipment,
+    environment,
+    duration_minutes: durationMinutes,
+    adherence_obstacles: adherenceObstacles,
+    preferred_split: preferredSplit,
+  });
+
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col justify-between px-6 py-6 max-w-md mx-auto">
-      {/* Navigation & Progress */}
-      <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-black text-white flex flex-col justify-between px-5 py-5 max-w-md mx-auto">
+      {/* ── TOP NAVIGATION & STEP PROGRESS ─────────────────────────────────── */}
+      <div className="flex items-center justify-between pb-2 border-b border-white/[0.06]">
         {step > 1 ? (
-          <button onClick={() => setStep(step - 1)} className="p-1 text-[#8E8E93] hover:text-white transition-colors">
-            <ArrowLeft className="w-5 h-5" />
+          <button
+            onClick={() => setStep((s) => s - 1)}
+            className="p-1.5 -ml-1 text-[#8E8E93] hover:text-white transition-colors rounded-xl bg-white/[0.05]"
+          >
+            <ArrowLeft className="w-4 h-4" />
           </button>
         ) : onCancel ? (
           <button onClick={onCancel} className="text-xs text-[#8E8E93] hover:text-white transition-colors">
@@ -136,38 +396,56 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
         ) : (
           <div className="w-5" />
         )}
-        <span className="text-xs font-semibold text-[#8E8E93]">
-          Step {step} of 3
+
+        <div className="flex items-center gap-1.5">
+          {Array.from({ length: totalSteps }).map((_, i) => (
+            <div
+              key={i}
+              className={`h-1.5 rounded-full transition-all ${
+                i + 1 === step
+                  ? 'w-6 bg-[#30D158]'
+                  : i + 1 < step
+                  ? 'w-2 bg-[#30D158]/50'
+                  : 'w-2 bg-white/10'
+              }`}
+            />
+          ))}
+        </div>
+
+        <span className="text-[11px] font-mono font-semibold text-[#8E8E93]">
+          {step}/{totalSteps}
         </span>
       </div>
 
-      {/* Step 1: Body Metrics */}
+      {/* ===================================================================== */}
+      {/* STEP 1: BIOMETRICS (Deterministic Calorie Anchor)                      */}
+      {/* ===================================================================== */}
       {step === 1 && (
-        <div className="space-y-6 my-auto py-4">
+        <div className="space-y-5 my-auto py-3 animate-fadeIn">
           <div>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-[#30D158]/15 text-[#30D158] border border-[#30D158]/30 uppercase">
               <Sparkles className="w-3 h-3" />
               Biometrics
             </span>
-            <h2 className="text-3xl font-bold tracking-tight text-white mt-2">About You</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-white mt-2">About You</h2>
             <p className="text-xs text-[#8E8E93] mt-1">
-              Used to calculate scientifically accurate metabolic targets.
+              Authoritative physical data used to calculate metabolic resting burn (BMR).
             </p>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3.5">
             <div>
-              <label className="block text-xs font-semibold text-[#8E8E93] uppercase tracking-wider mb-1.5">
+              <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-1.5">
                 Biological Sex
               </label>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2.5">
                 {(['male', 'female'] as const).map((opt) => (
                   <button
                     key={opt}
                     type="button"
                     onClick={() => setSex(opt)}
-                    className={`py-3 rounded-2xl text-xs font-semibold capitalize transition-colors ${
-                      sex === opt ? 'bg-white text-black font-bold shadow-md' : 'bg-[#1C1C1E] text-[#8E8E93] hover:text-white'
+                    className={`py-2.5 rounded-xl text-xs font-semibold capitalize transition-all ${
+                      sex === opt ? 'bg-white text-black font-bold shadow-md' : 'bg-[#1C1C1E] text-[#8E8E93] hover:text-white border border-white/[0.04]'
                     }`}
                   >
                     {opt}
@@ -178,7 +456,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-[#8E8E93] uppercase tracking-wider mb-1.5">
+                <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-1.5">
                   Height
                 </label>
                 <div className="relative">
@@ -186,14 +464,14 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                     type="number"
                     value={heightCm}
                     onChange={(e) => setHeightCm(e.target.value)}
-                    className="w-full px-3.5 py-3 rounded-2xl bg-[#1C1C1E] border border-white/[0.08] text-sm text-white font-semibold focus:outline-none focus:border-[#30D158]"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#1C1C1E] border border-white/[0.08] text-sm text-white font-semibold focus:outline-none focus:border-[#30D158]"
                   />
-                  <span className="absolute right-3.5 top-3.5 text-xs text-[#8E8E93] font-medium pointer-events-none">cm</span>
+                  <span className="absolute right-3.5 top-2.5 text-xs text-[#8E8E93] pointer-events-none">cm</span>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#8E8E93] uppercase tracking-wider mb-1.5">
+                <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-1.5">
                   Weight
                 </label>
                 <div className="relative">
@@ -202,45 +480,47 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                     step="0.1"
                     value={weightKg}
                     onChange={(e) => setWeightKg(e.target.value)}
-                    className="w-full px-3.5 py-3 rounded-2xl bg-[#1C1C1E] border border-white/[0.08] text-sm text-white font-semibold focus:outline-none focus:border-[#30D158]"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#1C1C1E] border border-white/[0.08] text-sm text-white font-semibold focus:outline-none focus:border-[#30D158]"
                   />
-                  <span className="absolute right-3.5 top-3.5 text-xs text-[#8E8E93] font-medium pointer-events-none">kg</span>
+                  <span className="absolute right-3.5 top-2.5 text-xs text-[#8E8E93] pointer-events-none">kg</span>
                 </div>
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#8E8E93] uppercase tracking-wider mb-1.5">
+              <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-1.5">
                 Date of Birth
               </label>
               <input
                 type="date"
                 value={dob}
                 onChange={(e) => setDob(e.target.value)}
-                className="w-full px-3.5 py-3 rounded-2xl bg-[#1C1C1E] border border-white/[0.08] text-sm text-white font-semibold focus:outline-none focus:border-[#30D158]"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#1C1C1E] border border-white/[0.08] text-sm text-white font-semibold focus:outline-none focus:border-[#30D158]"
               />
             </div>
           </div>
         </div>
       )}
 
-      {/* Step 2: Goal & Activity */}
+      {/* ===================================================================== */}
+      {/* STEP 2: ACTIVITY & WEIGHT TARGET (Deterministic Calorie Multiplier)   */}
+      {/* ===================================================================== */}
       {step === 2 && (
-        <div className="space-y-6 my-auto py-4">
+        <div className="space-y-5 my-auto py-3 animate-fadeIn">
           <div>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-[#30D158]/15 text-[#30D158] border border-[#30D158]/30 uppercase">
               <Target className="w-3 h-3" />
-              Activity &amp; Goal
+              Metabolism &amp; Target
             </span>
-            <h2 className="text-3xl font-bold tracking-tight text-white mt-2">Goals &amp; Activity</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-white mt-2">Goals &amp; Energy</h2>
             <p className="text-xs text-[#8E8E93] mt-1">
-              Calibrates daily energy expenditure (TDEE) and macro ratios.
+              Determines daily maintenance energy expenditure (TDEE) and caloric balance.
             </p>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3.5">
             <div>
-              <label className="block text-xs font-semibold text-[#8E8E93] uppercase tracking-wider mb-2">
+              <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-2">
                 Primary Goal
               </label>
               <div className="grid grid-cols-2 gap-2">
@@ -254,8 +534,8 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                     key={g.id}
                     type="button"
                     onClick={() => setGoal(g.id)}
-                    className={`p-3 rounded-2xl text-xs font-semibold transition-colors ${
-                      goal === g.id ? 'bg-white text-black font-bold shadow-md' : 'bg-[#1C1C1E] text-[#8E8E93] hover:text-white'
+                    className={`p-2.5 rounded-xl text-xs font-semibold transition-all ${
+                      goal === g.id ? 'bg-white text-black font-bold shadow-md' : 'bg-[#1C1C1E] text-[#8E8E93] hover:text-white border border-white/[0.04]'
                     }`}
                   >
                     {g.label}
@@ -265,7 +545,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#8E8E93] uppercase tracking-wider mb-1.5">
+              <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-1.5">
                 Target Weight
               </label>
               <div className="relative">
@@ -274,15 +554,14 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                   step="0.1"
                   value={targetWeightKg}
                   onChange={(e) => setTargetWeightKg(e.target.value)}
-                  placeholder="68"
-                  className="w-full px-3.5 py-3 rounded-2xl bg-[#1C1C1E] border border-white/[0.08] text-sm text-white font-semibold focus:outline-none focus:border-[#30D158]"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#1C1C1E] border border-white/[0.08] text-sm text-white font-semibold focus:outline-none focus:border-[#30D158]"
                 />
-                <span className="absolute right-3.5 top-3.5 text-xs text-[#8E8E93] font-medium pointer-events-none">kg</span>
+                <span className="absolute right-3.5 top-2.5 text-xs text-[#8E8E93] pointer-events-none">kg</span>
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#8E8E93] uppercase tracking-wider mb-2">
+              <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-2">
                 Activity Level
               </label>
               <div className="grid grid-cols-2 gap-2">
@@ -296,8 +575,8 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                     key={act.id}
                     type="button"
                     onClick={() => setActivityLevel(act.id)}
-                    className={`p-3 rounded-2xl text-xs font-semibold transition-colors ${
-                      activityLevel === act.id ? 'bg-white text-black font-bold shadow-md' : 'bg-[#1C1C1E] text-[#8E8E93] hover:text-white'
+                    className={`p-2.5 rounded-xl text-xs font-semibold transition-all ${
+                      activityLevel === act.id ? 'bg-white text-black font-bold shadow-md' : 'bg-[#1C1C1E] text-[#8E8E93] hover:text-white border border-white/[0.04]'
                     }`}
                   >
                     {act.label}
@@ -309,14 +588,429 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
         </div>
       )}
 
-      {/* Step 3: Scientific Calculation Results UI */}
-      {step === 3 && calculatedTargets && (
-        <div className="space-y-4 my-auto py-2">
+      {/* ===================================================================== */}
+      {/* STEP 3: UNDERSTAND YOUR BODY (Current Physique Assessment)            */}
+      {/* ===================================================================== */}
+      {step === 3 && (
+        <div className="space-y-4 my-auto py-2 animate-fadeIn">
+          <div>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-amber-500/15 text-[#FF9F0A] border border-[#FF9F0A]/30 uppercase">
+              <User className="w-3 h-3" />
+              Understand Your Body
+            </span>
+            <h2 className="text-2xl font-bold tracking-tight text-white mt-1.5">Where You Are Starting</h2>
+            <p className="text-xs text-[#8E8E93] mt-0.5 leading-snug">
+              A qualitative self-description to tailor training strategy. (Never used to guess fake body fat numbers).
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <div>
+              <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-1.5">
+                How would you describe your current physique?
+              </label>
+              <div className="space-y-1.5">
+                {currentPhysiqueOptions.map((opt) => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => setCurrentPhysique(opt.id)}
+                    className={`w-full p-2.5 rounded-xl text-left transition-all flex items-center justify-between cursor-pointer border ${
+                      currentPhysique === opt.id
+                        ? 'bg-white/[0.08] border-[#30D158] text-white shadow-sm'
+                        : 'bg-[#1C1C1E] border-white/[0.04] text-[#8E8E93] hover:text-white'
+                    }`}
+                  >
+                    <div>
+                      <p className="text-xs font-semibold text-white">{opt.label}</p>
+                      <p className="text-[10px] text-[#8E8E93]">{opt.desc}</p>
+                    </div>
+                    {currentPhysique === opt.id && (
+                      <CheckCircle2 className="w-4 h-4 text-[#30D158] shrink-0" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-1.5">
+                What would you most like to improve?
+              </label>
+              <div className="flex flex-wrap gap-1.5">
+                {priorityAreaOptions.map((area) => {
+                  const isSelected = priorityAreas.includes(area);
+                  return (
+                    <button
+                      key={area}
+                      type="button"
+                      onClick={() => toggleArrayItem(priorityAreas, area, setPriorityAreas)}
+                      className={`px-3 py-1.5 rounded-xl text-[11px] font-medium transition-all flex items-center gap-1 cursor-pointer border ${
+                        isSelected
+                          ? 'bg-[#30D158]/20 border-[#30D158] text-white font-semibold'
+                          : 'bg-[#1C1C1E] border-white/[0.06] text-[#8E8E93] hover:text-white'
+                      }`}
+                    >
+                      {isSelected && <Check className="w-3 h-3 text-[#30D158]" />}
+                      <span>{area}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-[10px] text-[#8E8E93] mt-1.5 italic">
+                * Note: Overall body recomposition drives progress; spot reduction is anatomically not possible.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===================================================================== */}
+      {/* STEP 4: DESIRED PHYSIQUE & VISION                                     */}
+      {/* ===================================================================== */}
+      {step === 4 && (
+        <div className="space-y-4 my-auto py-2 animate-fadeIn">
+          <div>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-sky-500/15 text-sky-400 border border-sky-500/30 uppercase">
+              <Compass className="w-3 h-3" />
+              Your Vision
+            </span>
+            <h2 className="text-2xl font-bold tracking-tight text-white mt-1.5">Desired Physique</h2>
+            <p className="text-xs text-[#8E8E93] mt-0.5">
+              Shapes workout selection, volume bias, and aesthetic coaching.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <div>
+              <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-1.5">
+                What kind of physique are you working toward?
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {desiredPhysiqueOptions.map((opt) => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => setDesiredPhysique(opt.id)}
+                    className={`p-2.5 rounded-xl text-left transition-all border ${
+                      desiredPhysique === opt.id
+                        ? 'bg-white/[0.08] border-[#30D158] text-white shadow-sm'
+                        : 'bg-[#1C1C1E] border-white/[0.04] text-[#8E8E93] hover:text-white'
+                    }`}
+                  >
+                    <p className="text-xs font-semibold text-white">{opt.label}</p>
+                    <p className="text-[10px] text-[#8E8E93] line-clamp-1">{opt.desc}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-1">
+                Describe your ideal look in your own words (optional)
+              </label>
+              <input
+                type="text"
+                value={desiredPhysiqueCustom}
+                onChange={(e) => setDesiredPhysiqueCustom(e.target.value)}
+                placeholder="e.g. Lean athletic with visible shoulders and less belly fat"
+                className="w-full px-3 py-2 rounded-xl bg-[#1C1C1E] border border-white/[0.08] text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-[#30D158]"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-1">
+                  Target BF% reference
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    value={targetBfRef}
+                    onChange={(e) => setTargetBfRef(e.target.value)}
+                    placeholder="15"
+                    className="w-full px-3 py-2 rounded-xl bg-[#1C1C1E] border border-white/[0.08] text-xs text-white focus:outline-none focus:border-[#30D158]"
+                  />
+                  <span className="absolute right-3 top-2 text-xs text-[#8E8E93] pointer-events-none">%</span>
+                </div>
+                <p className="text-[9px] text-[#8E8E93] mt-0.5">Visual target only</p>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-1">
+                  Reference photo
+                </label>
+                {physiquePhotoPreview ? (
+                  <div className="relative rounded-xl overflow-hidden border border-white/10 h-14 bg-black flex items-center justify-between px-3">
+                    <img src={physiquePhotoPreview} alt="Preview" className="h-10 w-10 object-cover rounded-lg" />
+                    <button
+                      type="button"
+                      onClick={() => setPhysiquePhotoPreview(null)}
+                      className="text-[#8E8E93] hover:text-white p-1"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-[#1C1C1E] border border-dashed border-white/20 text-xs text-[#8E8E93] hover:text-white cursor-pointer h-10">
+                    <Camera className="w-3.5 h-3.5 text-[#30D158]" />
+                    <span className="text-[11px]">Add photo</span>
+                    <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
+                  </label>
+                )}
+                <p className="text-[9px] text-[#8E8E93] mt-0.5">Optional &amp; client-side only</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===================================================================== */}
+      {/* STEP 5: TRAINING REALITY & HARD CONSTRAINTS                          */}
+      {/* ===================================================================== */}
+      {step === 5 && (
+        <div className="space-y-4 my-auto py-2 animate-fadeIn">
+          <div>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-purple-500/15 text-purple-400 border border-purple-500/30 uppercase">
+              <Dumbbell className="w-3 h-3" />
+              Hard Constraints
+            </span>
+            <h2 className="text-2xl font-bold tracking-tight text-white mt-1.5">Equipment &amp; Split</h2>
+            <p className="text-xs text-[#8E8E93] mt-0.5">
+              AI strictly obeys what you actually have. No unavailable gym machines will be prescribed.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <div>
+              <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-1.5">
+                Training Experience &amp; Consistency
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <p className="text-[10px] text-[#8E8E93] mb-1">Experience:</p>
+                  <select
+                    value={experienceLevel}
+                    onChange={(e) => setExperienceLevel(e.target.value as any)}
+                    className="w-full px-2.5 py-2 rounded-xl bg-[#1C1C1E] border border-white/[0.08] text-xs text-white focus:outline-none focus:border-[#30D158]"
+                  >
+                    {experienceOptions.map((o) => (
+                      <option key={o.id} value={o.id}>{o.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <p className="text-[10px] text-[#8E8E93] mb-1">Consistency:</p>
+                  <select
+                    value={consistencyLevel}
+                    onChange={(e) => setConsistencyLevel(e.target.value as any)}
+                    className="w-full px-2.5 py-2 rounded-xl bg-[#1C1C1E] border border-white/[0.08] text-xs text-white focus:outline-none focus:border-[#30D158]"
+                  >
+                    {consistencyOptions.map((o) => (
+                      <option key={o.id} value={o.id}>{o.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-1.5">
+                Where do you train &amp; what equipment do you have?
+              </label>
+              <div className="grid grid-cols-4 gap-1.5 mb-2">
+                {(['home', 'gym', 'both', 'outdoors'] as const).map((loc) => (
+                  <button
+                    key={loc}
+                    type="button"
+                    onClick={() => setEnvironment(loc)}
+                    className={`py-1.5 rounded-xl text-[11px] font-semibold capitalize transition-all ${
+                      environment === loc
+                        ? 'bg-white text-black'
+                        : 'bg-[#1C1C1E] text-[#8E8E93] hover:text-white border border-white/[0.04]'
+                    }`}
+                  >
+                    {loc}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto pr-1">
+                {equipmentOptions.map((eq) => {
+                  const isSelected = equipment.includes(eq);
+                  return (
+                    <button
+                      key={eq}
+                      type="button"
+                      onClick={() => toggleArrayItem(equipment, eq, setEquipment)}
+                      className={`px-2.5 py-1.5 rounded-xl text-[10px] font-medium transition-all flex items-center gap-1 cursor-pointer border ${
+                        isSelected
+                          ? 'bg-[#30D158]/20 border-[#30D158] text-white font-bold'
+                          : 'bg-[#1C1C1E] border-white/[0.06] text-[#8E8E93] hover:text-white'
+                      }`}
+                    >
+                      {isSelected && <Check className="w-3 h-3 text-[#30D158]" />}
+                      <span>{eq}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-1">
+                  Preferred Split
+                </label>
+                <select
+                  value={preferredSplit}
+                  onChange={(e) => setPreferredSplit(e.target.value)}
+                  className="w-full px-2.5 py-2 rounded-xl bg-[#1C1C1E] border border-white/[0.08] text-xs text-white focus:outline-none focus:border-[#30D158]"
+                >
+                  {splitOptions.map((s) => (
+                    <option key={s.id} value={s.id}>{s.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-1">
+                  Session Duration
+                </label>
+                <select
+                  value={durationMinutes}
+                  onChange={(e) => setDurationMinutes(Number(e.target.value))}
+                  className="w-full px-2.5 py-2 rounded-xl bg-[#1C1C1E] border border-white/[0.08] text-xs text-white focus:outline-none focus:border-[#30D158]"
+                >
+                  <option value={30}>20–30 min</option>
+                  <option value={45}>30–45 min</option>
+                  <option value={60}>45–60 min</option>
+                  <option value={75}>60–90 min</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===================================================================== */}
+      {/* STEP 6: PREFERENCES, CARDIO & ADHERENCE                               */}
+      {/* ===================================================================== */}
+      {step === 6 && (
+        <div className="space-y-4 my-auto py-2 animate-fadeIn">
+          <div>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-emerald-500/15 text-[#30D158] border border-[#30D158]/30 uppercase">
+              <Clock className="w-3 h-3" />
+              Lifestyle &amp; Habit
+            </span>
+            <h2 className="text-2xl font-bold tracking-tight text-white mt-1.5">Habits &amp; Obstacles</h2>
+            <p className="text-xs text-[#8E8E93] mt-0.5">
+              Personalizing adherence so your plan fits into real life without burnout.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <div>
+              <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-1">
+                Regular Cardio / Physical Activity
+              </label>
+              <div className="grid grid-cols-3 gap-1.5 mb-1.5">
+                {['Walking', 'Running', 'Cycling', 'Sports', 'Swimming', 'None'].map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setCardioHabit(c)}
+                    className={`py-1.5 rounded-xl text-[11px] font-medium transition-all ${
+                      cardioHabit === c
+                        ? 'bg-white text-black font-semibold'
+                        : 'bg-[#1C1C1E] text-[#8E8E93] hover:text-white border border-white/[0.04]'
+                    }`}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+              <input
+                type="text"
+                value={cardioDescription}
+                onChange={(e) => setCardioDescription(e.target.value)}
+                placeholder="e.g. 4.5 km brisk walk every Saturday"
+                className="w-full px-3 py-1.5 rounded-xl bg-[#1C1C1E] border border-white/[0.08] text-xs text-white focus:outline-none focus:border-[#30D158]"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-1">
+                  Training Intensity
+                </label>
+                <select
+                  value={targetRir}
+                  onChange={(e) => setTargetRir(e.target.value)}
+                  className="w-full px-2.5 py-2 rounded-xl bg-[#1C1C1E] border border-white/[0.08] text-xs text-white focus:outline-none focus:border-[#30D158]"
+                >
+                  <option value="1-3">Challenging (1-3 RIR)</option>
+                  <option value="0-1">Hard (0-1 RIR)</option>
+                  <option value="3-4">Comfortable (3-4 RIR)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-1">
+                  Best Time of Day
+                </label>
+                <select
+                  value={trainingTimeOfDay}
+                  onChange={(e) => setTrainingTimeOfDay(e.target.value as any)}
+                  className="w-full px-2.5 py-2 rounded-xl bg-[#1C1C1E] border border-white/[0.08] text-xs text-white focus:outline-none focus:border-[#30D158]"
+                >
+                  <option value="morning">Morning</option>
+                  <option value="afternoon">Afternoon</option>
+                  <option value="evening">Evening</option>
+                  <option value="varies">It varies</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-1.5">
+                What usually makes it hard to stay consistent?
+              </label>
+              <div className="flex flex-wrap gap-1.5">
+                {obstacleOptions.map((obs) => {
+                  const isSelected = adherenceObstacles.includes(obs);
+                  return (
+                    <button
+                      key={obs}
+                      type="button"
+                      onClick={() => toggleArrayItem(adherenceObstacles, obs, setAdherenceObstacles)}
+                      className={`px-2.5 py-1.5 rounded-xl text-[10px] font-medium transition-all flex items-center gap-1 cursor-pointer border ${
+                        isSelected
+                          ? 'bg-amber-500/20 border-amber-500 text-amber-200 font-semibold'
+                          : 'bg-[#1C1C1E] border-white/[0.06] text-[#8E8E93] hover:text-white'
+                      }`}
+                    >
+                      {isSelected && <Check className="w-3 h-3 text-[#FF9F0A]" />}
+                      <span>{obs}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===================================================================== */}
+      {/* STEP 7: YOUR PERSONALIZED PLAN & VERIFICATION                        */}
+      {/* ===================================================================== */}
+      {step === 7 && (
+        <div className="space-y-3.5 my-auto py-1 animate-fadeIn">
           <div>
             <div className="flex items-center justify-between">
               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-[#30D158]/15 text-[#30D158] border border-[#30D158]/30 uppercase">
-                <Sparkles className="w-3 h-3" />
-                Mifflin-St Jeor Engine
+                <ShieldCheck className="w-3 h-3" />
+                Verified Personal Plan
               </span>
               {(() => {
                 const strat = getGoalStrategy(goal);
@@ -327,120 +1021,151 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                 );
               })()}
             </div>
-            <h2 className="text-2xl font-bold tracking-tight text-white mt-1.5">Your Plan</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-white mt-1">Your Nuvia Blueprint</h2>
             <p className="text-[11px] text-[#8E8E93]">
-              Personalized metabolic targets based on your biometrics.
+              Review your personalized metabolic and training strategy before entering.
             </p>
           </div>
 
-          {/* Primary Calorie Target Card */}
-          <div className="p-4 rounded-2xl bg-gradient-to-br from-[#1C1C1E] to-[#2C2C2E] border border-white/[0.1] shadow-xl space-y-3">
+          {/* Primary Metabolic Target Card */}
+          {calculatedTargets && (
+            <div className="p-3.5 rounded-2xl bg-gradient-to-br from-[#1C1C1E] to-[#2C2C2E] border border-white/[0.1] shadow-xl space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider flex items-center gap-1.5">
+                  <Flame className="w-3.5 h-3.5 text-[#FF9500]" />
+                  Mifflin-St Jeor Energy Target
+                </span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#30D158]/20 text-[#30D158]">
+                  Deterministic
+                </span>
+              </div>
+
+              <div className="flex items-baseline justify-between">
+                <div>
+                  <span className="text-3xl font-extrabold text-white tracking-tight">
+                    {calculatedTargets.calorie_target.toLocaleString()}
+                  </span>
+                  <span className="text-xs text-[#8E8E93] ml-1.5">kcal / day</span>
+                </div>
+                <div className="text-right text-[10px] text-[#8E8E93]">
+                  <span>BMR: {calculatedTargets.bmr}</span> · <span>TDEE: {calculatedTargets.tdee}</span>
+                </div>
+              </div>
+
+              {/* Macros Row */}
+              <div className="grid grid-cols-3 gap-2 pt-1 border-t border-white/[0.06] text-center">
+                <div className="p-1.5 rounded-lg bg-black/30">
+                  <p className="text-[10px] text-emerald-400 font-semibold">Protein</p>
+                  <p className="text-xs font-bold text-white mt-0.5">{calculatedTargets.protein_target}g</p>
+                </div>
+                <div className="p-1.5 rounded-lg bg-black/30">
+                  <p className="text-[10px] text-amber-400 font-semibold">Carbs</p>
+                  <p className="text-xs font-bold text-white mt-0.5">{calculatedTargets.carbohydrate_target}g</p>
+                </div>
+                <div className="p-1.5 rounded-lg bg-black/30">
+                  <p className="text-[10px] text-sky-400 font-semibold">Fats</p>
+                  <p className="text-xs font-bold text-white mt-0.5">{calculatedTargets.fat_target}g</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Synthesized Training Strategy Card */}
+          <div className="p-3.5 rounded-2xl bg-[#1C1C1E] border border-white/[0.08] space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-[#8E8E93] uppercase tracking-wider flex items-center gap-1.5">
-                <Flame className="w-4 h-4 text-[#FF9500]" />
-                Daily Calorie Target
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#30D158] flex items-center gap-1.5">
+                <TrendingUp className="w-3.5 h-3.5" />
+                <span>Tailored Training Strategy</span>
               </span>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#30D158]/20 text-[#30D158]">
-                Recommended
-              </span>
+              <button
+                type="button"
+                onClick={() => setStep(3)}
+                className="text-[10px] font-semibold text-[#8E8E93] hover:text-white flex items-center gap-1"
+              >
+                <Pencil className="w-3 h-3" />
+                <span>Edit</span>
+              </button>
             </div>
 
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-4xl font-extrabold text-white tracking-tight">
-                {calculatedTargets.calorie_target.toLocaleString()}
-              </span>
-              <span className="text-sm text-[#8E8E93] font-normal">kcal / day</span>
-            </div>
-
-            {/* Metabolic Breakdown Cards (BMR & TDEE) */}
-            <div className="grid grid-cols-2 gap-2 pt-1 border-t border-white/[0.08]">
-              <div className="p-2 rounded-xl bg-black/40 border border-white/[0.05]">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-[#8E8E93] uppercase tracking-wider">Base (BMR)</span>
-                  <Activity className="w-3 h-3 text-zinc-500" />
+            <div className="space-y-1.5">
+              {synthesizedStrategy.map((bullet, idx) => (
+                <div key={idx} className="flex items-start gap-2 text-[11px] text-zinc-300 leading-relaxed">
+                  <span className="text-[#30D158] font-bold">•</span>
+                  <span>{bullet}</span>
                 </div>
-                <p className="text-sm font-bold text-white mt-0.5">{calculatedTargets.bmr.toLocaleString()} <span className="text-[10px] text-[#8E8E93] font-normal">kcal</span></p>
-                <p className="text-[9px] text-[#8E8E93]">Resting burn</p>
-              </div>
-
-              <div className="p-2 rounded-xl bg-black/40 border border-white/[0.05]">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-[#8E8E93] uppercase tracking-wider">Daily (TDEE)</span>
-                  <Flame className="w-3 h-3 text-orange-400" />
-                </div>
-                <p className="text-sm font-bold text-white mt-0.5">{calculatedTargets.tdee.toLocaleString()} <span className="text-[10px] text-[#8E8E93] font-normal">kcal</span></p>
-                <p className="text-[9px] text-[#8E8E93]">Maintenance burn</p>
-              </div>
+              ))}
             </div>
           </div>
 
-          {/* Macronutrients Breakdown Card */}
-          <div className="p-4 rounded-2xl bg-[#1C1C1E] border border-white/[0.08] space-y-3">
-            <span className="text-xs font-semibold text-[#8E8E93] uppercase tracking-wider block">
-              Macronutrient Allocation
-            </span>
-
-            <div className="grid grid-cols-3 gap-2 text-center">
-              {/* Protein */}
-              <div className="p-2.5 rounded-xl bg-black/30 border border-white/[0.05]">
-                <div className="flex items-center justify-center gap-1 text-[11px] font-medium text-emerald-400">
-                  <Beef className="w-3 h-3" />
-                  <span>Protein</span>
-                </div>
-                <p className="text-base font-bold text-white mt-1">{calculatedTargets.protein_target}g</p>
-                <p className="text-[9px] text-[#8E8E93] mt-0.5">~{calculatedTargets.protein_target * 4} kcal</p>
-              </div>
-
-              {/* Carbs */}
-              <div className="p-2.5 rounded-xl bg-black/30 border border-white/[0.05]">
-                <div className="flex items-center justify-center gap-1 text-[11px] font-medium text-amber-400">
-                  <Wheat className="w-3 h-3" />
-                  <span>Carbs</span>
-                </div>
-                <p className="text-base font-bold text-white mt-1">{calculatedTargets.carbohydrate_target}g</p>
-                <p className="text-[9px] text-[#8E8E93] mt-0.5">~{calculatedTargets.carbohydrate_target * 4} kcal</p>
-              </div>
-
-              {/* Fats */}
-              <div className="p-2.5 rounded-xl bg-black/30 border border-white/[0.05]">
-                <div className="flex items-center justify-center gap-1 text-[11px] font-medium text-sky-400">
-                  <Droplets className="w-3 h-3" />
-                  <span>Fats</span>
-                </div>
-                <p className="text-base font-bold text-white mt-1">{calculatedTargets.fat_target}g</p>
-                <p className="text-[9px] text-[#8E8E93] mt-0.5">~{calculatedTargets.fat_target * 9} kcal</p>
-              </div>
+          {/* Quick Profile Confirmation Matrix */}
+          <div className="p-3 rounded-2xl bg-black/50 border border-white/[0.05] grid grid-cols-2 gap-2 text-[11px]">
+            <div>
+              <p className="text-[10px] text-[#8E8E93]">Starting Physique</p>
+              <p className="font-semibold text-white truncate">
+                {currentPhysiqueOptions.find((c) => c.id === currentPhysique)?.label}
+              </p>
             </div>
-
-            {/* Exercise Target */}
-            <div className="p-2.5 rounded-xl bg-black/20 border border-white/[0.04] flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2">
-                <Zap className="w-4 h-4 text-[#30D158]" />
-                <span className="text-[#8E8E93]">Daily Activity Target:</span>
-              </div>
-              <span className="font-bold text-white">{calculatedTargets.exercise_minutes_target} mins/day</span>
+            <div>
+              <p className="text-[10px] text-[#8E8E93]">Target Vision</p>
+              <p className="font-semibold text-white truncate">
+                {desiredPhysiqueOptions.find((d) => d.id === desiredPhysique)?.label}
+              </p>
             </div>
+            <div>
+              <p className="text-[10px] text-[#8E8E93]">Split &amp; Duration</p>
+              <p className="font-semibold text-white truncate">
+                {preferredSplit} · {durationMinutes}m
+              </p>
+            </div>
+            <div>
+              <p className="text-[10px] text-[#8E8E93]">Equipment Hard Limits</p>
+              <p className="font-semibold text-[#30D158] truncate">
+                {equipment.slice(0, 2).join(', ')}{equipment.length > 2 ? ` +${equipment.length - 2}` : ''}
+              </p>
+            </div>
+          </div>
+
+          <div className="text-center pt-0.5">
+            <p className="text-[11px] text-[#8E8E93]">
+              Does this look right? Tap below to establish these preferences.
+            </p>
           </div>
         </div>
       )}
 
-      {/* Bottom Action Button */}
-      <div className="pb-2">
-        {step < 3 ? (
+      {/* ── BOTTOM ACTION BUTTON ───────────────────────────────────────────── */}
+      <div className="pt-2 border-t border-white/[0.06]">
+        {step < totalSteps ? (
           <button
             onClick={handleNextStep}
-            className="w-full py-3.5 rounded-full bg-white text-black font-semibold text-sm transition-transform active:scale-[0.98] cursor-pointer"
+            className="w-full py-3.5 rounded-2xl bg-white text-black font-bold text-xs transition-transform active:scale-[0.98] cursor-pointer shadow-md"
           >
             Continue
           </button>
         ) : (
-          <button
-            onClick={handleFinalSave}
-            disabled={saving}
-            className="w-full py-3.5 rounded-full bg-[#30D158] text-black font-bold text-sm transition-transform active:scale-[0.98] cursor-pointer shadow-lg shadow-[#30D158]/20"
-          >
-            {saving ? 'Saving Targets...' : hasCompletedOnboarding ? 'Save & Apply Calculated Targets' : 'Enter Nuvia'}
-          </button>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setStep(1)}
+              className="px-4 py-3.5 rounded-2xl bg-[#2C2C2E] hover:bg-[#3A3A3C] text-white font-semibold text-xs transition-colors"
+            >
+              Edit
+            </button>
+            <button
+              onClick={handleFinalSave}
+              disabled={saving}
+              className="flex-1 py-3.5 rounded-2xl bg-[#30D158] hover:bg-[#28B84D] text-black font-extrabold text-xs transition-transform active:scale-[0.98] cursor-pointer shadow-lg shadow-[#30D158]/20 flex items-center justify-center gap-2"
+            >
+              {saving ? (
+                <span>Generating Your Plan...</span>
+              ) : (
+                <>
+                  <span>Create My Plan &amp; Enter Nuvia</span>
+                  <Check className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          </div>
         )}
       </div>
     </div>

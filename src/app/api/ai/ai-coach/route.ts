@@ -36,17 +36,29 @@ function formatFitnessContext(fc: any): string {
   return `
 === AUTHORITATIVE PERSONAL FITNESS CONTEXT ===
 - Biometrics: ${p.sex || 'Not specified'}, ${p.age ? `${p.age} yrs` : ''}, ${p.height_cm ? `${p.height_cm} cm` : ''}, ${p.weight_kg ? `${p.weight_kg} kg` : ''}
-- Training Background & Level: ${p.fitness_level || 'beginner_inconsistent'} (${p.training_background || 'Returning trainee'})
+- Training Experience & Consistency:
+  * Experience Level: ${p.experience_level || p.fitness_level || 'beginner_inconsistent'} (${p.training_background || 'Returning trainee'})
+  * Current Consistency: ${p.consistency_level || 'on_and_off'}
+- Current Physique (Self-Assessed):
+  * Description: ${g.physique_preference?.current_physique_label || 'Soft / little muscle definition'}
+  * Priority Improvement Areas: ${(g.physique_preference?.priority_areas || ['Belly / waist', 'Overall muscle definition']).join(', ')}
+  * (RULE: NEVER claim spot reduction is possible; remind user that systemic body recomposition drives local definition)
+- Target Physique & Vision:
+  * Desired Look: ${g.physique_preference?.desired_physique || 'Athletic'} - ${g.physique_preference?.desired_physique_custom || g.physique_preference?.desired_look || 'Athletic, lean, and balanced'}
+  * Target Visual Reference: ${g.physique_preference?.user_estimated_target_bf_percent ? `~${g.physique_preference.user_estimated_target_bf_percent}% appearance (user-estimated aesthetic goal, NOT a medical calculation)` : 'Lean athletic'}
 - Primary Goal & Objective: ${g.primary_goal || 'lose_weight'}
   * Objective: ${g.objective || 'Body recomposition (fat loss while preserving/building lean muscle)'}
-  * Desired Look: ${g.physique_preference?.desired_look || 'Athletic, lean, and balanced'}
-  * User-Estimated Visual Appearance: ~${g.physique_preference?.user_estimated_bf_percent || 28}% body fat (user estimated, not medical)
 - Training Environment & Available Equipment:
   * Environment: ${c.environment || 'home'}
   * Available Equipment: ${(c.available_equipment || ['dumbbells', 'push_up_board', 'bodyweight']).join(', ')}
+  * Available Session Time: ~${c.workout_duration_minutes || 45} minutes
+  * Preferred Time of Day: ${c.training_time_of_day || 'Evening'}
+  * Adherence Obstacles: ${(c.adherence_obstacles || ['Lack of time']).join(', ')}
   * STRICT EQUIPMENT CONSTRAINT: ONLY prescribe exercises executable with their available equipment. NEVER prescribe barbell bench press, cable crossovers, leg press, or machine lat pulldowns unless explicitly in available equipment.
 - Cardio Habits: ${c.cardio_habits?.type || 'Brisk walking'} (~${c.cardio_habits?.distance_km || 4.5} km on ${(c.cardio_habits?.typical_days || ['Saturday']).join(', ')})
-  * RULE: Do NOT automatically add large amounts of cardio for fat loss; respect their existing weekend walking baseline and prioritize progressive resistance training.
+  * RULE: Do NOT automatically add large amounts of cardio for fat loss; respect their existing walking baseline and prioritize progressive resistance training.
+- Synthesized Individual Strategy:
+${(fc.synthesized_strategy || []).map((s: string) => `  * ${s}`).join('\n') || '  * Prioritize consistency, progressive overload, and adherence.'}
 - Weekly Training Structure:
 ${schedStr}
 - Current Day Reality:
@@ -55,8 +67,9 @@ ${schedStr}
 - Recovery Context:
   * Muscles trained in last 48h: ${(rec.trained_in_last_48h || []).join(', ') || 'None (fully recovered)'}
 - Personal Preferences & Progression Rules:
-  * Effort Target: ${pref.effort_target || '1-3 RIR (challenging but with 1-3 clean reps in reserve)'}
+  * Effort Target: ${pref.effort_target || 'Challenging but manageable (1-3 RIR)'}
   * Progression Rule: ${pref.progression_rule || 'Double progression (10-15 reps; raise weight when all sets reach 15)'}
+  * Easy vs Hard Areas: ${(pref.easy_hard_areas || []).join('; ') || 'None specified'}
   * Muscle Bias: ${(pref.muscle_biases || []).join('; ') || 'None'}
   * Preferred Exercises: ${(pref.preferred_exercises || []).join(', ')}
   * Disliked / Avoided Exercises: ${(pref.disliked_exercises || []).join(', ')} (NEVER prescribe these without user asking!)
