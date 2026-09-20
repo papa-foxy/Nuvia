@@ -1,9 +1,12 @@
 // Nuvia Service Worker
-const CACHE_NAME = 'nuvia-pwa-v1';
+const CACHE_NAME = 'nuvia-pwa-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/manifest.json',
   '/favicon.ico',
+  '/icon-192.png',
+  '/icon-512.png',
+  '/apple-touch-icon.png',
 ];
 
 self.addEventListener('install', (event) => {
