@@ -1,24 +1,39 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, Check, AlertCircle } from 'lucide-react';
+import { X, Check, AlertCircle, Sparkles } from 'lucide-react';
 import { AiService, ExerciseAnalysisResult } from '@/lib/ai-service';
 import { useAuth } from '@/lib/auth-context';
 import { IntensityLevel, EntrySource } from '@/types/database';
+import { FitnessContextService } from '@/lib/fitness-context-service';
+import {
+  NaturalLanguageLoggingContext,
+  ContextualSuggestion,
+} from '@/types/natural-language';
 
 interface AddExerciseModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSaveExercise: (exerciseData: any) => Promise<void>;
+  prefilledExercisePrompt?: string;
+  initialParsedResult?: ExerciseAnalysisResult | null;
+  initialContextBadge?: string;
+  initialContextNote?: string;
 }
 
 export function AddExerciseModal({
   isOpen,
   onClose,
   onSaveExercise,
+  prefilledExercisePrompt,
+  initialParsedResult,
+  initialContextBadge,
+  initialContextNote,
 }: AddExerciseModalProps) {
-  const { profile } = useAuth();
-  const [activeTab, setActiveTab] = useState<'manual' | 'ai'>('manual');
+  const { user, profile } = useAuth();
+  const [activeTab, setActiveTab] = useState<'manual' | 'ai'>(
+    prefilledExercisePrompt || initialParsedResult ? 'ai' : 'manual'
+  );
 
   // Manual mode state
   const [exerciseType, setExerciseType] = useState('Running');
@@ -27,13 +42,46 @@ export function AddExerciseModal({
   const [distanceKm, setDistanceKm] = useState('');
 
   // AI Prompt state
-  const [textPrompt, setTextPrompt] = useState('');
+  const [textPrompt, setTextPrompt] = useState(prefilledExercisePrompt || '');
 
   // Result state
   const [isParsing, setIsParsing] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  const [parsedResult, setParsedResult] = useState<ExerciseAnalysisResult | null>(null);
+  const [parsedResult, setParsedResult] = useState<ExerciseAnalysisResult | null>(
+    initialParsedResult || null
+  );
+  const [contextBadge, setContextBadge] = useState<string | undefined>(initialContextBadge);
+  const [contextNote, setContextNote] = useState<string | undefined>(initialContextNote);
+  const [nlContext, setNlContext] = useState<NaturalLanguageLoggingContext | null>(null);
+  const [suggestions, setSuggestions] = useState<ContextualSuggestion[]>([]);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (initialParsedResult) {
+      setParsedResult(initialParsedResult);
+      setActiveTab('ai');
+    }
+    if (prefilledExercisePrompt) {
+      setTextPrompt(prefilledExercisePrompt);
+      setActiveTab('ai');
+    }
+    if (initialContextBadge) setContextBadge(initialContextBadge);
+    if (initialContextNote) setContextNote(initialContextNote);
+  }, [initialParsedResult, prefilledExercisePrompt, initialContextBadge, initialContextNote]);
+
+  useEffect(() => {
+    if (isOpen) {
+      FitnessContextService.getNaturalLanguageLoggingContext(user?.id)
+        .then((ctx) => {
+          setNlContext(ctx);
+          const sug = FitnessContextService.generateContextualSuggestions(ctx);
+          setSuggestions(
+            sug.filter((s) => s.type === 'activity' || s.type === 'workout')
+          );
+        })
+        .catch(console.warn);
+    }
+  }, [isOpen, user?.id]);
 
   // Restore draft when modal opens
   useEffect(() => {
@@ -83,6 +131,30 @@ export function AddExerciseModal({
     setIsParsing(true);
 
     try {
+      if (activeTab === 'ai') {
+        const parsed = await AiService.parseNaturalInput({
+          text: textPrompt.trim(),
+          context: nlContext || undefined,
+        });
+
+        if (parsed.activity_data) {
+          setParsedResult({
+            exercise_type: parsed.activity_data.exercise_type,
+            duration_minutes: parsed.activity_data.duration_minutes,
+            intensity: parsed.activity_data.intensity,
+            distance_km: parsed.activity_data.distance_km,
+            calories_burned: parsed.activity_data.calories_burned,
+            confidence: parsed.confidence,
+            ai_tip: parsed.activity_data.ai_tip || 'Consistent training fuels steady progress.',
+          });
+          if (parsed.context_match?.badge_label) {
+            setContextBadge(parsed.context_match.badge_label);
+            setContextNote(parsed.context_match.note || undefined);
+          }
+          return;
+        }
+      }
+
       const res = await AiService.parseExercise({
         textPrompt: activeTab === 'ai' ? textPrompt.trim() : undefined,
         userWeightKg: profile?.weight_kg || 70,
@@ -268,26 +340,29 @@ export function AddExerciseModal({
                 rows={3}
                 value={textPrompt}
                 onChange={(e) => setTextPrompt(e.target.value)}
-                placeholder="e.g. Ran 5km this morning for about 32 minutes"
+                placeholder="Tell Nuvia what you did (e.g. Ran 5km in 30 minutes, or did my usual Saturday walk)..."
                 className="w-full p-3.5 rounded-xl bg-[#121214] border border-white/[0.06] text-xs text-white placeholder-[#8E8E93] focus:outline-none focus:border-[#30D158] resize-none"
               />
 
-              <div className="flex flex-wrap gap-1.5">
-                {[
-                  'Ran 5km in 30 minutes',
-                  'Chest and triceps workout for 45 min',
-                  'Played badminton for 1 hour',
-                ].map((preset) => (
-                  <button
-                    key={preset}
-                    type="button"
-                    onClick={() => setTextPrompt(preset)}
-                    className="text-[11px] px-2.5 py-1 rounded-full bg-[#121214] text-[#8E8E93] hover:text-white border border-white/[0.04]"
-                  >
-                    {preset}
-                  </button>
-                ))}
-              </div>
+              {suggestions.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 pt-0.5">
+                  {suggestions.map((preset, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setTextPrompt(preset.text)}
+                      className="text-[11px] px-2.5 py-1 rounded-full bg-[#121214] hover:bg-[#2C2C2E] text-[#8E8E93] hover:text-white border border-white/[0.06] transition-colors flex items-center gap-1.5"
+                    >
+                      {preset.badge && (
+                        <span className="text-[9px] px-1 py-0.2 rounded bg-[#30D158]/20 text-[#30D158] font-bold">
+                          {preset.badge}
+                        </span>
+                      )}
+                      <span>{preset.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -301,6 +376,13 @@ export function AddExerciseModal({
           {/* Parsed Result (Apple Health Inset Cell) */}
           {parsedResult && (
             <div className="bg-[#121214] p-4 rounded-2xl border border-white/[0.08] space-y-2">
+              {contextBadge && (
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#30D158]/10 border border-[#30D158]/25 text-xs text-[#30D158] mb-1">
+                  <Sparkles className="w-3.5 h-3.5 shrink-0" />
+                  <span className="font-semibold">{contextBadge}</span>
+                  {contextNote && <span className="text-[#8E8E93] text-[11px]">· {contextNote}</span>}
+                </div>
+              )}
               <div className="flex items-baseline justify-between">
                 <div>
                   <h4 className="text-base font-semibold text-white">

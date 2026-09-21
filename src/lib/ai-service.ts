@@ -1,4 +1,8 @@
 import { createClient, isSupabaseConfigured } from './supabase/client';
+import type {
+  NaturalLanguageLoggingContext,
+  NaturalLanguageParseResult,
+} from '@/types/natural-language';
 
 export interface MealAnalysisResult {
   meal_type: 'breakfast' | 'lunch' | 'dinner' | 'snack';
@@ -191,4 +195,33 @@ export const AiService = {
       throw new Error("We couldn't reach your AI Coach right now. Please try again.");
     }
   },
+
+  async parseNaturalInput(params: {
+    text: string;
+    context?: NaturalLanguageLoggingContext;
+  }): Promise<NaturalLanguageParseResult> {
+    try {
+      const res = await fetch('/api/ai/parse-natural-input', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(params),
+      });
+
+      if (!res.ok) {
+        throw new Error('Parsing service returned error status');
+      }
+
+      const json = await res.json();
+      if (!json.success || !json.data) {
+        throw new Error(json.error || 'Failed to interpret natural language input');
+      }
+
+      return json.data;
+    } catch (err: any) {
+      console.warn('parseNaturalInput error, falling back to local engine:', err);
+      const { parseNaturalLanguageLocally } = await import('./natural-language-parser');
+      return parseNaturalLanguageLocally(params.text, params.context);
+    }
+  },
 };
+

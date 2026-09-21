@@ -1,16 +1,23 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Camera, Image as ImageIcon, RefreshCw, X, AlertCircle, Sparkles } from 'lucide-react';
 import { AiService, MealAnalysisResult } from '@/lib/ai-service';
 import { MealType } from '@/types/database';
 import { MealResultModal } from './MealResultModal';
+import { useAuth } from '@/lib/auth-context';
+import { FitnessContextService } from '@/lib/fitness-context-service';
+import { NaturalLanguageLoggingContext, ContextualSuggestion } from '@/types/natural-language';
 
 interface AddMealModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSaveMeal: (mealData: any) => Promise<void>;
   initialMealType?: MealType;
+  initialMealPrompt?: string;
+  initialAnalysisResult?: MealAnalysisResult | null;
+  initialContextBadge?: string;
+  initialContextNote?: string;
 }
 
 // Client-side image compressor for mobile camera photos
@@ -35,7 +42,7 @@ function compressImage(fileOrDataUrl: File | string): Promise<string> {
       canvas.height = height;
       const ctx = canvas.getContext('2d');
       if (!ctx) {
-        resolve(typeof fileOrDataUrl === 'string' ? fileOrDataUrl : '');
+        resolve(typeof fileOrDataUrl === 'string' ? fileOrDataUrl : URL.createObjectURL(fileOrDataUrl));
         return;
       }
       ctx.drawImage(img, 0, 0, width, height);
@@ -60,15 +67,48 @@ export function AddMealModal({
   onClose,
   onSaveMeal,
   initialMealType = 'lunch',
+  initialMealPrompt,
+  initialAnalysisResult,
+  initialContextBadge,
+  initialContextNote,
 }: AddMealModalProps) {
-  const [activeTab, setActiveTab] = useState<'photo' | 'text'>('photo');
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState<'photo' | 'text'>(initialMealPrompt ? 'text' : 'photo');
   const [mealType, setMealType] = useState<MealType>(initialMealType);
-  const [description, setDescription] = useState('');
+  const [description, setDescription] = useState(initialMealPrompt || '');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isCompressing, setIsCompressing] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  const [analysisResult, setAnalysisResult] = useState<MealAnalysisResult | null>(null);
+  const [analysisResult, setAnalysisResult] = useState<MealAnalysisResult | null>(initialAnalysisResult || null);
+  const [contextBadge, setContextBadge] = useState<string | undefined>(initialContextBadge);
+  const [contextNote, setContextNote] = useState<string | undefined>(initialContextNote);
+  const [nlContext, setNlContext] = useState<NaturalLanguageLoggingContext | null>(null);
+  const [suggestions, setSuggestions] = useState<ContextualSuggestion[]>([]);
+
+  useEffect(() => {
+    if (initialAnalysisResult) {
+      setAnalysisResult(initialAnalysisResult);
+    }
+    if (initialMealPrompt) {
+      setDescription(initialMealPrompt);
+      setActiveTab('text');
+    }
+    if (initialContextBadge) setContextBadge(initialContextBadge);
+    if (initialContextNote) setContextNote(initialContextNote);
+  }, [initialAnalysisResult, initialMealPrompt, initialContextBadge, initialContextNote]);
+
+  useEffect(() => {
+    if (isOpen) {
+      FitnessContextService.getNaturalLanguageLoggingContext(user?.id)
+        .then((ctx) => {
+          setNlContext(ctx);
+          const sug = FitnessContextService.generateContextualSuggestions(ctx);
+          setSuggestions(sug.filter((s) => s.type === 'meal'));
+        })
+        .catch(console.warn);
+    }
+  }, [isOpen, user?.id]);
 
   // Hidden file inputs
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -111,6 +151,43 @@ export function AddMealModal({
 
     setIsAnalyzing(true);
     try {
+      if (activeTab === 'text' && !imagePreview) {
+        // Use unified contextual parser for rich food memory matching
+        const parsed = await AiService.parseNaturalInput({
+          text: description.trim(),
+          context: nlContext || undefined,
+        });
+
+        if (parsed.meal_data) {
+          const mappedFoods = parsed.meal_data.foods.map((f) => ({
+            name: f.name,
+            estimated_quantity: f.estimated_quantity,
+            unit: f.unit,
+            calories: f.calories,
+            protein_g: f.protein_g,
+            carbs_g: f.carbs_g,
+            fat_g: f.fat_g,
+            confidence: (f.confidence || 'high') as any,
+          }));
+
+          setAnalysisResult({
+            meal_type: parsed.meal_data.meal_type || mealType,
+            meal_name: parsed.meal_data.meal_name,
+            foods: mappedFoods,
+            total: parsed.meal_data.total,
+            confidence: parsed.confidence,
+            assumptions: parsed.meal_data.assumptions || [],
+            notes: parsed.meal_data.notes,
+          });
+
+          if (parsed.context_match?.badge_label) {
+            setContextBadge(parsed.context_match.badge_label);
+            setContextNote(parsed.context_match.note || undefined);
+          }
+          return;
+        }
+      }
+
       const result = await AiService.analyzeMeal({
         imageBase64: imagePreview || undefined,
         mimeType: 'image/jpeg',
@@ -337,29 +414,29 @@ export function AddMealModal({
                   rows={3}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="e.g. 2 eggs, 2 slices of wholemeal toast, and a cup of latte"
+                  placeholder="Tell Nuvia what you ate (e.g. 2 eggs with toast, chicken rice, or a protein shake)..."
                   className="w-full p-3.5 rounded-xl bg-[#121214] border border-white/[0.06] text-xs text-white placeholder-[#8E8E93] focus:outline-none focus:border-[#30D158] resize-none"
                 />
 
-                <div className="flex flex-wrap gap-1.5">
-                  {[
-                    'Ayam gepuk with rice & sambal',
-                    'Nasi lemak ayam goreng berempah',
-                    'Roti canai with dhal',
-                    'Hainanese chicken rice',
-                    'Nasi kandar kuah campur',
-                    'Mee goreng mamak with egg',
-                  ].map((preset) => (
-                    <button
-                      key={preset}
-                      type="button"
-                      onClick={() => setDescription(preset)}
-                      className="text-[11px] px-2.5 py-1 rounded-full bg-[#121214] text-[#8E8E93] hover:text-white border border-white/[0.04]"
-                    >
-                      {preset}
-                    </button>
-                  ))}
-                </div>
+                {suggestions.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 pt-0.5">
+                    {suggestions.map((preset, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setDescription(preset.text)}
+                        className="text-[11px] px-2.5 py-1 rounded-full bg-[#121214] hover:bg-[#2C2C2E] text-[#8E8E93] hover:text-white border border-white/[0.06] transition-colors flex items-center gap-1.5"
+                      >
+                        {preset.badge && (
+                          <span className="text-[9px] px-1 py-0.2 rounded bg-[#30D158]/20 text-[#30D158] font-bold">
+                            {preset.badge}
+                          </span>
+                        )}
+                        <span>{preset.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
@@ -399,6 +476,8 @@ export function AddMealModal({
           initialData={analysisResult}
           imagePreviewUrl={imagePreview}
           source={activeTab === 'photo' ? 'photo' : 'text'}
+          contextBadge={contextBadge}
+          contextNote={contextNote}
           onSave={async (mealData) => {
             await onSaveMeal({
               ...mealData,

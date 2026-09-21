@@ -1,7 +1,5 @@
-'use client';
-
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { ChevronRight, Sparkles, Send, Dumbbell, Flame, CheckCircle2, Camera, Moon, X } from 'lucide-react';
+import { ChevronRight, Sparkles, Send, Dumbbell, Flame, CheckCircle2, Camera, Moon, X, Loader2 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { DataService, getLocalDateString } from '@/lib/data-service';
 import { DailySummary, Meal, ExerciseLog } from '@/types/database';
@@ -20,12 +18,20 @@ import { cleanActivityTitle } from '@/lib/activity-utils';
 import { FitnessContextService } from '@/lib/fitness-context-service';
 import { NuviaFitnessContext } from '@/types/fitness-context';
 import { NuviaNextActionCard } from './adaptive/NuviaNextActionCard';
+import { IntentProposalCard } from './adaptive/IntentProposalCard';
+import { AiService } from '@/lib/ai-service';
+import {
+  NaturalLanguageLoggingContext,
+  NaturalLanguageParseResult,
+} from '@/types/natural-language';
 
 interface DashboardViewProps {
   onOpenAddMeal: () => void;
   onOpenAddExercise: () => void;
   onNavigateTab: (tab: TabType) => void;
   onNaturalLanguageInput: (text: string) => void;
+  onNaturalLanguageParsed?: (result: NaturalLanguageParseResult) => void;
+  onWorkoutLogged?: () => void;
   /** @deprecated - no longer triggers a full reload; kept for API compatibility */
   refreshKey?: number;
 }
@@ -35,6 +41,8 @@ export function DashboardView({
   onOpenAddExercise,
   onNavigateTab,
   onNaturalLanguageInput,
+  onNaturalLanguageParsed,
+  onWorkoutLogged,
   refreshKey,
 }: DashboardViewProps) {
   const { user, profile, goals } = useAuth();
@@ -44,14 +52,18 @@ export function DashboardView({
   const [recentExercises, setRecentExercises] = useState<ExerciseLog[]>([]);
   const [routines, setRoutines] = useState<WorkoutRoutine[]>([]);
   const [fitnessContext, setFitnessContext] = useState<NuviaFitnessContext | null>(null);
+  const [nlContext, setNlContext] = useState<NaturalLanguageLoggingContext | null>(null);
 
   // Separate loading state for first-ever load vs background refetch
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isFetching, setIsFetching] = useState(false);
 
   const [quickInput, setQuickInput] = useState('');
+  const [isInterpreting, setIsInterpreting] = useState(false);
   const [nuviaReply, setNuviaReply] = useState<string | null>(null);
   const [targetUpdateNotice, setTargetUpdateNotice] = useState<{ prev: number; current: number } | null>(null);
+  const [activeProposal, setActiveProposal] = useState<any | null>(null);
+  const [pendingWorkoutReview, setPendingWorkoutReview] = useState<any | null>(null);
 
   const today = new Date();
   const dateFormatted = today
@@ -81,12 +93,13 @@ export function DashboardView({
         setIsFetching(true);
       }
       try {
-        const [s, m, e, r, fitCtx] = await Promise.all([
+        const [s, m, e, r, fitCtx, nlCtx] = await Promise.all([
           DataService.getDailySummary(userId, todayStr),
           DataService.getMeals(userId, todayStr),
           DataService.getExerciseLogs(userId, todayStr),
           DataService.getWorkoutRoutines(userId),
           FitnessContextService.getFitnessContext(userId),
+          FitnessContextService.getNaturalLanguageLoggingContext(userId),
         ]);
 
         // Write each result to the cache with a 90-second stale window
@@ -98,6 +111,7 @@ export function DashboardView({
 
         applyData(s, m, e, r);
         setFitnessContext(fitCtx);
+        setNlContext(nlCtx);
       } finally {
         setIsInitialLoading(false);
         setIsFetching(false);
@@ -223,37 +237,124 @@ export function DashboardView({
     setTargetUpdateNotice(null);
   };
 
+  const suggestions = useMemo(() => {
+    if (!nlContext) return [];
+    return FitnessContextService.generateContextualSuggestions(nlContext);
+  }, [nlContext]);
+
+  const placeholderText = useMemo(() => {
+    if (nlContext?.today_routine && !nlContext.today_routine.is_completed) {
+      return "Log a meal, activity, or today's workout...";
+    }
+    return "Tell Nuvia what you ate or did...";
+  }, [nlContext]);
+
+  const handleExecuteNaturalLanguage = async (text: string) => {
+    if (!text.trim() || isInterpreting) return;
+    const trimmed = text.trim();
+    setQuickInput('');
+    setIsInterpreting(true);
+    setActiveProposal(null);
+    setPendingWorkoutReview(null);
+
+    try {
+      const result = await AiService.parseNaturalInput({
+        text: trimmed,
+        context: nlContext || undefined,
+      });
+
+      // 1. Clarification needed
+      if (result.requires_clarification) {
+        setNuviaReply(result.clarification_prompt || "Could you clarify what you had or did?");
+        return;
+      }
+
+      // 2. Training Intent (Adaptive Training Engine)
+      if (result.intent === 'training_intent') {
+        if (result.training_intent_data?.proposal) {
+          setActiveProposal(result.training_intent_data.proposal);
+        }
+        setNuviaReply(
+          result.training_intent_data?.reply ||
+            `I've noted your training intent. Here is the recommended adjustment:`
+        );
+        return;
+      }
+
+      // 3. Question
+      if (result.intent === 'question') {
+        setNuviaReply(result.question_data?.reply || "Here is what I found.");
+        return;
+      }
+
+      // 4. Workout / Partial Workout
+      if (result.intent === 'workout' || result.intent === 'partial_workout') {
+        if (result.workout_data) {
+          setPendingWorkoutReview(result.workout_data);
+          setNuviaReply(
+            result.context_match?.note ||
+              `Detected ${result.workout_data.is_partial ? 'partial ' : ''}workout: ${result.workout_data.routine_title}. Review below to confirm.`
+          );
+          return;
+        }
+      }
+
+      // 5. Meal or Activity -> Pass to review modals in parent
+      if (result.intent === 'meal' || result.intent === 'activity') {
+        if (onNaturalLanguageParsed) {
+          onNaturalLanguageParsed(result);
+        } else {
+          onNaturalLanguageInput(trimmed);
+        }
+        return;
+      }
+
+      setNuviaReply(`I've received your entry: "${trimmed}".`);
+    } catch (err: any) {
+      console.error('Natural language execution failed:', err);
+      onNaturalLanguageInput(trimmed);
+    } finally {
+      setIsInterpreting(false);
+    }
+  };
+
+  const handleConfirmWorkoutReview = async (review: any) => {
+    if (!review || !user) return;
+    try {
+      await DataService.addExerciseLog({
+        user_id: user.id,
+        exercise_type: review.routine_title,
+        duration_minutes: review.duration_minutes || 45,
+        intensity: 'moderate',
+        distance_km: null,
+        calories_burned: review.estimated_calories_burned || 280,
+        source: 'routine',
+        description: review.notes || `${review.routine_title} session`,
+        confidence: 'high',
+        ai_analysis: {
+          executed_count: review.completed_exercise_count,
+          total_exercises: review.total_exercise_count,
+          completion_percentage: review.completion_percentage,
+          is_partial: review.is_partial,
+          stopped_after: review.stopped_after,
+        },
+      });
+
+      setPendingWorkoutReview(null);
+      setNuviaReply(
+        `Logged ${review.routine_title} (${review.completion_percentage}% completed). Great effort!`
+      );
+      FitnessContextService.invalidateFitnessContext(user.id);
+      onWorkoutLogged?.();
+    } catch (err) {
+      console.error('Failed to confirm workout:', err);
+    }
+  };
+
   const handleAskNuvia = (e: React.FormEvent) => {
     e.preventDefault();
     if (!quickInput.trim()) return;
-
-    const query = quickInput.trim().toLowerCase();
-    if (
-      query.includes('ate') ||
-      query.includes('had') ||
-      query.includes('ran') ||
-      query.includes('walked') ||
-      query.includes('workout')
-    ) {
-      onNaturalLanguageInput(quickInput.trim());
-      setQuickInput('');
-      return;
-    }
-
-    if (proteinGap > 20) {
-      setNuviaReply(
-        `You need ${proteinGap}g more protein today to hit your ${proteinTarget}g target. For your next meal: grilled chicken breast (180g) or tofu scramble with brown rice (≈520 kcal, ≈42g protein).`
-      );
-    } else if (remainingCalories > 300) {
-      setNuviaReply(
-        `You have ${remainingCalories.toLocaleString()} kcal remaining in your net calorie budget today. A balanced option around 400 kcal like salmon with vegetables fits comfortably within your goal.`
-      );
-    } else {
-      setNuviaReply(
-        `You're right on target today (${netCalories.toLocaleString()} net of ${calorieTarget.toLocaleString()} kcal target; ${foodCalories.toLocaleString()} kcal eaten, ${exerciseCalories.toLocaleString()} kcal burned). Focus on hydration and restful sleep.`
-      );
-    }
-    setQuickInput('');
+    handleExecuteNaturalLanguage(quickInput);
   };
 
   // ── First-load skeleton ───────────────────────────────────────────────────
@@ -881,7 +982,7 @@ export function DashboardView({
 
       <div className="ios-divider" />
 
-      {/* SECTION 4: NUVIA QUICK INSIGHT */}
+      {/* SECTION 4: NUVIA QUICK INSIGHT & NATURAL LOGGER */}
       <div className="bg-[#1C1C1E] rounded-2xl p-4 border border-white/[0.06] space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-white">
@@ -903,20 +1004,97 @@ export function DashboardView({
               : `You've maintained your calorie and macronutrient balance well today. Stay hydrated and prioritize recovery.`)}
         </p>
 
+        {/* Dynamic Contextual Suggestion Chips */}
+        {suggestions.length > 0 && (
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar -mx-1 px-1">
+            {suggestions.map((s, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => handleExecuteNaturalLanguage(s.text)}
+                disabled={isInterpreting}
+                className="shrink-0 text-[11px] px-2.5 py-1 rounded-full bg-[#2C2C2E] hover:bg-[#3A3A3C] text-[#E5E5EA] border border-white/[0.08] transition-all flex items-center gap-1.5 active:scale-95"
+              >
+                {s.badge && (
+                  <span className="text-[9px] px-1 py-0.2 rounded bg-[#30D158]/20 text-[#30D158] font-bold">
+                    {s.badge}
+                  </span>
+                )}
+                <span>{s.label}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Pending Workout Review Card */}
+        {pendingWorkoutReview && (
+          <div className="p-3.5 rounded-xl bg-[#121214] border border-[#30D158]/40 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-[#30D158] uppercase tracking-wider flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Today's Workout</span>
+              </span>
+              {pendingWorkoutReview.is_partial && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 font-semibold">
+                  Partial ~{pendingWorkoutReview.completion_percentage}%
+                </span>
+              )}
+            </div>
+            <p className="text-sm font-semibold text-white">{pendingWorkoutReview.routine_title}</p>
+            <p className="text-xs text-[#8E8E93]">
+              {pendingWorkoutReview.duration_minutes} mins · ~{pendingWorkoutReview.estimated_calories_burned} kcal
+              {pendingWorkoutReview.notes ? ` · ${pendingWorkoutReview.notes}` : ''}
+            </p>
+            <div className="flex items-center gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => handleConfirmWorkoutReview(pendingWorkoutReview)}
+                className="flex-1 py-2 rounded-xl bg-[#30D158] hover:bg-[#28B84D] text-black font-bold text-xs transition-colors"
+              >
+                Confirm &amp; Log Workout
+              </button>
+              <button
+                type="button"
+                onClick={() => setPendingWorkoutReview(null)}
+                className="px-3 py-2 rounded-xl bg-[#2C2C2E] text-[#8E8E93] hover:text-white text-xs font-medium"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Active Adaptive Intent Proposal Card */}
+        {activeProposal && (
+          <IntentProposalCard
+            proposal={activeProposal}
+            onApplied={() => {
+              setActiveProposal(null);
+              setNuviaReply("Schedule updated. Check your weekly plan in Activity tab.");
+            }}
+            onDismiss={() => setActiveProposal(null)}
+          />
+        )}
+
         <form onSubmit={handleAskNuvia} className="flex items-center gap-2 pt-1">
           <input
             type="text"
             value={quickInput}
             onChange={(e) => setQuickInput(e.target.value)}
-            placeholder="Ask Nuvia, or type what you ate / did..."
-            className="flex-1 bg-[#2C2C2E] text-xs text-white placeholder-[#8E8E93] px-3 py-2 rounded-xl border border-transparent focus:border-[#30D158] focus:outline-none"
+            placeholder={placeholderText}
+            disabled={isInterpreting}
+            className="flex-1 bg-[#2C2C2E] text-xs text-white placeholder-[#8E8E93] px-3 py-2 rounded-xl border border-transparent focus:border-[#30D158] focus:outline-none disabled:opacity-60"
           />
           <button
             type="submit"
-            disabled={!quickInput.trim()}
-            className="p-2 rounded-xl bg-[#2C2C2E] hover:bg-[#3A3A3C] disabled:opacity-30 text-white transition-colors"
+            disabled={!quickInput.trim() || isInterpreting}
+            className="p-2 rounded-xl bg-[#2C2C2E] hover:bg-[#3A3A3C] disabled:opacity-30 text-white transition-colors flex items-center justify-center min-w-[32px]"
           >
-            <Send className="w-3.5 h-3.5" />
+            {isInterpreting ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-[#30D158]" />
+            ) : (
+              <Send className="w-3.5 h-3.5" />
+            )}
           </button>
         </form>
       </div>

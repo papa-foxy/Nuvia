@@ -26,6 +26,14 @@ import {
   RecoveryState,
 } from '@/types/fitness-context';
 import { ExercisePerformance, LoggedSet } from '@/types/routine';
+import {
+  NaturalLanguageLoggingContext,
+  FrequentMealSummary,
+  RecentMealSummary,
+  RecentActivitySummary,
+  ScheduledRoutineSummary,
+  ContextualSuggestion,
+} from '@/types/natural-language';
 
 const PREFERENCES_STORAGE_KEY_PREFIX = 'nuvia_fitness_preferences_';
 
@@ -528,6 +536,349 @@ export class FitnessContextService {
    */
   static invalidateFitnessContext(userId?: string): void {
     const effectiveUserId = userId || DataService.getDemoUserId();
+    NuviaCache.invalidate(`fitness-context:${effectiveUserId}`);
     NuviaCache.invalidate(`fitness_context_${effectiveUserId}`);
+    NuviaCache.invalidate(`nl-context:${effectiveUserId}`);
+  }
+
+  /**
+   * Constructs a compact, bounded natural-language logging context
+   * containing frequent foods, portion baselines, recent activities,
+   * habitual cardio, and today's scheduled training routine.
+   */
+  static async getNaturalLanguageLoggingContext(
+    userId?: string
+  ): Promise<NaturalLanguageLoggingContext> {
+    const effectiveUserId = userId || DataService.getDemoUserId();
+    const cacheKey = `nl-context:${effectiveUserId}`;
+    const cached = NuviaCache.get<NaturalLanguageLoggingContext>(cacheKey);
+    if (cached && !cached.isStale) {
+      return cached.data;
+    }
+
+    const [fitnessCtx, allMeals, allLogs, todaySummary, goals] = await Promise.all([
+      this.getFitnessContext(userId),
+      DataService.getMeals(userId),
+      DataService.getExerciseLogs(userId),
+      DataService.getDailySummary(userId),
+      DataService.getGoals(userId),
+    ]);
+
+    const now = new Date();
+    const todayDate = getLocalDateString(now);
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] as const;
+    const dayOfWeek = dayNames[now.getDay()];
+
+    // 1. Build User Food Memory (Frequent Meals & Portion History)
+    const mealFrequencyMap = new Map<
+      string,
+      {
+        displayName: string;
+        count: number;
+        totalCalories: number;
+        totalProtein: number;
+        totalCarbs: number;
+        totalFat: number;
+        mealTypes: Record<string, number>;
+        lastLoggedAt?: string;
+      }
+    >();
+
+    for (const meal of allMeals) {
+      const rawName = (meal.description || '').trim();
+      if (!rawName || rawName.length < 2) continue;
+
+      // Normalize key for grouping
+      const normalizedKey = rawName
+        .toLowerCase()
+        .replace(/\s+/g, ' ')
+        .replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, '')
+        .trim();
+
+      if (!normalizedKey) continue;
+
+      const existing = mealFrequencyMap.get(normalizedKey);
+      const cals = Number(meal.calories) || 0;
+      const prot = Number(meal.protein_g) || 0;
+      const carbs = Number(meal.carbs_g) || 0;
+      const fat = Number(meal.fat_g) || 0;
+      const mType = (meal.meal_type || 'lunch').toLowerCase();
+
+      if (existing) {
+        existing.count += 1;
+        existing.totalCalories += cals;
+        existing.totalProtein += prot;
+        existing.totalCarbs += carbs;
+        existing.totalFat += fat;
+        existing.mealTypes[mType] = (existing.mealTypes[mType] || 0) + 1;
+        if (!existing.lastLoggedAt || meal.meal_time > existing.lastLoggedAt) {
+          existing.lastLoggedAt = meal.meal_time;
+          existing.displayName = rawName; // update to most recent casing
+        }
+      } else {
+        mealFrequencyMap.set(normalizedKey, {
+          displayName: rawName,
+          count: 1,
+          totalCalories: cals,
+          totalProtein: prot,
+          totalCarbs: carbs,
+          totalFat: fat,
+          mealTypes: { [mType]: 1 },
+          lastLoggedAt: meal.meal_time,
+        });
+      }
+    }
+
+    const frequentMeals: FrequentMealSummary[] = Array.from(mealFrequencyMap.values())
+      .filter((m) => m.count >= 2 || allMeals.length <= 5) // Frequent or if user is newer
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 8)
+      .map((m) => {
+        // Determine dominant meal type
+        let topMealType: 'breakfast' | 'lunch' | 'dinner' | 'snack' = 'lunch';
+        let maxCount = 0;
+        for (const [t, count] of Object.entries(m.mealTypes)) {
+          if (count > maxCount) {
+            maxCount = count;
+            topMealType = t as any;
+          }
+        }
+
+        return {
+          name: m.displayName,
+          count: m.count,
+          recent_average_calories: Math.round(m.totalCalories / m.count),
+          recent_average_protein_g: Math.round((m.totalProtein / m.count) * 10) / 10,
+          recent_average_carbs_g: Math.round((m.totalCarbs / m.count) * 10) / 10,
+          recent_average_fat_g: Math.round((m.totalFat / m.count) * 10) / 10,
+          common_meal_type: topMealType,
+          last_logged_at: m.lastLoggedAt,
+        };
+      });
+
+    // 2. Recent Meals (Last 8 entries)
+    const recentMeals: RecentMealSummary[] = allMeals
+      .slice(0, 8)
+      .map((m) => ({
+        name: m.description || 'Meal',
+        meal_type: (m.meal_type as any) || 'lunch',
+        calories: Number(m.calories) || 0,
+        protein_g: Number(m.protein_g) || 0,
+        logged_at: m.meal_time || m.created_at || todayDate,
+      }));
+
+    // 3. Recent Activities (Last 6 entries)
+    const recentActivities: RecentActivitySummary[] = allLogs
+      .slice(0, 6)
+      .map((log) => ({
+        name: log.exercise_type || 'Activity',
+        duration_minutes: Number(log.duration_minutes) || 0,
+        distance_km: log.distance_km ? Number(log.distance_km) : null,
+        calories_burned: Number(log.calories_burned) || 0,
+        intensity: (log.intensity as any) || undefined,
+        logged_at: log.created_at || todayDate,
+      }));
+
+    // 4. Scheduled Routine Context
+    let scheduledToday: ScheduledRoutineSummary | null = null;
+    const schedRef = fitnessCtx.recovery.scheduled_today;
+    if (schedRef?.has_routine && schedRef.routine_id) {
+      const matchingRoutine = fitnessCtx.active_routines.find((r) => r.id === schedRef.routine_id);
+      if (matchingRoutine) {
+        scheduledToday = {
+          id: matchingRoutine.id,
+          title: cleanActivityTitle(matchingRoutine.title).title,
+          focus: matchingRoutine.focus,
+          exercises: matchingRoutine.exercise_names || [],
+          is_completed: schedRef.is_completed,
+          total_exercises: matchingRoutine.exercise_names?.length || 0,
+        };
+      }
+    }
+
+    // 5. Upcoming Routine Context
+    let upcomingRoutine: ScheduledRoutineSummary | null = null;
+    const upcomingDay = fitnessCtx.weekly_schedule.find(
+      (day) => day.type === 'workout' && day.day !== dayOfWeek && day.routine_id
+    );
+    if (upcomingDay?.routine_id) {
+      const match = fitnessCtx.active_routines.find((r) => r.id === upcomingDay.routine_id);
+      if (match) {
+        upcomingRoutine = {
+          id: match.id,
+          title: cleanActivityTitle(match.title).title,
+          focus: match.focus,
+          exercises: match.exercise_names || [],
+          is_completed: false,
+          total_exercises: match.exercise_names?.length || 0,
+        };
+      }
+    }
+
+    const loggingContext: NaturalLanguageLoggingContext = {
+      today_date: todayDate,
+      day_of_week: dayOfWeek,
+      today_summary: todaySummary
+        ? {
+            calories_consumed: todaySummary.calories_consumed || 0,
+            protein_consumed: todaySummary.protein_consumed || 0,
+            calories_burned: todaySummary.calories_burned || 0,
+            exercise_minutes: todaySummary.exercise_minutes || 0,
+          }
+        : undefined,
+      targets: {
+        calorie_target: goals?.calorie_target || 2000,
+        protein_target: goals?.protein_target || 140,
+      },
+      today_routine: scheduledToday,
+      upcoming_routine: upcomingRoutine,
+      frequent_meals: frequentMeals,
+      recent_meals: recentMeals,
+      recent_activities: recentActivities,
+      habitual_cardio: fitnessCtx.constraints.cardio_habits || null,
+      user_weight_kg: fitnessCtx.profile.weight_kg,
+      goal: fitnessCtx.goal.primary_goal,
+    };
+
+    NuviaCache.set(cacheKey, loggingContext, { staleTime: 120_000, gcTime: 300_000 });
+    return loggingContext;
+  }
+
+  /**
+   * Generates dynamic contextual suggestion chips based on the user's
+   * actual routines, habitual activities, and frequent meals.
+   * Completely eliminates generic syntax prefixes.
+   */
+  static generateContextualSuggestions(
+    context: NaturalLanguageLoggingContext
+  ): ContextualSuggestion[] {
+    const suggestions: ContextualSuggestion[] = [];
+    const now = new Date();
+    const currentHour = now.getHours();
+
+    // 1. Scheduled Routine Suggestion
+    if (context.today_routine && !context.today_routine.is_completed) {
+      suggestions.push({
+        label: `Log ${context.today_routine.title}`,
+        text: `Finished today's ${context.today_routine.title} workout`,
+        badge: "Today's Plan",
+        type: 'workout',
+      });
+      suggestions.push({
+        label: 'Log half workout',
+        text: `I only did half of today's workout`,
+        badge: 'Partial',
+        type: 'workout',
+      });
+    }
+
+    // 2. Habitual Cardio Suggestion (e.g. Saturday walk)
+    if (context.habitual_cardio) {
+      const isCardioDay = context.habitual_cardio.typical_days.some(
+        (d) => d.toLowerCase() === context.day_of_week.toLowerCase()
+      );
+      if (isCardioDay) {
+        suggestions.push({
+          label: `Log ${context.day_of_week} ${context.habitual_cardio.type}`,
+          text: `Did my usual ${context.day_of_week} ${context.habitual_cardio.type.toLowerCase()}`,
+          badge: 'Habit',
+          type: 'activity',
+        });
+      } else {
+        suggestions.push({
+          label: `Log usual ${context.habitual_cardio.type.toLowerCase()}`,
+          text: `Did my usual ${context.habitual_cardio.type.toLowerCase()}`,
+          type: 'activity',
+        });
+      }
+    }
+
+    // 3. Frequent Food Memory Suggestions
+    if (context.frequent_meals.length > 0) {
+      // Breakfast suggestion in morning
+      if (currentHour < 12) {
+        const bFast = context.frequent_meals.find((m) => m.common_meal_type === 'breakfast');
+        if (bFast) {
+          suggestions.push({
+            label: `Log usual breakfast`,
+            text: `Had my usual breakfast`,
+            badge: `${bFast.recent_average_calories} kcal`,
+            type: 'meal',
+          });
+        }
+      }
+
+      // Top frequent dish
+      const topMeal = context.frequent_meals[0];
+      if (topMeal && !suggestions.some((s) => s.label.includes(topMeal.name))) {
+        suggestions.push({
+          label: `Log ${topMeal.name}`,
+          text: `Had ${topMeal.name}`,
+          badge: `${topMeal.recent_average_calories} kcal`,
+          type: 'meal',
+        });
+      }
+
+      // Protein shake or drink habit
+      const shake = context.frequent_meals.find(
+        (m) =>
+          m.name.toLowerCase().includes('shake') ||
+          m.name.toLowerCase().includes('protein') ||
+          m.name.toLowerCase().includes('milo')
+      );
+      if (shake && !suggestions.some((s) => s.label.includes(shake.name))) {
+        suggestions.push({
+          label: `Log usual ${shake.name}`,
+          text: `Had my usual ${shake.name}`,
+          type: 'meal',
+        });
+      }
+
+      // Repeat yesterday's meal if available
+      if (context.recent_meals.length > 0) {
+        const yesterdayMeal = context.recent_meals[0];
+        suggestions.push({
+          label: `Repeat ${yesterdayMeal.name}`,
+          text: `Had ${yesterdayMeal.name} again`,
+          type: 'meal',
+        });
+      }
+    }
+
+    // 4. Clean Fallback for brand-new users with zero history
+    if (suggestions.length < 3) {
+      const fallbacks: ContextualSuggestion[] = [
+        {
+          label: 'Nasi ayam for lunch',
+          text: 'I had nasi ayam for lunch',
+          type: 'meal',
+        },
+        {
+          label: 'Walked 4.5 km',
+          text: 'I walked 4.5 km with my mom',
+          type: 'activity',
+        },
+        {
+          label: "Today's workout",
+          text: "Finished today's workout",
+          type: 'workout',
+        },
+        {
+          label: 'Usual protein shake',
+          text: 'Had my usual protein shake',
+          type: 'meal',
+        },
+      ];
+
+      for (const fb of fallbacks) {
+        if (!suggestions.some((s) => s.text === fb.text)) {
+          suggestions.push(fb);
+        }
+        if (suggestions.length >= 4) break;
+      }
+    }
+
+    return suggestions.slice(0, 5);
   }
 }
+

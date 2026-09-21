@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Check, Plus, Trash2, X } from 'lucide-react';
+import { Check, Plus, Trash2, X, Sparkles } from 'lucide-react';
 import { MealAnalysisResult } from '@/lib/ai-service';
 import { MealType, EntrySource, ConfidenceLevel } from '@/types/database';
 
@@ -9,6 +9,8 @@ interface MealResultModalProps {
   initialData: MealAnalysisResult;
   imagePreviewUrl?: string | null;
   source: EntrySource;
+  contextBadge?: string;
+  contextNote?: string;
   onSave: (savedMeal: {
     meal_type: MealType;
     meal_time: string;
@@ -37,6 +39,8 @@ export function MealResultModal({
   initialData,
   imagePreviewUrl,
   source,
+  contextBadge,
+  contextNote,
   onSave,
   onClose,
   onAddAnother,
@@ -156,6 +160,15 @@ export function MealResultModal({
                 <span className="w-1.5 h-1.5 rounded-full bg-[#30D158]" />
                 <span>AI Photo Analyzed</span>
               </div>
+            </div>
+          )}
+
+          {/* Nuvia Food Memory Context Badge */}
+          {contextBadge && (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#30D158]/10 border border-[#30D158]/25 text-xs text-[#30D158]">
+              <Sparkles className="w-3.5 h-3.5 shrink-0" />
+              <span className="font-semibold">{contextBadge}</span>
+              {contextNote && <span className="text-[#8E8E93] text-[11px]">· {contextNote}</span>}
             </div>
           )}
 

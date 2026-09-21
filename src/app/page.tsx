@@ -26,6 +26,9 @@ import {
 } from '@/lib/nuvia-cache';
 import { getLocalDateString } from '@/lib/data-service';
 import { Flame } from 'lucide-react';
+import { FitnessContextService } from '@/lib/fitness-context-service';
+import { AiService } from '@/lib/ai-service';
+import { NaturalLanguageParseResult } from '@/types/natural-language';
 
 export default function HomePage() {
   const { user, profile, goals, isLoading, hasCompletedOnboarding, refreshProfileAndGoals } =
@@ -41,11 +44,15 @@ export default function HomePage() {
    * to bypass its cache and fetch fresh data.
    * Using a separate counter per data type allows targeted invalidation.
    */
+  const [prefilledMealPrompt, setPrefilledMealPrompt] = useState<string>('');
+  const [prefilledExercisePrompt, setPrefilledExercisePrompt] = useState<string>('');
+  const [prefilledMealResult, setPrefilledMealResult] = useState<any | null>(null);
+  const [prefilledMealBadge, setPrefilledMealBadge] = useState<string | undefined>(undefined);
+  const [prefilledMealNote, setPrefilledMealNote] = useState<string | undefined>(undefined);
+  const [prefilledExerciseResult, setPrefilledExerciseResult] = useState<any | null>(null);
+  const [prefilledExerciseBadge, setPrefilledExerciseBadge] = useState<string | undefined>(undefined);
+  const [prefilledExerciseNote, setPrefilledExerciseNote] = useState<string | undefined>(undefined);
   const [refreshKey, setRefreshKey] = useState(0);
-
-  // Prefilled natural language inputs
-  const [prefilledMealPrompt, setPrefilledMealPrompt] = useState('');
-  const [prefilledExercisePrompt, setPrefilledExercisePrompt] = useState('');
 
   if (isLoading) {
     return (
@@ -94,7 +101,65 @@ export default function HomePage() {
     );
   }
 
-  const handleNaturalLanguageInput = (input: string) => {
+  const handleNaturalLanguageParsed = (result: NaturalLanguageParseResult) => {
+    if (result.intent === 'meal' && result.meal_data) {
+      setPrefilledMealResult({
+        meal_type: result.meal_data.meal_type || 'lunch',
+        meal_name: result.meal_data.meal_name,
+        foods: result.meal_data.foods.map((f) => ({
+          name: f.name,
+          estimated_quantity: f.estimated_quantity,
+          unit: f.unit,
+          calories: f.calories,
+          protein_g: f.protein_g,
+          carbs_g: f.carbs_g,
+          fat_g: f.fat_g,
+          confidence: (f.confidence || 'high') as any,
+        })),
+        total: result.meal_data.total,
+        confidence: result.confidence,
+        assumptions: result.meal_data.assumptions || [],
+        notes: result.meal_data.notes,
+      });
+      setPrefilledMealBadge(result.context_match?.badge_label || undefined);
+      setPrefilledMealNote(result.context_match?.note || undefined);
+      setIsAddMealOpen(true);
+      return;
+    }
+
+    if (result.intent === 'activity' && result.activity_data) {
+      setPrefilledExerciseResult({
+        exercise_type: result.activity_data.exercise_type,
+        duration_minutes: result.activity_data.duration_minutes,
+        intensity: result.activity_data.intensity,
+        distance_km: result.activity_data.distance_km,
+        calories_burned: result.activity_data.calories_burned,
+        confidence: result.confidence,
+        ai_tip: result.activity_data.ai_tip || 'Keep up the consistent effort!',
+      });
+      setPrefilledExerciseBadge(result.context_match?.badge_label || undefined);
+      setPrefilledExerciseNote(result.context_match?.note || undefined);
+      setIsAddExerciseOpen(true);
+      return;
+    }
+  };
+
+  const handleNaturalLanguageInput = async (input: string) => {
+    try {
+      const nlCtx = await FitnessContextService.getNaturalLanguageLoggingContext(user.id);
+      const parsed = await AiService.parseNaturalInput({ text: input, context: nlCtx });
+      if (parsed.intent === 'meal' && parsed.meal_data) {
+        handleNaturalLanguageParsed(parsed);
+        return;
+      }
+      if (parsed.intent === 'activity' && parsed.activity_data) {
+        handleNaturalLanguageParsed(parsed);
+        return;
+      }
+    } catch {
+      // Fallback to keyword heuristics if parsing throws
+    }
+
     const text = input.toLowerCase();
     const exerciseKeywords = [
       'run', 'jog', 'walk', 'gym', 'workout', 'cardio',
@@ -136,6 +201,7 @@ export default function HomePage() {
     NuviaCache.invalidate(todaySummaryKey(user.id, todayStr));
     NuviaCache.invalidate(todayMealsKey(user.id, todayStr));
     NuviaCache.invalidate(allMealsKey(user.id));
+    FitnessContextService.invalidateFitnessContext(user.id);
 
     setRefreshKey((k) => k + 1);
     await refreshProfileAndGoals();
@@ -162,6 +228,7 @@ export default function HomePage() {
     NuviaCache.invalidatePrefix('today-summary:');
     NuviaCache.invalidatePrefix('today-activity:');
     NuviaCache.invalidatePrefix('exercise-logs:');
+    FitnessContextService.invalidateFitnessContext(user.id);
 
     setRefreshKey((k) => k + 1);
     await refreshProfileAndGoals();
@@ -216,6 +283,8 @@ export default function HomePage() {
                 onOpenAddExercise={() => setIsAddExerciseOpen(true)}
                 onNavigateTab={setActiveTab}
                 onNaturalLanguageInput={handleNaturalLanguageInput}
+                onNaturalLanguageParsed={handleNaturalLanguageParsed}
+                onWorkoutLogged={() => setRefreshKey((k) => k + 1)}
                 refreshKey={refreshKey}
               />
             </div>
@@ -270,18 +339,32 @@ export default function HomePage() {
         {/* MODALS */}
         <AddMealModal
           isOpen={isAddMealOpen}
+          initialMealPrompt={prefilledMealPrompt}
+          initialAnalysisResult={prefilledMealResult}
+          initialContextBadge={prefilledMealBadge}
+          initialContextNote={prefilledMealNote}
           onClose={() => {
             setIsAddMealOpen(false);
             setPrefilledMealPrompt('');
+            setPrefilledMealResult(null);
+            setPrefilledMealBadge(undefined);
+            setPrefilledMealNote(undefined);
           }}
           onSaveMeal={handleSaveMeal}
         />
 
         <AddExerciseModal
           isOpen={isAddExerciseOpen}
+          prefilledExercisePrompt={prefilledExercisePrompt}
+          initialParsedResult={prefilledExerciseResult}
+          initialContextBadge={prefilledExerciseBadge}
+          initialContextNote={prefilledExerciseNote}
           onClose={() => {
             setIsAddExerciseOpen(false);
             setPrefilledExercisePrompt('');
+            setPrefilledExerciseResult(null);
+            setPrefilledExerciseBadge(undefined);
+            setPrefilledExerciseNote(undefined);
           }}
           onSaveExercise={handleSaveExercise}
         />
