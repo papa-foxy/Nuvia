@@ -189,7 +189,7 @@ export function NuviaBottomSheet({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:p-4 pb-[calc(56px+env(safe-area-inset-bottom,0px))]"
+      className="fixed inset-0 z-50 flex items-end justify-center p-0 pb-[calc(56px+env(safe-area-inset-bottom,0px))]"
     >
       {/* Backdrop: covers page background above bottom nav */}
       <div

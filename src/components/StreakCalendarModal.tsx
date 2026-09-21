@@ -116,7 +116,7 @@ export function StreakCalendarModal({
   const isTodayLogged = activeDatesSet.has(todayStr);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:p-4 pb-[calc(56px+env(safe-area-inset-bottom,0px))] animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-end justify-center p-0 pb-[calc(56px+env(safe-area-inset-bottom,0px))] animate-in fade-in duration-200">
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/80 backdrop-blur-md"

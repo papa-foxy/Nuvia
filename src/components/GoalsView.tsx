@@ -747,7 +747,7 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
       {/* ── BOTTOM SHEET: "WHY THIS TARGET?" ────────────────────────────── */}
       {/* ══════════════════════════════════════════════════════════════════ */}
       {showWhySheet && (
-        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-end justify-center p-0 sm:p-4 pb-[calc(56px+env(safe-area-inset-bottom,0px))] animate-fadeIn">
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-end justify-center p-0 pb-[calc(56px+env(safe-area-inset-bottom,0px))] animate-fadeIn">
           <div className="w-full max-w-md bg-[#1C1C1E] border-t border-x border-b-0 border-white/10 rounded-t-[28px] rounded-b-none p-5 space-y-4 max-h-[calc(100dvh-56px-env(safe-area-inset-bottom,0px)-0.5rem)] overflow-y-auto">
             <div className="flex items-center justify-between pb-2 border-b border-white/10">
               <div>
@@ -874,7 +874,7 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
 
       {/* 1. Goal Editor */}
       {activeEditor === 'goal' && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end justify-center p-0 sm:p-4 pb-[calc(56px+env(safe-area-inset-bottom,0px))] animate-fadeIn">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end justify-center p-0 pb-[calc(56px+env(safe-area-inset-bottom,0px))] animate-fadeIn">
           <div className="w-full max-w-md bg-[#1C1C1E] border-t border-x border-b-0 border-white/10 rounded-t-[28px] rounded-b-none p-5 space-y-4 max-h-[calc(100dvh-56px-env(safe-area-inset-bottom,0px)-0.5rem)]">
             <div className="flex items-center justify-between pb-2 border-b border-white/10">
               <h3 className="text-base font-bold text-white">Select Your Goal</h3>
@@ -952,7 +952,7 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
 
       {/* 2. Target Weight Editor */}
       {activeEditor === 'target_weight' && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end justify-center p-0 sm:p-4 pb-[calc(56px+env(safe-area-inset-bottom,0px))] animate-fadeIn">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end justify-center p-0 pb-[calc(56px+env(safe-area-inset-bottom,0px))] animate-fadeIn">
           <div className="w-full max-w-md bg-[#1C1C1E] border-t border-x border-b-0 border-white/10 rounded-t-[28px] rounded-b-none p-5 space-y-4 max-h-[calc(100dvh-56px-env(safe-area-inset-bottom,0px)-0.5rem)]">
             <div className="flex items-center justify-between pb-2 border-b border-white/10">
               <h3 className="text-base font-bold text-white">Target Weight</h3>
@@ -1014,7 +1014,7 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
 
       {/* 3. Activity Level Editor */}
       {activeEditor === 'activity' && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end justify-center p-0 sm:p-4 pb-[calc(56px+env(safe-area-inset-bottom,0px))] animate-fadeIn">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end justify-center p-0 pb-[calc(56px+env(safe-area-inset-bottom,0px))] animate-fadeIn">
           <div className="w-full max-w-md bg-[#1C1C1E] border-t border-x border-b-0 border-white/10 rounded-t-[28px] rounded-b-none p-5 space-y-4 max-h-[calc(100dvh-56px-env(safe-area-inset-bottom,0px)-0.5rem)] overflow-y-auto">
             <div className="flex items-center justify-between pb-2 border-b border-white/10">
               <h3 className="text-base font-bold text-white">Daily Activity Level</h3>
@@ -1071,7 +1071,7 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
 
       {/* 4. Goal Pace Editor */}
       {activeEditor === 'pace' && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end justify-center p-0 sm:p-4 pb-[calc(56px+env(safe-area-inset-bottom,0px))] animate-fadeIn">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end justify-center p-0 pb-[calc(56px+env(safe-area-inset-bottom,0px))] animate-fadeIn">
           <div className="w-full max-w-md bg-[#1C1C1E] border-t border-x border-b-0 border-white/10 rounded-t-[28px] rounded-b-none p-5 space-y-4 max-h-[calc(100dvh-56px-env(safe-area-inset-bottom,0px)-0.5rem)]">
             <div className="flex items-center justify-between pb-2 border-b border-white/10">
               <div>

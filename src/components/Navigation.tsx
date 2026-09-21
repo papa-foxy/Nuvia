@@ -158,8 +158,14 @@ export function BottomNav({
 
       {/* iOS-Style Contextual Log Action Sheet */}
       {showLogSheet && (
-        <div className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm flex items-end justify-center p-0 sm:p-4 pb-[calc(56px+env(safe-area-inset-bottom,0px))]">
-          <div className="w-full max-w-sm ios-sheet border border-white/[0.12] rounded-t-3xl rounded-b-none border-b-0 p-5 shadow-2xl space-y-4 animate-slideUp">
+        <div
+          onClick={() => setShowLogSheet(false)}
+          className="fixed md:absolute inset-0 z-[70] bg-black/60 backdrop-blur-sm flex items-end justify-center p-0 pb-[calc(56px+env(safe-area-inset-bottom,0px))]"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md bg-[#1C1C1E] border-t border-x border-b-0 border-white/[0.12] rounded-t-[28px] rounded-b-none p-5 shadow-2xl space-y-4 animate-slideUp"
+          >
             <div className="flex items-center justify-between pb-1">
               <span className="text-xs font-bold uppercase tracking-wider text-[#8E8E93]">
                 Log Entry
