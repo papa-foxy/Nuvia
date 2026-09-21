@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Calendar, Utensils, Activity, Sparkles, User, Plus, Camera, X } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
+import { NuviaBottomSheet } from './NuviaBottomSheet';
 
 export type TabType = 'home' | 'meals' | 'exercise' | 'coach' | 'profile' | 'summary' | 'goals';
 
@@ -83,7 +84,7 @@ export function BottomNav({
   return (
     <>
       <nav
-        className="fixed md:absolute bottom-0 left-0 right-0 z-[60] w-full h-[calc(56px+env(safe-area-inset-bottom,0px))] pb-[calc(4px+env(safe-area-inset-bottom,0px))] bg-black border-t border-white/[0.08] px-4 pt-1.5 flex items-center justify-between"
+        className="fixed md:absolute bottom-0 left-0 right-0 z-50 w-full h-[calc(var(--bottom-nav-height,56px)+env(safe-area-inset-bottom,0px))] pb-[calc(4px+env(safe-area-inset-bottom,0px))] bg-black border-t border-white/[0.08] px-4 pt-1.5 flex items-center justify-between"
       >
         {/* Destination 1: Today */}
         <button
@@ -107,14 +108,20 @@ export function BottomNav({
           <span className="text-[10px] font-semibold tracking-tight">Meals</span>
         </button>
 
-        {/* Action Center: (+) Larger with Crisp Border, No Glow */}
-        <div className="relative -top-2">
+        {/* Action Center: (+) Rotates to (×) when Log Entry sheet is open */}
+        <div className="relative -top-2 z-10">
           <button
-            onClick={() => setShowLogSheet(true)}
-            className="w-14 h-14 rounded-full bg-[#30D158] text-black flex items-center justify-center border-2 border-white ring-4 ring-black active:scale-95 transition-all cursor-pointer"
-            title="Log Meal or Activity"
+            type="button"
+            onClick={() => setShowLogSheet((prev) => !prev)}
+            className={`w-14 h-14 rounded-full flex items-center justify-center border-2 border-white ring-4 ring-black active:scale-95 transition-all duration-300 cursor-pointer shadow-lg ${
+              showLogSheet
+                ? 'bg-[#2C2C2E] text-white rotate-45 border-white/80'
+                : 'bg-[#30D158] text-black rotate-0 hover:bg-[#28B84D]'
+            }`}
+            title={showLogSheet ? 'Close Log Menu' : 'Log Meal or Activity'}
+            aria-expanded={showLogSheet}
           >
-            <Plus className="w-7 h-7 stroke-[3] text-black" />
+            <Plus className="w-7 h-7 stroke-[3] transition-transform duration-300" />
           </button>
         </div>
 
@@ -156,69 +163,55 @@ export function BottomNav({
         </button>
       </nav>
 
-      {/* iOS-Style Contextual Log Action Sheet */}
-      {showLogSheet && (
-        <div
-          onClick={() => setShowLogSheet(false)}
-          className="fixed md:absolute inset-0 z-[70] bg-black/60 backdrop-blur-sm flex items-end justify-center p-0 pb-[calc(56px+env(safe-area-inset-bottom,0px))]"
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md bg-[#1C1C1E] border-t border-x border-b-0 border-white/[0.12] rounded-t-[28px] rounded-b-none p-5 shadow-2xl space-y-4 animate-slideUp"
+      {/* Unified Compact Log Action Sheet */}
+      <NuviaBottomSheet
+        isOpen={showLogSheet}
+        onClose={() => setShowLogSheet(false)}
+        variant="compact"
+        title="Log Entry"
+        maxWidth="max-w-md"
+      >
+        <div className="space-y-2.5">
+          <button
+            type="button"
+            onClick={() => {
+              setShowLogSheet(false);
+              onOpenAddMeal?.();
+            }}
+            className="w-full p-3.5 rounded-2xl bg-gradient-to-r from-[#30D158]/20 to-[#2C2C2E] hover:from-[#30D158]/30 border border-[#30D158]/40 text-left transition-all flex items-center gap-3.5 group cursor-pointer active:scale-[0.99]"
           >
-            <div className="flex items-center justify-between pb-1">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#8E8E93]">
-                Log Entry
-              </span>
-              <button
-                onClick={() => setShowLogSheet(false)}
-                className="w-7 h-7 rounded-full bg-[#2C2C2E] flex items-center justify-center text-[#8E8E93] hover:text-white"
-              >
-                <X className="w-4 h-4" />
-              </button>
+            <div className="w-10 h-10 rounded-xl bg-[#30D158] text-black flex items-center justify-center shrink-0 shadow-md">
+              <Camera className="w-5 h-5 stroke-[2.5]" />
             </div>
-
-            <div className="space-y-2">
-              <button
-                onClick={() => {
-                  setShowLogSheet(false);
-                  onOpenAddMeal?.();
-                }}
-                className="w-full p-3.5 rounded-2xl bg-gradient-to-r from-[#30D158]/20 to-[#2C2C2E] hover:from-[#30D158]/30 border border-[#30D158]/40 text-left transition-all flex items-center gap-3.5 group"
-              >
-                <div className="w-10 h-10 rounded-xl bg-[#30D158] text-black flex items-center justify-center shrink-0 shadow-md">
-                  <Camera className="w-5 h-5 stroke-[2.5]" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-1.5">
-                    <p className="text-sm font-bold text-white">Log Meal</p>
-                    <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-[#30D158] text-black">
-                      AI Camera
-                    </span>
-                  </div>
-                  <p className="text-xs text-[#8E8E93]">Photo capture & instant calorie calculation</p>
-                </div>
-              </button>
-
-              <button
-                onClick={() => {
-                  setShowLogSheet(false);
-                  onOpenAddExercise?.();
-                }}
-                className="w-full p-3.5 rounded-2xl bg-[#2C2C2E] hover:bg-[#3A3A3C] text-left transition-colors flex items-center gap-3.5 group"
-              >
-                <div className="w-10 h-10 rounded-xl bg-[#0A84FF]/15 text-[#0A84FF] flex items-center justify-center">
-                  <Activity className="w-5 h-5" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-white">Log Activity</p>
-                  <p className="text-xs text-[#8E8E93]">Workout, run, gym, or sports</p>
-                </div>
-              </button>
+            <div className="flex-1">
+              <div className="flex items-center gap-1.5">
+                <p className="text-sm font-bold text-white">Log Meal</p>
+                <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-[#30D158] text-black">
+                  AI Camera
+                </span>
+              </div>
+              <p className="text-xs text-[#8E8E93]">Photo capture & instant calorie calculation</p>
             </div>
-          </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setShowLogSheet(false);
+              onOpenAddExercise?.();
+            }}
+            className="w-full p-3.5 rounded-2xl bg-[#2C2C2E] hover:bg-[#3A3A3C] text-left transition-colors flex items-center gap-3.5 group cursor-pointer active:scale-[0.99]"
+          >
+            <div className="w-10 h-10 rounded-xl bg-[#0A84FF]/15 text-[#0A84FF] flex items-center justify-center">
+              <Activity className="w-5 h-5" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-white">Log Activity</p>
+              <p className="text-xs text-[#8E8E93]">Workout, run, gym, or sports</p>
+            </div>
+          </button>
         </div>
-      )}
+      </NuviaBottomSheet>
     </>
   );
 }

@@ -230,6 +230,7 @@ export function PasteAiRoutineModal({
       isOpen={isOpen}
       onClose={onClose}
       triggerRef={triggerRef}
+      variant="full"
       title={
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-[#30D158] to-[#0A84FF] flex items-center justify-center text-black">

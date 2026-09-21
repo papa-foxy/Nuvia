@@ -160,8 +160,28 @@ export function RoutineEditView({
   const filteredCatalog = searchExercises(searchQuery, activeCategory);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-end justify-center p-0 pb-[calc(56px+env(safe-area-inset-bottom,0px))] animate-fadeIn">
-      <div className="w-full max-w-lg bg-[#1C1C1E] border-t border-x border-b-0 border-white/10 rounded-t-[28px] rounded-b-none p-5 sm:p-6 shadow-2xl animate-slideUp max-h-[calc(100dvh-56px-env(safe-area-inset-bottom,0px)-0.5rem)] flex flex-col">
+    <>
+      {/* Backdrop: bounded above bottom navigation */}
+      <div
+        className="fixed md:absolute top-0 left-0 right-0 z-40 bg-black/80 backdrop-blur-sm transition-opacity animate-fadeIn"
+        style={{
+          bottom: 'calc(var(--bottom-nav-height, 56px) + env(safe-area-inset-bottom, 0px))',
+        }}
+        onClick={onClose}
+        aria-hidden="true"
+      />
+
+      {/* Sheet Container: sits above backdrop (z-45) directly on top of nav */}
+      <div
+        className="fixed md:absolute left-0 right-0 z-45 flex items-end justify-center p-0 pointer-events-none"
+        style={{
+          bottom: 'calc(var(--bottom-nav-height, 56px) + env(safe-area-inset-bottom, 0px))',
+        }}
+      >
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="pointer-events-auto w-full max-w-lg bg-[#1C1C1E] border-t border-x border-b-0 border-white/10 rounded-t-[28px] rounded-b-none p-5 sm:p-6 shadow-2xl animate-slideUp max-h-[calc(100dvh-var(--bottom-nav-height,56px)-env(safe-area-inset-bottom,0px)-0.75rem)] flex flex-col"
+        >
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-white/10 shrink-0">
           <div>
@@ -516,5 +536,6 @@ export function RoutineEditView({
         )}
       </div>
     </div>
+    </>
   );
 }

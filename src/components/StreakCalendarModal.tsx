@@ -116,15 +116,28 @@ export function StreakCalendarModal({
   const isTodayLogged = activeDatesSet.has(todayStr);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center p-0 pb-[calc(56px+env(safe-area-inset-bottom,0px))] animate-in fade-in duration-200">
-      {/* Backdrop */}
+    <>
+      {/* Backdrop: bounded above bottom navigation */}
       <div
-        className="fixed inset-0 bg-black/80 backdrop-blur-md"
+        className="fixed md:absolute top-0 left-0 right-0 z-40 bg-black/80 backdrop-blur-sm transition-opacity"
+        style={{
+          bottom: 'calc(var(--bottom-nav-height, 56px) + env(safe-area-inset-bottom, 0px))',
+        }}
         onClick={onClose}
+        aria-hidden="true"
       />
 
-      {/* Modal Sheet */}
-      <div className="relative w-full max-w-md bg-[#161618] border-t border-x border-b-0 border-white/10 rounded-t-[28px] rounded-b-none max-h-[calc(100dvh-56px-env(safe-area-inset-bottom,0px)-0.5rem)] flex flex-col overflow-hidden shadow-2xl z-10 animate-slideUp">
+      {/* Sheet Container: sits above backdrop (z-45) directly on top of nav */}
+      <div
+        className="fixed md:absolute left-0 right-0 z-45 flex items-end justify-center p-0 pointer-events-none"
+        style={{
+          bottom: 'calc(var(--bottom-nav-height, 56px) + env(safe-area-inset-bottom, 0px))',
+        }}
+      >
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="pointer-events-auto relative w-full max-w-md bg-[#161618] border-t border-x border-b-0 border-white/10 rounded-t-[28px] rounded-b-none max-h-[calc(100dvh-var(--bottom-nav-height,56px)-env(safe-area-inset-bottom,0px)-0.75rem)] flex flex-col overflow-hidden shadow-2xl z-10 animate-slideUp"
+        >
         {/* Grab Handle */}
         <div className="flex justify-center pt-3 pb-1">
           <div className="w-10 h-1 rounded-full bg-white/20" />
@@ -419,5 +432,6 @@ export function StreakCalendarModal({
         </div>
       </div>
     </div>
+    </>
   );
 }

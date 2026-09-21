@@ -21,6 +21,9 @@
     --accent-orange: #ff9f0a;
     --accent-blue: #0a84ff;
     --accent-red: #ff453a;
+
+    /* Bottom Navigation Tokens */
+    --bottom-nav-height: 56px;
   }
 
   html {

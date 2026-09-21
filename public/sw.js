@@ -1,5 +1,5 @@
 // Nuvia Service Worker
-const CACHE_NAME = 'nuvia-pwa-v4';
+const CACHE_NAME = 'nuvia-pwa-v5';
 const ASSETS_TO_CACHE = [
   '/',
   '/manifest.json',

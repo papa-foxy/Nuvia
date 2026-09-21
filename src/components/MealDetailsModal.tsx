@@ -225,31 +225,40 @@ export function MealDetailsModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center p-0 pb-[calc(56px+env(safe-area-inset-bottom,0px))] animate-in fade-in duration-200">
-      {/* Backdrop */}
+    <>
+      {/* Backdrop: bounded above bottom navigation */}
       <div
-        className="fixed inset-0 bg-black/80 backdrop-blur-md transition-opacity"
+        className="fixed md:absolute top-0 left-0 right-0 z-40 bg-black/75 backdrop-blur-sm transition-opacity"
         style={{
+          bottom: 'calc(var(--bottom-nav-height, 56px) + env(safe-area-inset-bottom, 0px))',
           opacity: isClosing || isEntering ? 0 : Math.max(0.1, 1 - dragY / 300),
           transitionDuration: isDragging ? '0ms' : isEntering ? '320ms' : '220ms',
         }}
         onClick={triggerClose}
+        aria-hidden="true"
       />
 
-      {/* Sheet / Modal Container */}
+      {/* Sheet / Modal Container: sits above backdrop (z-45) directly on top of nav */}
       <div
+        className="fixed md:absolute left-0 right-0 z-45 flex items-end justify-center p-0 pointer-events-none"
         style={{
-          transform: isClosing || isEntering
-            ? 'translateY(100%)'
-            : `translateY(${dragY}px)`,
-          transition: isDragging
-            ? 'none'
-            : isEntering
-            ? 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)'
-            : 'transform 0.24s cubic-bezier(0.2, 0.9, 0.3, 1)',
+          bottom: 'calc(var(--bottom-nav-height, 56px) + env(safe-area-inset-bottom, 0px))',
         }}
-        className="relative w-full max-w-md bg-[#161618] border-t border-x border-b-0 border-white/10 rounded-t-[28px] rounded-b-none max-h-[calc(100dvh-56px-env(safe-area-inset-bottom,0px)-0.5rem)] flex flex-col overflow-hidden shadow-2xl z-10 select-none sm:select-auto will-change-transform"
       >
+        <div
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            transform: isClosing || isEntering
+              ? 'translateY(100%)'
+              : `translateY(${dragY}px)`,
+            transition: isDragging
+              ? 'none'
+              : isEntering
+              ? 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)'
+              : 'transform 0.24s cubic-bezier(0.2, 0.9, 0.3, 1)',
+          }}
+          className="pointer-events-auto relative w-full max-w-md bg-[#161618] border-t border-x border-b-0 border-white/10 rounded-t-[28px] rounded-b-none max-h-[calc(100dvh-var(--bottom-nav-height,56px)-env(safe-area-inset-bottom,0px)-1rem)] flex flex-col overflow-hidden shadow-2xl z-10 select-none sm:select-auto will-change-transform"
+        >
         {/* Grab Handle */}
         <div
           onTouchStart={(e) => handleTouchStart(e, true)}
@@ -533,5 +542,6 @@ export function MealDetailsModal({
         </div>
       </div>
     </div>
+    </>
   );
 }

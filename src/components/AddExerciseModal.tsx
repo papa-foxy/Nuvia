@@ -203,8 +203,28 @@ export function AddExerciseModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end justify-center p-0 pb-[calc(56px+env(safe-area-inset-bottom,0px))]">
-      <div className="w-full max-w-md bg-[#1C1C1E] border-t border-x border-b-0 border-white/[0.08] rounded-t-[28px] rounded-b-none max-h-[calc(100dvh-56px-env(safe-area-inset-bottom,0px)-0.5rem)] flex flex-col overflow-hidden shadow-2xl animate-slideUp">
+    <>
+      {/* Backdrop: bounded above bottom navigation */}
+      <div
+        className="fixed md:absolute top-0 left-0 right-0 z-40 bg-black/75 backdrop-blur-sm transition-opacity"
+        style={{
+          bottom: 'calc(var(--bottom-nav-height, 56px) + env(safe-area-inset-bottom, 0px))',
+        }}
+        onClick={onClose}
+        aria-hidden="true"
+      />
+
+      {/* Sheet / Modal Container: sits above backdrop (z-45) directly on top of nav */}
+      <div
+        className="fixed md:absolute left-0 right-0 z-45 flex items-end justify-center p-0 pointer-events-none"
+        style={{
+          bottom: 'calc(var(--bottom-nav-height, 56px) + env(safe-area-inset-bottom, 0px))',
+        }}
+      >
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="pointer-events-auto w-full max-w-md bg-[#1C1C1E] border-t border-x border-b-0 border-white/[0.08] rounded-t-[28px] rounded-b-none max-h-[calc(100dvh-var(--bottom-nav-height,56px)-env(safe-area-inset-bottom,0px)-0.75rem)] flex flex-col overflow-hidden shadow-2xl animate-slideUp"
+        >
         {/* Header */}
         <div className="px-5 py-4 border-b border-white/[0.08] flex items-center justify-between">
           <h3 className="text-base font-semibold text-white">Log Activity</h3>
@@ -440,5 +460,6 @@ export function AddExerciseModal({
         </div>
       </div>
     </div>
+    </>
   );
 }

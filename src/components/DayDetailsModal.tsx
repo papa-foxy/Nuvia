@@ -229,27 +229,38 @@ export function DayDetailsModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center p-0 pb-[calc(56px+env(safe-area-inset-bottom,0px))]">
-      {/* Backdrop */}
+    <>
+      {/* Backdrop: bounded above bottom navigation */}
       <div
         onClick={triggerClose}
-        className={`fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-200 cursor-pointer ${
+        className={`fixed md:absolute top-0 left-0 right-0 z-40 bg-black/75 backdrop-blur-sm transition-opacity duration-200 cursor-pointer ${
           isClosing ? 'opacity-0' : 'opacity-100'
         }`}
+        style={{
+          bottom: 'calc(var(--bottom-nav-height, 56px) + env(safe-area-inset-bottom, 0px))',
+        }}
+        aria-hidden="true"
       />
 
-      {/* Modal Container */}
+      {/* Sheet / Modal Container: sits above backdrop (z-45) directly on top of nav */}
       <div
+        className="fixed md:absolute left-0 right-0 z-45 flex items-end justify-center p-0 pointer-events-none"
         style={{
-          transform: isClosing
-            ? 'translateY(100%)'
-            : isEntering
-            ? 'translateY(100%)'
-            : `translateY(${dragY}px)`,
-          transition: isDragging ? 'none' : 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
+          bottom: 'calc(var(--bottom-nav-height, 56px) + env(safe-area-inset-bottom, 0px))',
         }}
-        className="relative z-10 w-full max-w-md bg-[#1C1C1E] border-t border-x border-b-0 border-white/10 rounded-t-[28px] rounded-b-none max-h-[calc(100dvh-56px-env(safe-area-inset-bottom,0px)-0.5rem)] flex flex-col shadow-2xl overflow-hidden will-change-transform"
       >
+        <div
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            transform: isClosing
+              ? 'translateY(100%)'
+              : isEntering
+              ? 'translateY(100%)'
+              : `translateY(${dragY}px)`,
+            transition: isDragging ? 'none' : 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
+          }}
+          className="pointer-events-auto relative z-10 w-full max-w-md bg-[#1C1C1E] border-t border-x border-b-0 border-white/10 rounded-t-[28px] rounded-b-none max-h-[calc(100dvh-var(--bottom-nav-height,56px)-env(safe-area-inset-bottom,0px)-1rem)] flex flex-col shadow-2xl overflow-hidden will-change-transform"
+        >
         {/* iOS Drag Handle */}
         <div
           onTouchStart={(e) => handleTouchStart(e, true)}
@@ -592,5 +603,6 @@ export function DayDetailsModal({
         </div>
       </div>
     </div>
+    </>
   );
 }
