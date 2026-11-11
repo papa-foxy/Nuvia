@@ -27,17 +27,17 @@ export function ProfileHeader({ user, profile, onEditProfile }: ProfileHeaderPro
     <div className="flex flex-col items-center text-center pt-2 pb-1">
       {/* Apple-style Centered Avatar with subtle ring */}
       <div className="relative mb-3.5 group">
-        <div className="relative w-20 h-20 rounded-full p-0.5 bg-gradient-to-b from-white/20 to-white/5 shadow-xl shadow-black/40">
+        <div className="relative w-20 h-20 rounded-full p-0.5 bg-gradient-to-b from-fg/20 to-fg/5 shadow-xl shadow-black/10 dark:shadow-black/40">
           {avatarUrl && !imgError ? (
             <img
               src={avatarUrl}
               alt={displayName}
               referrerPolicy="no-referrer"
               onError={() => setImgError(true)}
-              className="w-full h-full rounded-full object-cover bg-[#1C1C1E]"
+              className="w-full h-full rounded-full object-cover bg-card"
             />
           ) : (
-            <div className="w-full h-full rounded-full bg-gradient-to-tr from-[#2C2C2E] to-[#3A3A3C] flex items-center justify-center text-white font-semibold text-2xl">
+            <div className="w-full h-full rounded-full bg-gradient-to-tr from-elevated to-elevated-2 flex items-center justify-center text-fg font-semibold text-2xl">
               {displayName.charAt(0).toUpperCase()}
             </div>
           )}
@@ -46,22 +46,22 @@ export function ProfileHeader({ user, profile, onEditProfile }: ProfileHeaderPro
 
       {/* Name and Verification Badge */}
       <div className="flex items-center justify-center gap-1.5">
-        <h1 className="text-2xl font-bold tracking-tight text-white">
+        <h1 className="text-2xl font-bold tracking-tight text-fg">
           {displayName}
         </h1>
         {isGoogle && (
           <span
             title="Google Verified Account"
-            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-white/[0.08] text-zinc-300 border border-white/10"
+            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-fg/[0.08] text-zinc-300 border border-fg/10"
           >
-            <ShieldCheck className="w-3 h-3 text-[#30D158]" />
+            <ShieldCheck className="w-3 h-3 text-green-ink" />
             <span>Verified</span>
           </span>
         )}
       </div>
 
       {/* Email */}
-      <p className="text-xs text-[#8E8E93] mt-1 font-normal tracking-wide">
+      <p className="text-xs text-muted mt-1 font-normal tracking-wide">
         {email}
       </p>
 
@@ -70,9 +70,9 @@ export function ProfileHeader({ user, profile, onEditProfile }: ProfileHeaderPro
         <button
           type="button"
           onClick={onEditProfile}
-          className="px-3.5 py-1.5 rounded-full bg-white/[0.08] hover:bg-white/[0.12] active:scale-95 text-xs font-semibold text-white/90 border border-white/[0.06] transition-all flex items-center gap-1.5"
+          className="px-3.5 py-1.5 rounded-full bg-fg/[0.08] hover:bg-fg/[0.12] active:scale-95 text-xs font-semibold text-fg/90 border border-fg/[0.06] transition-all flex items-center gap-1.5"
         >
-          <Pencil className="w-3 h-3 text-[#30D158]" />
+          <Pencil className="w-3 h-3 text-green-ink" />
           <span>Edit Profile</span>
         </button>
       </div>

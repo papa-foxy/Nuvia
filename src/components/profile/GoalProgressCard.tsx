@@ -41,8 +41,8 @@ export function GoalProgressCard({ profile, goals }: GoalProgressCardProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
-          <Target className="w-3.5 h-3.5 text-[#30D158]" />
-          <span className="text-xs font-bold text-white uppercase tracking-wider">
+          <Target className="w-3.5 h-3.5 text-green-ink" />
+          <span className="text-xs font-bold text-fg uppercase tracking-wider">
             Goal Progress
           </span>
         </div>
@@ -50,42 +50,42 @@ export function GoalProgressCard({ profile, goals }: GoalProgressCardProps) {
 
       {/* Main Stats: Current -> Target */}
       <div className="grid grid-cols-2 gap-3 pt-0.5">
-        <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/[0.04]">
-          <span className="text-[11px] font-medium text-[#8E8E93] block">Current</span>
+        <div className="p-3 rounded-2xl bg-fg/[0.03] border border-fg/[0.04]">
+          <span className="text-[11px] font-medium text-muted block">Current</span>
           <div className="flex items-baseline gap-1 mt-0.5">
-            <span className="text-2xl font-bold tracking-tight text-white">
+            <span className="text-2xl font-bold tracking-tight text-fg">
               {currentWeight !== null ? currentWeight : '—'}
             </span>
-            <span className="text-xs font-semibold text-[#8E8E93]">kg</span>
+            <span className="text-xs font-semibold text-muted">kg</span>
           </div>
         </div>
 
-        <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/[0.04]">
+        <div className="p-3 rounded-2xl bg-fg/[0.03] border border-fg/[0.04]">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-medium text-[#8E8E93] block">Target</span>
-            <span className="text-[10px] font-semibold text-[#30D158] px-1.5 py-0.2 rounded-full bg-[#30D158]/10">
+            <span className="text-[11px] font-medium text-muted block">Target</span>
+            <span className="text-[10px] font-semibold text-green-ink px-1.5 py-0.2 rounded-full bg-[#30D158]/10">
               {goalFormatted}
             </span>
           </div>
           <div className="flex items-baseline gap-1 mt-0.5">
-            <span className="text-2xl font-bold tracking-tight text-white">
+            <span className="text-2xl font-bold tracking-tight text-fg">
               {targetWeight !== null ? targetWeight : '—'}
             </span>
-            <span className="text-xs font-semibold text-[#8E8E93]">kg</span>
+            <span className="text-xs font-semibold text-muted">kg</span>
           </div>
         </div>
       </div>
 
       {/* Delta Callout */}
       {hasWeights ? (
-        <div className="p-3 rounded-xl bg-black/30 border border-white/[0.04] flex items-center justify-between">
+        <div className="p-3 rounded-xl bg-app/30 border border-fg/[0.04] flex items-center justify-between">
           <div className="flex items-center gap-2">
             {isLosing ? (
-              <div className="w-6 h-6 rounded-lg bg-emerald-500/15 text-[#30D158] flex items-center justify-center">
+              <div className="w-6 h-6 rounded-lg bg-emerald-500/15 text-green-ink flex items-center justify-center">
                 <TrendingDown className="w-3.5 h-3.5" />
               </div>
             ) : isGaining ? (
-              <div className="w-6 h-6 rounded-lg bg-[#0A84FF]/15 text-[#0A84FF] flex items-center justify-center">
+              <div className="w-6 h-6 rounded-lg bg-[#0A84FF]/15 text-blue-ink flex items-center justify-center">
                 <TrendingUp className="w-3.5 h-3.5" />
               </div>
             ) : (
@@ -94,20 +94,20 @@ export function GoalProgressCard({ profile, goals }: GoalProgressCardProps) {
               </div>
             )}
             <div>
-              <p className="text-xs font-semibold text-white">
+              <p className="text-xs font-semibold text-fg">
                 {isAtGoal
                   ? 'Target reached! Maintaining weight.'
                   : `${diff} kg to goal`}
               </p>
-              <p className="text-[11px] text-[#8E8E93]">
+              <p className="text-[11px] text-muted">
                 {isLosing ? 'Gradual calorie deficit plan' : isGaining ? 'Surplus & muscle growth plan' : 'Maintenance balance'}
               </p>
             </div>
           </div>
         </div>
       ) : (
-        <div className="p-3 rounded-xl bg-black/20 border border-white/[0.04] text-center">
-          <p className="text-xs text-[#8E8E93]">
+        <div className="p-3 rounded-xl bg-app/20 border border-fg/[0.04] text-center">
+          <p className="text-xs text-muted">
             Track progress towards your target weight in Your Daily Plan below.
           </p>
         </div>

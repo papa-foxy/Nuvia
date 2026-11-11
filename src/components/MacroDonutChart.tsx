@@ -76,21 +76,21 @@ export function MacroDonutChart({
       {/* Header & Mode Switch */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-xs font-semibold text-[#8E8E93] uppercase tracking-wider">
+          <h3 className="text-xs font-semibold text-muted uppercase tracking-wider">
             Nutrition & Activity Balance
           </h3>
-          <p className="text-sm font-bold text-white mt-0.5">
+          <p className="text-sm font-bold text-fg mt-0.5">
             {chartMode === 'macros' ? 'Macronutrient Split' : 'Daily Goal Rings'}
           </p>
         </div>
 
-        <div className="flex bg-white/5 p-0.5 rounded-lg border border-white/5">
+        <div className="flex bg-fg/5 p-0.5 rounded-lg border border-fg/5">
           <button
             onClick={() => setChartMode('macros')}
             className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
               chartMode === 'macros'
-                ? 'bg-white/15 text-white shadow-sm'
-                : 'text-zinc-400 hover:text-white'
+                ? 'bg-fg/15 text-fg shadow-sm'
+                : 'text-zinc-400 hover:text-fg'
             }`}
           >
             Macros
@@ -99,8 +99,8 @@ export function MacroDonutChart({
             onClick={() => setChartMode('rings')}
             className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
               chartMode === 'rings'
-                ? 'bg-white/15 text-white shadow-sm'
-                : 'text-zinc-400 hover:text-white'
+                ? 'bg-fg/15 text-fg shadow-sm'
+                : 'text-zinc-400 hover:text-fg'
             }`}
           >
             Rings
@@ -120,7 +120,7 @@ export function MacroDonutChart({
                 cy={center}
                 r={radius}
                 fill="transparent"
-                stroke="rgba(255, 255, 255, 0.06)"
+                stroke="color-mix(in srgb, var(--theme-fg) 6%, transparent)"
                 strokeWidth={strokeWidth}
               />
 
@@ -247,17 +247,17 @@ export function MacroDonutChart({
           <div className="absolute flex flex-col items-center justify-center text-center pointer-events-none">
             {chartMode === 'macros' ? (
               <>
-                <span className="text-2xl font-bold tracking-tight text-white leading-none">
+                <span className="text-2xl font-bold tracking-tight text-fg leading-none">
                   {calories.toLocaleString()}
                 </span>
                 <span className="text-[10px] text-zinc-400 mt-0.5">kcal logged</span>
-                <span className="text-[9px] text-[#30D158] font-medium mt-0.5">
+                <span className="text-[9px] text-green-ink font-medium mt-0.5">
                   {protein}g protein
                 </span>
               </>
             ) : (
               <>
-                <span className="text-xl font-bold tracking-tight text-white leading-none">
+                <span className="text-xl font-bold tracking-tight text-fg leading-none">
                   {Math.round(calCompletion * 100)}%
                 </span>
                 <span className="text-[10px] text-zinc-400 mt-0.5">daily goal</span>
@@ -277,18 +277,18 @@ export function MacroDonutChart({
                 className={`p-2 rounded-xl transition-all border flex items-center justify-between ${
                   hoveredMacro === 'protein'
                     ? 'bg-[#30D158]/15 border-[#30D158]/30'
-                    : 'bg-white/[0.03] border-white/5'
+                    : 'bg-fg/[0.03] border-fg/5'
                 }`}
               >
                 <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-[#30D158] shadow-sm shadow-emerald-500/50" />
                   <div>
-                    <span className="text-xs font-semibold text-white block">Protein</span>
+                    <span className="text-xs font-semibold text-fg block">Protein</span>
                     <span className="text-[10px] text-zinc-400">{protein}g / {proteinTarget}g target</span>
                   </div>
                 </div>
                 <div className="text-right">
-                  <span className="text-xs font-bold text-[#30D158]">{proteinPct}%</span>
+                  <span className="text-xs font-bold text-green-ink">{proteinPct}%</span>
                   <span className="text-[10px] text-zinc-500 block">{proteinCals} kcal</span>
                 </div>
               </div>
@@ -300,18 +300,18 @@ export function MacroDonutChart({
                 className={`p-2 rounded-xl transition-all border flex items-center justify-between ${
                   hoveredMacro === 'carbs'
                     ? 'bg-[#FF9500]/15 border-[#FF9500]/30'
-                    : 'bg-white/[0.03] border-white/5'
+                    : 'bg-fg/[0.03] border-fg/5'
                 }`}
               >
                 <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-[#FF9500] shadow-sm shadow-orange-500/50" />
                   <div>
-                    <span className="text-xs font-semibold text-white block">Carbs</span>
+                    <span className="text-xs font-semibold text-fg block">Carbs</span>
                     <span className="text-[10px] text-zinc-400">{carbs}g / {carbsTarget}g target</span>
                   </div>
                 </div>
                 <div className="text-right">
-                  <span className="text-xs font-bold text-[#FF9500]">{carbsPct}%</span>
+                  <span className="text-xs font-bold text-orange-ink">{carbsPct}%</span>
                   <span className="text-[10px] text-zinc-500 block">{carbsCals} kcal</span>
                 </div>
               </div>
@@ -323,18 +323,18 @@ export function MacroDonutChart({
                 className={`p-2 rounded-xl transition-all border flex items-center justify-between ${
                   hoveredMacro === 'fat'
                     ? 'bg-[#FF375F]/15 border-[#FF375F]/30'
-                    : 'bg-white/[0.03] border-white/5'
+                    : 'bg-fg/[0.03] border-fg/5'
                 }`}
               >
                 <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-[#FF375F] shadow-sm shadow-pink-500/50" />
                   <div>
-                    <span className="text-xs font-semibold text-white block">Fats</span>
+                    <span className="text-xs font-semibold text-fg block">Fats</span>
                     <span className="text-[10px] text-zinc-400">{fat}g / {fatTarget}g target</span>
                   </div>
                 </div>
                 <div className="text-right">
-                  <span className="text-xs font-bold text-[#FF375F]">{fatPct}%</span>
+                  <span className="text-xs font-bold text-pink-ink">{fatPct}%</span>
                   <span className="text-[10px] text-zinc-500 block">{fatCals} kcal</span>
                 </div>
               </div>
@@ -342,39 +342,39 @@ export function MacroDonutChart({
           ) : (
             <>
               {/* Calories Ring Legend */}
-              <div className="p-2 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-between">
+              <div className="p-2 rounded-xl bg-fg/[0.03] border border-fg/5 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-[#FF3B30] shadow-sm shadow-red-500/50" />
                   <div>
-                    <span className="text-xs font-semibold text-white block">Calories</span>
+                    <span className="text-xs font-semibold text-fg block">Calories</span>
                     <span className="text-[10px] text-zinc-400">{calories} / {calorieTarget} kcal</span>
                   </div>
                 </div>
-                <span className="text-xs font-bold text-[#FF3B30]">{Math.round(calCompletion * 100)}%</span>
+                <span className="text-xs font-bold text-red-ink">{Math.round(calCompletion * 100)}%</span>
               </div>
 
               {/* Protein Ring Legend */}
-              <div className="p-2 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-between">
+              <div className="p-2 rounded-xl bg-fg/[0.03] border border-fg/5 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-[#30D158] shadow-sm shadow-emerald-500/50" />
                   <div>
-                    <span className="text-xs font-semibold text-white block">Protein Target</span>
+                    <span className="text-xs font-semibold text-fg block">Protein Target</span>
                     <span className="text-[10px] text-zinc-400">{protein}g / {proteinTarget}g</span>
                   </div>
                 </div>
-                <span className="text-xs font-bold text-[#30D158]">{Math.round(proteinCompletion * 100)}%</span>
+                <span className="text-xs font-bold text-green-ink">{Math.round(proteinCompletion * 100)}%</span>
               </div>
 
               {/* Exercise Ring Legend */}
-              <div className="p-2 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-between">
+              <div className="p-2 rounded-xl bg-fg/[0.03] border border-fg/5 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-[#0A84FF] shadow-sm shadow-blue-500/50" />
                   <div>
-                    <span className="text-xs font-semibold text-white block">Exercise Time</span>
+                    <span className="text-xs font-semibold text-fg block">Exercise Time</span>
                     <span className="text-[10px] text-zinc-400">{exerciseMinutes}m / {exerciseTarget}m</span>
                   </div>
                 </div>
-                <span className="text-xs font-bold text-[#0A84FF]">{Math.round(exCompletion * 100)}%</span>
+                <span className="text-xs font-bold text-blue-ink">{Math.round(exCompletion * 100)}%</span>
               </div>
             </>
           )}

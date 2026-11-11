@@ -582,7 +582,7 @@ export function RoutineDetailView({
           <button
             type="button"
             onClick={onBack}
-            className="flex items-center gap-1 text-xs font-semibold text-[#8E8E93] hover:text-white transition-colors py-1.5 px-2.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12]"
+            className="flex items-center gap-1 text-xs font-semibold text-muted hover:text-fg transition-colors py-1.5 px-2.5 rounded-xl bg-fg/[0.06] hover:bg-fg/[0.12]"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Plans</span>
@@ -593,10 +593,10 @@ export function RoutineDetailView({
               <button
                 type="button"
                 onClick={() => onEditRoutine(currentRoutine)}
-                className="py-1.5 px-3 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-xs font-semibold text-white flex items-center gap-1.5 transition-colors"
+                className="py-1.5 px-3 rounded-xl bg-fg/[0.06] hover:bg-fg/[0.12] text-xs font-semibold text-fg flex items-center gap-1.5 transition-colors"
                 title="Edit Routine"
               >
-                <Pencil className="w-3.5 h-3.5 text-[#30D158]" />
+                <Pencil className="w-3.5 h-3.5 text-green-ink" />
                 <span>Edit</span>
               </button>
             )}
@@ -605,7 +605,7 @@ export function RoutineDetailView({
               <button
                 type="button"
                 onClick={() => onDuplicateRoutine(currentRoutine.id)}
-                className="p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-[#8E8E93] hover:text-white transition-colors"
+                className="p-2 rounded-xl bg-fg/[0.04] hover:bg-fg/[0.08] text-muted hover:text-fg transition-colors"
                 title="Duplicate Routine"
               >
                 <Copy className="w-3.5 h-3.5" />
@@ -615,7 +615,7 @@ export function RoutineDetailView({
             <button
               type="button"
               onClick={() => onDeleteRoutine(currentRoutine.id)}
-              className="p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-[#8E8E93] hover:text-red-400 transition-colors"
+              className="p-2 rounded-xl bg-fg/[0.04] hover:bg-fg/[0.08] text-muted hover:text-red-400 transition-colors"
               title="Delete Routine"
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -626,29 +626,29 @@ export function RoutineDetailView({
         {/* Hero Card with Title, Focus, and Training Days */}
         <div className="space-y-2 pt-1">
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#30D158]/15 text-[#30D158] border border-[#30D158]/25">
+            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#30D158]/15 text-green-ink border border-[#30D158]/25">
               {currentRoutine.focus || 'Workout'}
             </span>
-            <span className="text-xs text-[#8E8E93]">
+            <span className="text-xs text-muted">
               {currentRoutine.exercises.length} Movements · ~{defaultEstMinutes} min
             </span>
           </div>
 
-          <h1 className="text-2xl font-bold tracking-tight text-white leading-tight">
+          <h1 className="text-2xl font-bold tracking-tight text-fg leading-tight">
             {currentRoutine.title}
           </h1>
 
           {currentRoutine.description && (
-            <p className="text-xs text-[#8E8E93] leading-relaxed">{currentRoutine.description}</p>
+            <p className="text-xs text-muted leading-relaxed">{currentRoutine.description}</p>
           )}
 
           {/* Days Chips */}
           <div className="flex flex-wrap items-center gap-1 pt-1">
-            <span className="text-[11px] text-[#8E8E93] mr-1">Scheduled on:</span>
+            <span className="text-[11px] text-muted mr-1">Scheduled on:</span>
             {currentRoutine.days.map((day) => (
               <span
                 key={day}
-                className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-white/[0.08] text-white border border-white/5"
+                className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-fg/[0.08] text-fg border border-fg/5"
               >
                 {day}
               </span>
@@ -659,7 +659,7 @@ export function RoutineDetailView({
         {/* Recovery Awareness Guidance (Phase 11) */}
         {hasRecentlyTrained && (
           <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-start gap-2.5 text-xs text-amber-200">
-            <Info className="w-4 h-4 text-[#FF9F0A] shrink-0 mt-0.5" />
+            <Info className="w-4 h-4 text-orange-ink shrink-0 mt-0.5" />
             <p className="leading-snug text-[11px]">
               Target muscle groups were trained recently. You can still train today — listen to your body and adjust resistance or volume as needed.
             </p>
@@ -667,14 +667,14 @@ export function RoutineDetailView({
         )}
 
         {/* Real Lifetime Performance Statistics (Phase 3) */}
-        <div className="p-4 rounded-3xl bg-gradient-to-b from-[#1C1C1E] to-[#141416] border border-white/[0.08] space-y-3 shadow-xl">
+        <div className="p-4 rounded-3xl bg-gradient-to-b from-card to-card dark:to-[#141416] border border-fg/[0.08] space-y-3 shadow-xl">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#8E8E93] flex items-center gap-1.5">
-              <TrendingUp className="w-3.5 h-3.5 text-[#30D158]" />
+            <span className="text-[11px] font-bold uppercase tracking-wider text-muted flex items-center gap-1.5">
+              <TrendingUp className="w-3.5 h-3.5 text-green-ink" />
               <span>Routine Activity History</span>
             </span>
             {stats && stats.completedCount > 0 && (
-              <span className="text-[10px] text-[#30D158] font-semibold bg-[#30D158]/10 px-2 py-0.5 rounded-full">
+              <span className="text-[10px] text-green-ink font-semibold bg-[#30D158]/10 px-2 py-0.5 rounded-full">
                 Active Routine
               </span>
             )}
@@ -682,45 +682,45 @@ export function RoutineDetailView({
 
           {loadingStats ? (
             <div className="grid grid-cols-3 gap-2 py-2">
-              <div className="h-12 bg-white/5 rounded-xl animate-pulse" />
-              <div className="h-12 bg-white/5 rounded-xl animate-pulse" />
-              <div className="h-12 bg-white/5 rounded-xl animate-pulse" />
+              <div className="h-12 bg-fg/5 rounded-xl animate-pulse" />
+              <div className="h-12 bg-fg/5 rounded-xl animate-pulse" />
+              <div className="h-12 bg-fg/5 rounded-xl animate-pulse" />
             </div>
           ) : stats && stats.completedCount > 0 ? (
             <div className="grid grid-cols-3 gap-2 text-center">
-              <div className="p-2.5 rounded-xl bg-black/40 border border-white/[0.04]">
-                <p className="text-[10px] text-[#8E8E93]">Workouts</p>
-                <p className="text-base font-bold text-white mt-0.5">{stats.completedCount}</p>
+              <div className="p-2.5 rounded-xl bg-app/40 border border-fg/[0.04]">
+                <p className="text-[10px] text-muted">Workouts</p>
+                <p className="text-base font-bold text-fg mt-0.5">{stats.completedCount}</p>
               </div>
 
-              <div className="p-2.5 rounded-xl bg-black/40 border border-white/[0.04]">
-                <p className="text-[10px] text-[#8E8E93]">Total Time</p>
-                <p className="text-base font-bold text-white mt-0.5">
+              <div className="p-2.5 rounded-xl bg-app/40 border border-fg/[0.04]">
+                <p className="text-[10px] text-muted">Total Time</p>
+                <p className="text-base font-bold text-fg mt-0.5">
                   {stats.totalDurationMinutes >= 60
                     ? `${Math.floor(stats.totalDurationMinutes / 60)}h ${stats.totalDurationMinutes % 60}m`
                     : `${stats.totalDurationMinutes}m`}
                 </p>
               </div>
 
-              <div className="p-2.5 rounded-xl bg-black/40 border border-white/[0.04]">
-                <p className="text-[10px] text-[#8E8E93]">Calories</p>
-                <p className="text-base font-bold text-[#FF9500] mt-0.5">{stats.totalCaloriesBurned}</p>
+              <div className="p-2.5 rounded-xl bg-app/40 border border-fg/[0.04]">
+                <p className="text-[10px] text-muted">Calories</p>
+                <p className="text-base font-bold text-orange-ink mt-0.5">{stats.totalCaloriesBurned}</p>
               </div>
             </div>
           ) : (
             <div className="py-2 text-center space-y-1">
               <p className="text-xs text-zinc-300 font-medium">No sessions completed yet.</p>
-              <p className="text-[11px] text-[#8E8E93]">Start your first workout to begin tracking consistency & progressive overload.</p>
+              <p className="text-[11px] text-muted">Start your first workout to begin tracking consistency & progressive overload.</p>
             </div>
           )}
 
           {stats?.lastCompletedDate && (
-            <div className="flex items-center justify-between pt-1 border-t border-white/[0.04] text-[11px] text-[#8E8E93]">
+            <div className="flex items-center justify-between pt-1 border-t border-fg/[0.04] text-[11px] text-muted">
               <span className="flex items-center gap-1">
-                <Calendar className="w-3 h-3 text-[#30D158]" />
+                <Calendar className="w-3 h-3 text-green-ink" />
                 <span>Last completed:</span>
               </span>
-              <span className="text-white font-medium">
+              <span className="text-fg font-medium">
                 {new Date(stats.lastCompletedDate).toLocaleDateString('en-US', {
                   month: 'short',
                   day: 'numeric',
@@ -742,7 +742,7 @@ export function RoutineDetailView({
 
         {/* Exercise Preview List */}
         <div className="space-y-2.5 pt-2">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-[#8E8E93] block px-1">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-muted block px-1">
             Planned Exercises ({currentRoutine.exercises.length})
           </span>
 
@@ -751,28 +751,28 @@ export function RoutineDetailView({
               <div
                 key={ex.id || idx}
                 onClick={() => setSelectedVideoExercise(ex)}
-                className="p-3 rounded-2xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.06] flex items-center justify-between transition-colors cursor-pointer group"
+                className="p-3 rounded-2xl bg-fg/[0.03] hover:bg-fg/[0.06] border border-fg/[0.06] flex items-center justify-between transition-colors cursor-pointer group"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl overflow-hidden bg-black shrink-0 border border-white/10 relative">
+                  <div className="w-12 h-12 rounded-xl overflow-hidden bg-app shrink-0 border border-fg/10 relative">
                     <ExerciseThumbnail exercise={ex} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                     <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Play className="w-4 h-4 text-white fill-white" />
+                      <Play className="w-4 h-4 text-fg fill-white" />
                     </div>
                   </div>
 
                   <div>
-                    <p className="text-xs font-bold text-white group-hover:text-[#30D158] transition-colors leading-tight">
+                    <p className="text-xs font-bold text-fg group-hover:text-green-ink transition-colors leading-tight">
                       {ex.name}
                     </p>
-                    <div className="flex items-center gap-2 mt-1 text-[10px] text-[#8E8E93]">
+                    <div className="flex items-center gap-2 mt-1 text-[10px] text-muted">
                       <span className="font-semibold text-zinc-300">
                         {ex.sets} sets × {ex.reps}
                       </span>
                       {ex.target_weight_kg && (
                         <>
                           <span>·</span>
-                          <span className="text-[#0A84FF] font-medium">{ex.target_weight_kg} kg</span>
+                          <span className="text-blue-ink font-medium">{ex.target_weight_kg} kg</span>
                         </>
                       )}
                       <span>·</span>
@@ -782,7 +782,7 @@ export function RoutineDetailView({
                     {/* Progressive Overload Insight Badge (Phase 10) */}
                     {exerciseHistoryMap[ex.name.toLowerCase()] && (
                       <p className="text-[10px] text-zinc-400 mt-0.5 flex items-center gap-1">
-                        <History className="w-2.5 h-2.5 text-[#30D158]" />
+                        <History className="w-2.5 h-2.5 text-green-ink" />
                         <span>Last: {exerciseHistoryMap[ex.name.toLowerCase()]}</span>
                       </p>
                     )}
@@ -790,7 +790,7 @@ export function RoutineDetailView({
                 </div>
 
                 <div className="text-right shrink-0">
-                  <span className="text-[10px] text-[#8E8E93] group-hover:text-white transition-colors">
+                  <span className="text-[10px] text-muted group-hover:text-fg transition-colors">
                     Watch ›
                   </span>
                 </div>
@@ -819,17 +819,17 @@ export function RoutineDetailView({
         <button
           type="button"
           onClick={() => setViewMode('overview')}
-          className="flex items-center gap-1 text-xs font-semibold text-[#8E8E93] hover:text-white transition-colors py-1.5 px-2.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12]"
+          className="flex items-center gap-1 text-xs font-semibold text-muted hover:text-fg transition-colors py-1.5 px-2.5 rounded-xl bg-fg/[0.06] hover:bg-fg/[0.12]"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Overview</span>
         </button>
 
         <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-white">
+          <span className="text-xs font-bold text-fg">
             {completedSetsCount}/{totalSetsCount} Sets Done
           </span>
-          <div className="w-16 h-2 bg-white/10 rounded-full overflow-hidden">
+          <div className="w-16 h-2 bg-fg/10 rounded-full overflow-hidden">
             <div
               className="h-full bg-[#30D158] transition-all duration-300"
               style={{ width: `${progressPercent}%` }}
@@ -840,14 +840,14 @@ export function RoutineDetailView({
 
       {/* Floating Rest Countdown Timer Widget (Phase 4) */}
       {isRestTimerActive && restSecondsRemaining !== null && restSecondsRemaining > 0 && (
-        <div className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-500/20 via-[#1C1C1E] to-[#1C1C1E] border border-[#30D158]/40 shadow-xl flex items-center justify-between animate-fadeIn">
+        <div className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-500/20 via-card to-card border border-[#30D158]/40 shadow-xl flex items-center justify-between animate-fadeIn">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-[#30D158]/20 text-[#30D158] flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-[#30D158]/20 text-green-ink flex items-center justify-center">
               <Timer className="w-4 h-4 animate-spin" />
             </div>
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-[#30D158]">Resting Between Sets</p>
-              <p className="font-mono text-lg font-black text-white leading-tight">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-green-ink">Resting Between Sets</p>
+              <p className="font-mono text-lg font-black text-fg leading-tight">
                 {formatTimer(restSecondsRemaining)}
               </p>
             </div>
@@ -857,7 +857,7 @@ export function RoutineDetailView({
             <button
               type="button"
               onClick={() => setRestSecondsRemaining((prev) => (prev ? prev + 30 : 30))}
-              className="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-semibold"
+              className="px-2.5 py-1.5 rounded-xl bg-fg/10 hover:bg-fg/15 text-fg text-xs font-semibold"
             >
               +30s
             </button>
@@ -867,7 +867,7 @@ export function RoutineDetailView({
                 setIsRestTimerActive(false);
                 setRestSecondsRemaining(0);
               }}
-              className="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-zinc-300 text-xs font-semibold"
+              className="px-2.5 py-1.5 rounded-xl bg-fg/10 hover:bg-fg/15 text-zinc-300 text-xs font-semibold"
             >
               Skip
             </button>
@@ -876,7 +876,7 @@ export function RoutineDetailView({
       )}
 
       {/* Live Controller Card */}
-      <div className="p-4 rounded-3xl bg-gradient-to-b from-[#1C1C1E] to-[#141416] border border-white/[0.1] shadow-xl space-y-3.5">
+      <div className="p-4 rounded-3xl bg-gradient-to-b from-card to-card dark:to-[#141416] border border-fg/[0.1] shadow-xl space-y-3.5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span
@@ -888,19 +888,19 @@ export function RoutineDetailView({
                   : 'bg-[#8E8E93]'
               }`}
             />
-            <span className="text-xs font-bold uppercase tracking-wider text-white">
+            <span className="text-xs font-bold uppercase tracking-wider text-fg">
               {status === 'active' ? 'Live Session' : status === 'paused' ? 'Paused' : 'Workout Ready'}
             </span>
           </div>
 
           {/* Stopwatch Display */}
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/60 border border-white/[0.08] text-white">
-              <Clock className="w-3.5 h-3.5 text-[#30D158]" />
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-app/60 border border-fg/[0.08] text-fg">
+              <Clock className="w-3.5 h-3.5 text-green-ink" />
               <span className="font-mono text-sm font-bold tracking-wider">{formatTimer(elapsedSeconds)}</span>
             </div>
 
-            <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#30D158]/10 border border-[#30D158]/25 text-[#30D158]">
+            <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#30D158]/10 border border-[#30D158]/25 text-green-ink">
               <Flame className="w-3 h-3 fill-[#30D158]" />
               <span className="text-xs font-bold">{currentCaloriesBurned} kcal</span>
             </div>
@@ -908,21 +908,21 @@ export function RoutineDetailView({
         </div>
 
         {/* Adjustable Duration Controls */}
-        <div className="p-2.5 rounded-2xl bg-black/40 border border-white/[0.06] flex items-center justify-between text-xs">
-          <span className="text-[11px] text-[#8E8E93]">Duration:</span>
+        <div className="p-2.5 rounded-2xl bg-app/40 border border-fg/[0.06] flex items-center justify-between text-xs">
+          <span className="text-[11px] text-muted">Duration:</span>
           <div className="flex items-center gap-1">
             <button
               type="button"
               onClick={() => handleAdjustDuration(-5)}
-              className="px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[#8E8E93] text-[10px]"
+              className="px-2 py-1 rounded-lg bg-fg/5 hover:bg-fg/10 text-muted text-[10px]"
             >
               -5m
             </button>
-            <span className="font-bold text-white px-1.5">{durationMinutes} min</span>
+            <span className="font-bold text-fg px-1.5">{durationMinutes} min</span>
             <button
               type="button"
               onClick={() => handleAdjustDuration(5)}
-              className="px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[#8E8E93] text-[10px]"
+              className="px-2 py-1 rounded-lg bg-fg/5 hover:bg-fg/10 text-muted text-[10px]"
             >
               +5m
             </button>
@@ -936,7 +936,7 @@ export function RoutineDetailView({
               <button
                 type="button"
                 onClick={handlePauseWorkout}
-                className="flex-1 py-3 px-4 rounded-2xl bg-[#2C2C2E] hover:bg-[#3A3A3C] text-[#FF9F0A] font-bold text-xs flex items-center justify-center gap-2 border border-[#FF9F0A]/30 transition-all"
+                className="flex-1 py-3 px-4 rounded-2xl bg-elevated hover:bg-elevated-2 text-orange-ink font-bold text-xs flex items-center justify-center gap-2 border border-[#FF9F0A]/30 transition-all"
               >
                 <Pause className="w-4 h-4 fill-[#FF9F0A]" />
                 <span>Pause</span>
@@ -971,9 +971,9 @@ export function RoutineDetailView({
                   setStatus('finished');
                   setShowCompletionModal(true);
                 }}
-                className="flex-1 py-3 px-4 rounded-2xl bg-[#2C2C2E] hover:bg-[#3A3A3C] text-white font-bold text-xs flex items-center justify-center gap-2 border border-white/[0.1] transition-all"
+                className="flex-1 py-3 px-4 rounded-2xl bg-elevated hover:bg-elevated-2 text-fg font-bold text-xs flex items-center justify-center gap-2 border border-fg/[0.1] transition-all"
               >
-                <CheckCircle2 className="w-4 h-4 text-[#30D158]" />
+                <CheckCircle2 className="w-4 h-4 text-green-ink" />
                 <span>Finish Early</span>
               </button>
             </>
@@ -997,10 +997,10 @@ export function RoutineDetailView({
       {/* Exercises with Set-by-Set Logging (Phase 4) */}
       <div className="space-y-3 pt-1">
         <div className="flex items-center justify-between px-1">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-[#8E8E93]">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-muted">
             Track Sets & Reps
           </span>
-          <span className="text-[10px] text-[#8E8E93]">Check set to start rest timer</span>
+          <span className="text-[10px] text-muted">Check set to start rest timer</span>
         </div>
 
         {currentRoutine.exercises.map((ex, exIdx) => {
@@ -1013,7 +1013,7 @@ export function RoutineDetailView({
               className={`p-3.5 rounded-2xl border transition-all space-y-3 ${
                 allSetsDone
                   ? 'bg-[#30D158]/[0.03] border-[#30D158]/30 shadow-sm'
-                  : 'bg-white/[0.02] border-white/[0.08]'
+                  : 'bg-fg/[0.02] border-fg/[0.08]'
               }`}
             >
               {/* Exercise Header */}
@@ -1021,26 +1021,26 @@ export function RoutineDetailView({
                 <div className="flex items-center gap-2.5">
                   <div
                     onClick={() => setSelectedVideoExercise(ex)}
-                    className="w-11 h-11 rounded-xl overflow-hidden bg-black shrink-0 border border-white/10 cursor-pointer relative group"
+                    className="w-11 h-11 rounded-xl overflow-hidden bg-app shrink-0 border border-fg/10 cursor-pointer relative group"
                   >
                     <ExerciseThumbnail exercise={ex} className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Play className="w-3.5 h-3.5 text-white fill-white" />
+                      <Play className="w-3.5 h-3.5 text-fg fill-white" />
                     </div>
                   </div>
 
                   <div>
-                    <h4 className="text-xs font-bold text-white leading-tight">{ex.name}</h4>
-                    <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-[#8E8E93]">
+                    <h4 className="text-xs font-bold text-fg leading-tight">{ex.name}</h4>
+                    <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-muted">
                       <span>Planned: {ex.sets} × {ex.reps}</span>
                       <span>·</span>
-                      <span className="text-[#30D158] font-medium">{ex.target_muscle}</span>
+                      <span className="text-green-ink font-medium">{ex.target_muscle}</span>
                     </div>
 
                     {/* Progressive Overload Badge */}
                     {exerciseHistoryMap[ex.name.toLowerCase()] && (
                       <p className="text-[10px] text-zinc-400 mt-0.5 flex items-center gap-1">
-                        <History className="w-2.5 h-2.5 text-[#30D158]" />
+                        <History className="w-2.5 h-2.5 text-green-ink" />
                         <span>Last: {exerciseHistoryMap[ex.name.toLowerCase()]}</span>
                       </p>
                     )}
@@ -1051,17 +1051,17 @@ export function RoutineDetailView({
                 <button
                   type="button"
                   onClick={() => setReplacingExercise(ex)}
-                  className="px-2.5 py-1 rounded-xl bg-white/5 hover:bg-white/10 text-[10px] font-semibold text-zinc-300 hover:text-white border border-white/5 flex items-center gap-1 transition-colors"
+                  className="px-2.5 py-1 rounded-xl bg-fg/5 hover:bg-fg/10 text-[10px] font-semibold text-zinc-300 hover:text-fg border border-fg/5 flex items-center gap-1 transition-colors"
                   title="Replace with alternative movement"
                 >
-                  <RefreshCw className="w-3 h-3 text-[#FF9500]" />
+                  <RefreshCw className="w-3 h-3 text-orange-ink" />
                   <span>Replace</span>
                 </button>
               </div>
 
               {/* Set-by-Set Table (Phase 4) */}
               <div className="space-y-1.5 pt-1">
-                <div className="grid grid-cols-12 gap-1 text-[10px] text-[#8E8E93] font-semibold px-2">
+                <div className="grid grid-cols-12 gap-1 text-[10px] text-muted font-semibold px-2">
                   <span className="col-span-2">SET</span>
                   <span className="col-span-4 text-center">REPS</span>
                   <span className="col-span-4 text-center">WEIGHT (KG)</span>
@@ -1074,10 +1074,10 @@ export function RoutineDetailView({
                     className={`grid grid-cols-12 gap-1 items-center p-2 rounded-xl border transition-colors ${
                       set.completed
                         ? 'bg-[#30D158]/10 border-[#30D158]/25'
-                        : 'bg-black/30 border-white/[0.04]'
+                        : 'bg-app/30 border-fg/[0.04]'
                     }`}
                   >
-                    <span className="col-span-2 text-xs font-bold text-white px-1">
+                    <span className="col-span-2 text-xs font-bold text-fg px-1">
                       {set.set_number}
                     </span>
 
@@ -1086,17 +1086,17 @@ export function RoutineDetailView({
                       <button
                         type="button"
                         onClick={() => handleUpdateSetReps(ex.id, sIdx, -1)}
-                        className="w-5 h-5 rounded bg-white/5 text-white flex items-center justify-center text-xs"
+                        className="w-5 h-5 rounded bg-fg/5 text-fg flex items-center justify-center text-xs"
                       >
                         -
                       </button>
-                      <span className="font-mono font-bold text-white text-xs w-6 text-center">
+                      <span className="font-mono font-bold text-fg text-xs w-6 text-center">
                         {set.reps}
                       </span>
                       <button
                         type="button"
                         onClick={() => handleUpdateSetReps(ex.id, sIdx, 1)}
-                        className="w-5 h-5 rounded bg-white/5 text-white flex items-center justify-center text-xs"
+                        className="w-5 h-5 rounded bg-fg/5 text-fg flex items-center justify-center text-xs"
                       >
                         +
                       </button>
@@ -1117,7 +1117,7 @@ export function RoutineDetailView({
                             e.target.value ? Number(e.target.value) : undefined
                           )
                         }
-                        className="w-14 px-1.5 py-1 text-center font-mono text-xs rounded-lg bg-black/40 border border-white/10 text-white focus:outline-none focus:border-[#30D158]"
+                        className="w-14 px-1.5 py-1 text-center font-mono text-xs rounded-lg bg-app/40 border border-fg/10 text-fg focus:outline-none focus:border-[#30D158]"
                       />
                     </div>
 
@@ -1129,7 +1129,7 @@ export function RoutineDetailView({
                         className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
                           set.completed
                             ? 'bg-[#30D158] text-black shadow'
-                            : 'bg-white/10 hover:bg-white/15 text-zinc-400'
+                            : 'bg-fg/10 hover:bg-fg/15 text-zinc-400'
                         }`}
                       >
                         <Check className="w-4 h-4" />
@@ -1144,7 +1144,7 @@ export function RoutineDetailView({
                 <button
                   type="button"
                   onClick={() => handleAddSet(ex.id, parseTargetReps(ex.reps))}
-                  className="text-[11px] font-semibold text-[#30D158] hover:underline flex items-center gap-1"
+                  className="text-[11px] font-semibold text-green-ink hover:underline flex items-center gap-1"
                 >
                   <Plus className="w-3 h-3" />
                   <span>Add Set</span>
@@ -1168,26 +1168,26 @@ export function RoutineDetailView({
       {/* Completion Dialog */}
       {showCompletionModal && (
         <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
-          <div className="w-full max-w-sm bg-[#1C1C1E] border border-white/15 rounded-3xl p-6 shadow-2xl space-y-4 text-center">
-            <div className="w-14 h-14 rounded-full bg-[#30D158]/20 text-[#30D158] flex items-center justify-center mx-auto">
+          <div className="w-full max-w-sm bg-card border border-fg/15 rounded-3xl p-6 shadow-2xl space-y-4 text-center">
+            <div className="w-14 h-14 rounded-full bg-[#30D158]/20 text-green-ink flex items-center justify-center mx-auto">
               <Award className="w-7 h-7" />
             </div>
 
             <div>
-              <h3 className="text-lg font-bold text-white">Workout Complete!</h3>
-              <p className="text-xs text-[#8E8E93] mt-1">
+              <h3 className="text-lg font-bold text-fg">Workout Complete!</h3>
+              <p className="text-xs text-muted mt-1">
                 {completedSetsCount} sets logged across {completedExercisesCount} movements.
               </p>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.06] grid grid-cols-2 gap-3 text-center">
+            <div className="p-3.5 rounded-2xl bg-fg/[0.04] border border-fg/[0.06] grid grid-cols-2 gap-3 text-center">
               <div>
-                <p className="text-[11px] text-[#8E8E93]">Duration</p>
-                <p className="text-base font-extrabold text-white mt-0.5">{durationMinutes} min</p>
+                <p className="text-[11px] text-muted">Duration</p>
+                <p className="text-base font-extrabold text-fg mt-0.5">{durationMinutes} min</p>
               </div>
               <div>
-                <p className="text-[11px] text-[#8E8E93]">Burned</p>
-                <p className="text-base font-extrabold text-[#FF9500] mt-0.5">{currentCaloriesBurned} kcal</p>
+                <p className="text-[11px] text-muted">Burned</p>
+                <p className="text-base font-extrabold text-orange-ink mt-0.5">{currentCaloriesBurned} kcal</p>
               </div>
             </div>
 
@@ -1205,7 +1205,7 @@ export function RoutineDetailView({
                 type="button"
                 onClick={() => handleSaveAndConfirm(false)}
                 disabled={isSaving}
-                className="w-full py-3 rounded-2xl bg-white/10 hover:bg-white/15 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold text-xs transition-colors"
+                className="w-full py-3 rounded-2xl bg-fg/10 hover:bg-fg/15 disabled:opacity-60 disabled:cursor-not-allowed text-fg font-semibold text-xs transition-colors"
               >
                 {isSaving ? 'Saving…' : 'Save & Return to Plans'}
               </button>

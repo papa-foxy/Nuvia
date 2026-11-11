@@ -235,17 +235,17 @@ export function AddMealModal({
       >
         <div
           onClick={(e) => e.stopPropagation()}
-          className="pointer-events-auto w-full max-w-md bg-[#1C1C1E] border-t border-x border-b-0 border-white/[0.08] rounded-t-[28px] rounded-b-none max-h-[calc(100dvh-var(--bottom-nav-height,56px)-env(safe-area-inset-bottom,0px)-0.75rem)] flex flex-col overflow-hidden shadow-2xl animate-slideUp"
+          className="pointer-events-auto w-full max-w-md bg-card border-t border-x border-b-0 border-fg/[0.08] rounded-t-[28px] rounded-b-none max-h-[calc(100dvh-var(--bottom-nav-height,56px)-env(safe-area-inset-bottom,0px)-0.75rem)] flex flex-col overflow-hidden shadow-2xl animate-slideUp"
         >
           {/* Header */}
-          <div className="px-5 py-4 border-b border-white/[0.08] flex items-center justify-between">
+          <div className="px-5 py-4 border-b border-fg/[0.08] flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Camera className="w-4 h-4 text-[#30D158]" />
-              <h3 className="text-base font-semibold text-white">Log Meal & Calculate Calories</h3>
+              <Camera className="w-4 h-4 text-green-ink" />
+              <h3 className="text-base font-semibold text-fg">Log Meal & Calculate Calories</h3>
             </div>
             <button
               onClick={handleCloseAll}
-              className="w-7 h-7 rounded-full bg-[#2C2C2E] flex items-center justify-center text-[#8E8E93] hover:text-white"
+              className="w-7 h-7 rounded-full bg-elevated flex items-center justify-center text-muted hover:text-fg"
             >
               <X className="w-4 h-4" />
             </button>
@@ -253,22 +253,22 @@ export function AddMealModal({
 
           {/* Mode Switcher */}
           <div className="p-4 pb-0">
-            <div className="grid grid-cols-2 gap-1 p-1 bg-[#121214] rounded-xl border border-white/[0.06]">
+            <div className="grid grid-cols-2 gap-1 p-1 bg-surface rounded-xl border border-fg/[0.06]">
               <button
                 type="button"
                 onClick={() => setActiveTab('photo')}
                 className={`py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-all ${
-                  activeTab === 'photo' ? 'bg-[#2C2C2E] text-white shadow' : 'text-[#8E8E93]'
+                  activeTab === 'photo' ? 'bg-elevated text-fg shadow' : 'text-muted'
                 }`}
               >
-                <Camera className="w-3.5 h-3.5 text-[#30D158]" />
+                <Camera className="w-3.5 h-3.5 text-green-ink" />
                 <span>Camera & Photo</span>
               </button>
               <button
                 type="button"
                 onClick={() => setActiveTab('text')}
                 className={`py-2 text-xs font-semibold rounded-lg transition-all ${
-                  activeTab === 'text' ? 'bg-[#2C2C2E] text-white shadow' : 'text-[#8E8E93]'
+                  activeTab === 'text' ? 'bg-elevated text-fg shadow' : 'text-muted'
                 }`}
               >
                 Text
@@ -280,7 +280,7 @@ export function AddMealModal({
           <div className="p-4 overflow-y-auto space-y-4">
             {/* Meal Category */}
             <div>
-              <label className="block text-xs font-semibold text-[#8E8E93] uppercase tracking-wider mb-2">
+              <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-2">
                 Category
               </label>
               <div className="grid grid-cols-4 gap-1.5">
@@ -291,8 +291,8 @@ export function AddMealModal({
                     onClick={() => setMealType(t)}
                     className={`py-2 rounded-xl text-xs font-medium capitalize transition-colors ${
                       mealType === t
-                        ? 'bg-white text-black font-semibold'
-                        : 'bg-[#121214] text-[#8E8E93] hover:text-white border border-white/[0.04]'
+                        ? 'bg-fg text-app font-semibold'
+                        : 'bg-surface text-muted hover:text-fg border border-fg/[0.04]'
                     }`}
                   >
                     {t}
@@ -326,14 +326,14 @@ export function AddMealModal({
 
                 {/* State 1: Photo Preview (When image has been taken or selected) */}
                 {imagePreview ? (
-                  <div className="relative rounded-2xl overflow-hidden h-52 border border-white/[0.08] bg-black shadow-lg">
+                  <div className="relative rounded-2xl overflow-hidden h-52 border border-fg/[0.08] bg-app shadow-lg">
                     <img src={imagePreview} alt="Captured Food" className="w-full h-full object-cover" />
 
                     {/* Scan Line Animation while analyzing */}
                     {isAnalyzing && (
                       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#30D158]/25 to-transparent animate-pulse pointer-events-none flex flex-col justify-center items-center">
                         <div className="w-full h-1 bg-[#30D158] shadow-[0_0_15px_#30D158]" />
-                        <div className="mt-3 px-3 py-1.5 rounded-full bg-black/80 backdrop-blur-md border border-[#30D158]/40 text-xs font-semibold text-[#30D158] flex items-center gap-2">
+                        <div className="mt-3 px-3 py-1.5 rounded-full bg-black/80 backdrop-blur-md border border-[#30D158]/40 text-xs font-semibold text-green-ink flex items-center gap-2">
                           <Sparkles className="w-3.5 h-3.5 animate-spin" />
                           <span>Nuvia AI is calculating calories...</span>
                         </div>
@@ -353,7 +353,7 @@ export function AddMealModal({
                         <button
                           type="button"
                           onClick={() => setImagePreview(null)}
-                          className="px-2.5 py-1 rounded-lg bg-black/70 backdrop-blur-md text-xs text-[#FF453A] hover:bg-black/90"
+                          className="px-2.5 py-1 rounded-lg bg-black/70 backdrop-blur-md text-xs text-red-ink hover:bg-black/90"
                         >
                           Remove
                         </button>
@@ -367,19 +367,19 @@ export function AddMealModal({
                     <button
                       type="button"
                       onClick={() => cameraInputRef.current?.click()}
-                      className="w-full text-left p-4 rounded-2xl bg-gradient-to-r from-[#30D158]/15 via-[#1C1C1E] to-[#121214] border border-[#30D158]/30 hover:border-[#30D158] transition-all flex items-center gap-3.5 group active:scale-[0.99]"
+                      className="w-full text-left p-4 rounded-2xl bg-gradient-to-r from-[#30D158]/15 via-card to-surface border border-[#30D158]/30 hover:border-[#30D158] transition-all flex items-center gap-3.5 group active:scale-[0.99]"
                     >
                       <div className="w-12 h-12 rounded-xl bg-[#30D158] text-black flex items-center justify-center shrink-0 shadow-lg shadow-[#30D158]/20 group-hover:scale-105 transition-transform">
                         <Camera className="w-6 h-6 stroke-[2.5]" />
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-1.5">
-                          <p className="text-sm font-bold text-white">Take Photo</p>
+                          <p className="text-sm font-bold text-fg">Take Photo</p>
                           <span className="text-[10px] uppercase font-extrabold px-1.5 py-0.5 rounded bg-[#30D158] text-black">
                             Camera
                           </span>
                         </div>
-                        <p className="text-xs text-[#8E8E93] mt-0.5">
+                        <p className="text-xs text-muted mt-0.5">
                           Direct phone camera capture & AI calorie calculation
                         </p>
                       </div>
@@ -389,14 +389,14 @@ export function AddMealModal({
                     <button
                       type="button"
                       onClick={() => libraryInputRef.current?.click()}
-                      className="w-full text-left p-3.5 rounded-2xl bg-[#121214] hover:bg-[#2C2C2E] border border-white/[0.08] hover:border-white/[0.2] transition-colors flex items-center gap-3.5 group active:scale-[0.99]"
+                      className="w-full text-left p-3.5 rounded-2xl bg-surface hover:bg-elevated border border-fg/[0.08] hover:border-fg/[0.2] transition-colors flex items-center gap-3.5 group active:scale-[0.99]"
                     >
                       <div className="w-11 h-11 rounded-xl bg-[#AF52DE]/15 text-[#AF52DE] border border-[#AF52DE]/20 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                         <ImageIcon className="w-5 h-5" />
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm font-semibold text-white">Choose from Photo Library</p>
-                        <p className="text-xs text-[#8E8E93] mt-0.5">
+                        <p className="text-sm font-semibold text-fg">Choose from Photo Library</p>
+                        <p className="text-xs text-muted mt-0.5">
                           Upload existing food photo from gallery
                         </p>
                       </div>
@@ -405,14 +405,14 @@ export function AddMealModal({
                 )}
 
                 {isCompressing && (
-                  <p className="text-xs text-[#30D158] flex items-center gap-1.5">
+                  <p className="text-xs text-green-ink flex items-center gap-1.5">
                     <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                     <span>Processing & optimizing photo...</span>
                   </p>
                 )}
 
                 <div>
-                  <label className="block text-xs text-[#8E8E93] mb-1">
+                  <label className="block text-xs text-muted mb-1">
                     Meal Notes / Ingredients (optional)
                   </label>
                   <input
@@ -420,7 +420,7 @@ export function AddMealModal({
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="e.g. Grilled chicken breast with white rice & broccoli"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#121214] border border-white/[0.06] text-xs text-white placeholder-[#8E8E93] focus:outline-none focus:border-[#30D158]"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-surface border border-fg/[0.06] text-xs text-fg placeholder-muted focus:outline-none focus:border-[#30D158]"
                   />
                 </div>
               </div>
@@ -434,7 +434,7 @@ export function AddMealModal({
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Tell Nuvia what you ate (e.g. 2 eggs with toast, chicken rice, or a protein shake)..."
-                  className="w-full p-3.5 rounded-xl bg-[#121214] border border-white/[0.06] text-xs text-white placeholder-[#8E8E93] focus:outline-none focus:border-[#30D158] resize-none"
+                  className="w-full p-3.5 rounded-xl bg-surface border border-fg/[0.06] text-xs text-fg placeholder-muted focus:outline-none focus:border-[#30D158] resize-none"
                 />
 
                 {suggestions.length > 0 && (
@@ -444,10 +444,10 @@ export function AddMealModal({
                         key={idx}
                         type="button"
                         onClick={() => setDescription(preset.text)}
-                        className="text-[11px] px-2.5 py-1 rounded-full bg-[#121214] hover:bg-[#2C2C2E] text-[#8E8E93] hover:text-white border border-white/[0.06] transition-colors flex items-center gap-1.5"
+                        className="text-[11px] px-2.5 py-1 rounded-full bg-surface hover:bg-elevated text-muted hover:text-fg border border-fg/[0.06] transition-colors flex items-center gap-1.5"
                       >
                         {preset.badge && (
-                          <span className="text-[9px] px-1 py-0.2 rounded bg-[#30D158]/20 text-[#30D158] font-bold">
+                          <span className="text-[9px] px-1 py-0.2 rounded bg-[#30D158]/20 text-green-ink font-bold">
                             {preset.badge}
                           </span>
                         )}
@@ -460,7 +460,7 @@ export function AddMealModal({
             )}
 
             {errorMsg && (
-              <p className="text-xs text-[#FF453A] flex items-center gap-1.5">
+              <p className="text-xs text-red-ink flex items-center gap-1.5">
                 <AlertCircle className="w-3.5 h-3.5" />
                 <span>{errorMsg}</span>
               </p>
@@ -468,7 +468,7 @@ export function AddMealModal({
           </div>
 
           {/* Bottom Action */}
-          <div className="p-4 border-t border-white/[0.08]">
+          <div className="p-4 border-t border-fg/[0.08]">
             <button
               onClick={handleAnalyze}
               disabled={isAnalyzing || isCompressing || (activeTab === 'photo' && !imagePreview && !description.trim())}

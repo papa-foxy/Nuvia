@@ -53,7 +53,7 @@ export function BodyMuscleMap({
 
     if (selected) return '#30D158'; // Bright Emerald selected
     if (worked) return isPumpActive ? '#30D158' : '#FF9500'; // Pump Emerald or Active Amber
-    return '#2C2C2E'; // Neutral dark
+    return 'var(--theme-body-base)'; // Neutral body
   };
 
   const getMuscleFilter = (id: string) => {
@@ -84,32 +84,32 @@ export function BodyMuscleMap({
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-1.5">
-            <span className="text-xs font-semibold text-[#8E8E93] uppercase tracking-wider">
+            <span className="text-xs font-semibold text-muted uppercase tracking-wider">
               Muscle Activation
             </span>
             {isPumpActive ? (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-[#30D158]/20 text-[#30D158] border border-[#30D158]/30 animate-pulse">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-[#30D158]/20 text-green-ink border border-[#30D158]/30 animate-pulse">
                 <Sparkles className="w-2.5 h-2.5" />
                 PUMP ACTIVE
               </span>
             ) : (
-              <span className="inline-flex items-center px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-[#FF9500]/20 text-[#FF9500]">
+              <span className="inline-flex items-center px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-[#FF9500]/20 text-orange-ink">
                 SCHEDULED
               </span>
             )}
           </div>
-          <p className="text-sm font-bold text-white mt-0.5">
+          <p className="text-sm font-bold text-fg mt-0.5">
             {routineTitle || 'Targeted Muscle Groups'}
           </p>
         </div>
 
-        <div className="flex bg-white/5 p-0.5 rounded-lg border border-white/5">
+        <div className="flex bg-fg/5 p-0.5 rounded-lg border border-fg/5">
           <button
             onClick={() => setActiveView('front')}
             className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
               activeView === 'front'
-                ? 'bg-white/15 text-white shadow-sm'
-                : 'text-zinc-400 hover:text-white'
+                ? 'bg-fg/15 text-fg shadow-sm'
+                : 'text-zinc-400 hover:text-fg'
             }`}
           >
             Front
@@ -118,8 +118,8 @@ export function BodyMuscleMap({
             onClick={() => setActiveView('back')}
             className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
               activeView === 'back'
-                ? 'bg-white/15 text-white shadow-sm'
-                : 'text-zinc-400 hover:text-white'
+                ? 'bg-fg/15 text-fg shadow-sm'
+                : 'text-zinc-400 hover:text-fg'
             }`}
           >
             Back
@@ -128,15 +128,15 @@ export function BodyMuscleMap({
       </div>
 
       {/* Interactive Silhouette Display */}
-      <div className="relative bg-[#141416] rounded-2xl p-4 border border-white/5 flex flex-col items-center justify-center min-h-[260px]">
+      <div className="relative bg-card dark:bg-[#141416] rounded-2xl p-4 border border-fg/5 flex flex-col items-center justify-center min-h-[260px]">
         {/* SVG Body Diagram */}
         <div className="relative w-44 h-56 flex items-center justify-center">
           {activeView === 'front' ? (
             /* FRONT VIEW SVG */
             <svg viewBox="0 0 160 220" className="w-full h-full">
               {/* Head / Neck */}
-              <circle cx="80" cy="20" r="14" fill="#2C2C2E" />
-              <path d="M74 34 L86 34 L88 44 L72 44 Z" fill="#2C2C2E" />
+              <circle cx="80" cy="20" r="14" fill="var(--theme-body-base)" />
+              <path d="M74 34 L86 34 L88 44 L72 44 Z" fill="var(--theme-body-base)" />
 
               {/* Shoulders (Deltoids) */}
               <path
@@ -193,8 +193,8 @@ export function BodyMuscleMap({
               />
 
               {/* Forearms */}
-              <path d="M38 94 L32 120 L40 120 L44 94 Z" fill="#242426" />
-              <path d="M122 94 L128 120 L120 120 L116 94 Z" fill="#242426" />
+              <path d="M38 94 L32 120 L40 120 L44 94 Z" fill="var(--theme-body-alt)" />
+              <path d="M122 94 L128 120 L120 120 L116 94 Z" fill="var(--theme-body-alt)" />
 
               {/* Abs & Core (Abdominals) */}
               <path
@@ -206,12 +206,12 @@ export function BodyMuscleMap({
                 className="cursor-pointer hover:opacity-80"
               />
               {/* Abdominal six-pack dividing lines */}
-              <line x1="80" y1="74" x2="80" y2="112" stroke="#161618" strokeWidth="1.5" />
-              <line x1="68" y1="87" x2="92" y2="87" stroke="#161618" strokeWidth="1.5" />
-              <line x1="68" y1="99" x2="92" y2="99" stroke="#161618" strokeWidth="1.5" />
+              <line x1="80" y1="74" x2="80" y2="112" stroke="var(--theme-body-line)" strokeWidth="1.5" />
+              <line x1="68" y1="87" x2="92" y2="87" stroke="var(--theme-body-line)" strokeWidth="1.5" />
+              <line x1="68" y1="99" x2="92" y2="99" stroke="var(--theme-body-line)" strokeWidth="1.5" />
 
               {/* Hips / Waist */}
-              <path d="M64 114 L96 114 L92 126 L68 126 Z" fill="#2C2C2E" />
+              <path d="M64 114 L96 114 L92 126 L68 126 Z" fill="var(--theme-body-base)" />
 
               {/* Quads / Front Thighs */}
               <path
@@ -232,8 +232,8 @@ export function BodyMuscleMap({
               />
 
               {/* Knees */}
-              <circle cx="68" cy="172" r="4" fill="#242426" />
-              <circle cx="92" cy="172" r="4" fill="#242426" />
+              <circle cx="68" cy="172" r="4" fill="var(--theme-body-alt)" />
+              <circle cx="92" cy="172" r="4" fill="var(--theme-body-alt)" />
 
               {/* Calves Front */}
               <path
@@ -257,8 +257,8 @@ export function BodyMuscleMap({
             /* BACK VIEW SVG */
             <svg viewBox="0 0 160 220" className="w-full h-full">
               {/* Head / Back of Neck */}
-              <circle cx="80" cy="20" r="14" fill="#2C2C2E" />
-              <path d="M74 34 L86 34 L88 44 L72 44 Z" fill="#2C2C2E" />
+              <circle cx="80" cy="20" r="14" fill="var(--theme-body-base)" />
+              <path d="M74 34 L86 34 L88 44 L72 44 Z" fill="var(--theme-body-base)" />
 
               {/* Rear Deltoids */}
               <path
@@ -287,7 +287,7 @@ export function BodyMuscleMap({
                 onClick={() => handleMuscleClick('back')}
                 className="cursor-pointer hover:opacity-80"
               />
-              <line x1="80" y1="46" x2="80" y2="112" stroke="#161618" strokeWidth="1.5" />
+              <line x1="80" y1="46" x2="80" y2="112" stroke="var(--theme-body-line)" strokeWidth="1.5" />
 
               {/* Triceps (Back Arms) */}
               <path
@@ -308,8 +308,8 @@ export function BodyMuscleMap({
               />
 
               {/* Forearms */}
-              <path d="M38 94 L32 120 L40 120 L44 94 Z" fill="#242426" />
-              <path d="M122 94 L128 120 L120 120 L116 94 Z" fill="#242426" />
+              <path d="M38 94 L32 120 L40 120 L44 94 Z" fill="var(--theme-body-alt)" />
+              <path d="M122 94 L128 120 L120 120 L116 94 Z" fill="var(--theme-body-alt)" />
 
               {/* Glutes / Lower Back */}
               <path
@@ -362,7 +362,7 @@ export function BodyMuscleMap({
 
         {/* Selected / Hover Info Pill */}
         {selectedMuscle && (
-          <div className="absolute bottom-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs text-white flex items-center gap-1.5 shadow-lg">
+          <div className="absolute bottom-2 px-3 py-1 rounded-full bg-fg/10 backdrop-blur-md border border-fg/15 text-xs text-fg flex items-center gap-1.5 shadow-lg">
             <span
               className="w-2 h-2 rounded-full"
               style={{ backgroundColor: getMuscleColor(selectedMuscle) }}
@@ -385,8 +385,8 @@ export function BodyMuscleMap({
               onClick={() => handleMuscleClick(m)}
               className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all flex items-center gap-1 border ${
                 trained
-                  ? 'bg-[#FF9500]/15 text-[#FF9500] border-[#FF9500]/30 shadow-sm'
-                  : 'bg-white/[0.03] text-zinc-400 border-white/5 hover:text-white'
+                  ? 'bg-[#FF9500]/15 text-orange-ink border-[#FF9500]/30 shadow-sm'
+                  : 'bg-fg/[0.03] text-zinc-400 border-fg/5 hover:text-fg'
               }`}
             >
               <span className={`w-1.5 h-1.5 rounded-full ${trained ? 'bg-[#FF9500]' : 'bg-zinc-600'}`} />
@@ -399,7 +399,7 @@ export function BodyMuscleMap({
 
       {/* Exercises that activated the pump */}
       {exercisesPerformed.length > 0 && (
-        <div className="pt-2 border-t border-white/5 space-y-1.5">
+        <div className="pt-2 border-t border-fg/5 space-y-1.5">
           <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block">
             Movements Driving The Pump ({exercisesPerformed.length})
           </span>
@@ -407,7 +407,7 @@ export function BodyMuscleMap({
             {exercisesPerformed.map((ex, i) => (
               <span
                 key={i}
-                className="px-2 py-0.5 rounded-md bg-[#30D158]/10 border border-[#30D158]/20 text-[10px] text-[#30D158] font-medium"
+                className="px-2 py-0.5 rounded-md bg-[#30D158]/10 border border-[#30D158]/20 text-[10px] text-green-ink font-medium"
               >
                 ✓ {ex}
               </span>

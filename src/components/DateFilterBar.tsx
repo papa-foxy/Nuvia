@@ -95,12 +95,12 @@ export function DateFilterBar({
     <>
       {/* Date Filter Bar Pill */}
       <div
-        className={`flex items-center gap-1.5 bg-[#1C1C1E] px-2 py-1.5 rounded-full border border-white/[0.08] shadow-sm ${className}`}
+        className={`flex items-center gap-1.5 bg-card px-2 py-1.5 rounded-full border border-fg/[0.08] shadow-sm ${className}`}
       >
         {/* Previous Day */}
         <button
           onClick={() => changeDateBy(-1)}
-          className="p-1.5 text-[#8E8E93] hover:text-white transition-colors rounded-full hover:bg-white/[0.06] active:scale-95"
+          className="p-1.5 text-muted hover:text-fg transition-colors rounded-full hover:bg-fg/[0.06] active:scale-95"
           title="Previous Day"
           type="button"
         >
@@ -110,18 +110,18 @@ export function DateFilterBar({
         {/* Date / Calendar Trigger Button */}
         <button
           onClick={() => setIsCalendarOpen(true)}
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold text-white hover:bg-white/[0.08] transition-colors group cursor-pointer"
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold text-fg hover:bg-fg/[0.08] transition-colors group cursor-pointer"
           title="Open calendar to pick a date"
           type="button"
         >
-          <CalendarIcon className="w-3.5 h-3.5 text-[#30D158] group-hover:scale-110 transition-transform" />
+          <CalendarIcon className="w-3.5 h-3.5 text-green-ink group-hover:scale-110 transition-transform" />
           <span className="whitespace-nowrap">{dateLabel}</span>
         </button>
 
         {/* Next Day */}
         <button
           onClick={() => changeDateBy(1)}
-          className="p-1.5 text-[#8E8E93] hover:text-white transition-colors rounded-full hover:bg-white/[0.06] active:scale-95"
+          className="p-1.5 text-muted hover:text-fg transition-colors rounded-full hover:bg-fg/[0.06] active:scale-95"
           title="Next Day"
           type="button"
         >
@@ -132,21 +132,21 @@ export function DateFilterBar({
       {/* Calendar Selector Modal */}
       {isCalendarOpen && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end md:items-center justify-center p-4">
-          <div className="w-full max-w-sm bg-[#1C1C1E] border border-white/[0.12] rounded-3xl p-5 shadow-2xl space-y-4 animate-slideUp">
+          <div className="w-full max-w-sm bg-card border border-fg/[0.12] rounded-3xl p-5 shadow-2xl space-y-4 animate-slideUp">
             {/* Header */}
-            <div className="flex items-center justify-between pb-1 border-b border-white/[0.06]">
+            <div className="flex items-center justify-between pb-1 border-b border-fg/[0.06]">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-[#30D158]/15 flex items-center justify-center text-[#30D158]">
+                <div className="w-8 h-8 rounded-full bg-[#30D158]/15 flex items-center justify-center text-green-ink">
                   <CalendarIcon className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-white tracking-tight">Select Date</h3>
-                  <p className="text-[11px] text-[#8E8E93]">Choose a date to view entries</p>
+                  <h3 className="text-sm font-bold text-fg tracking-tight">Select Date</h3>
+                  <p className="text-[11px] text-muted">Choose a date to view entries</p>
                 </div>
               </div>
               <button
                 onClick={() => setIsCalendarOpen(false)}
-                className="w-7 h-7 rounded-full bg-[#2C2C2E] flex items-center justify-center text-[#8E8E93] hover:text-white transition-colors"
+                className="w-7 h-7 rounded-full bg-elevated flex items-center justify-center text-muted hover:text-fg transition-colors"
                 type="button"
               >
                 <X className="w-4 h-4" />
@@ -157,16 +157,16 @@ export function DateFilterBar({
             <div className="flex items-center justify-between px-1">
               <button
                 onClick={handlePrevMonth}
-                className="w-8 h-8 rounded-full bg-[#2C2C2E] hover:bg-white/10 flex items-center justify-center text-white transition-colors"
+                className="w-8 h-8 rounded-full bg-elevated hover:bg-fg/10 flex items-center justify-center text-fg transition-colors"
                 type="button"
                 title="Previous Month"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
-              <span className="text-sm font-bold text-white">{monthName}</span>
+              <span className="text-sm font-bold text-fg">{monthName}</span>
               <button
                 onClick={handleNextMonth}
-                className="w-8 h-8 rounded-full bg-[#2C2C2E] hover:bg-white/10 flex items-center justify-center text-white transition-colors"
+                className="w-8 h-8 rounded-full bg-elevated hover:bg-fg/10 flex items-center justify-center text-fg transition-colors"
                 type="button"
                 title="Next Month"
               >
@@ -175,7 +175,7 @@ export function DateFilterBar({
             </div>
 
             {/* Calendar Weekday Headers */}
-            <div className="grid grid-cols-7 text-center text-[10px] font-semibold text-[#8E8E93] uppercase tracking-wider">
+            <div className="grid grid-cols-7 text-center text-[10px] font-semibold text-muted uppercase tracking-wider">
               <span>Mo</span>
               <span>Tu</span>
               <span>We</span>
@@ -209,8 +209,8 @@ export function DateFilterBar({
                       isDaySelected
                         ? 'bg-[#30D158] text-black font-bold shadow-md shadow-[#30D158]/30 scale-105 z-10'
                         : isDayToday
-                        ? 'border border-[#30D158] text-[#30D158] hover:bg-[#30D158]/10'
-                        : 'text-white hover:bg-white/10'
+                        ? 'border border-[#30D158] text-green-ink hover:bg-[#30D158]/10'
+                        : 'text-fg hover:bg-fg/10'
                     }`}
                   >
                     <span>{dayNum}</span>

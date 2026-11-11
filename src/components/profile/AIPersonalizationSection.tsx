@@ -93,43 +93,43 @@ export function AIPersonalizationSection({ userId, profile }: AIPersonalizationS
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
-          <Brain className="w-3.5 h-3.5 text-[#30D158]" />
-          <span className="text-xs font-bold text-white uppercase tracking-wider">
+          <Brain className="w-3.5 h-3.5 text-green-ink" />
+          <span className="text-xs font-bold text-fg uppercase tracking-wider">
             AI Personalization
           </span>
         </div>
         <button
           type="button"
           onClick={() => setIsMemoryModalOpen(true)}
-          className="text-xs text-[#30D158] hover:underline font-semibold"
+          className="text-xs text-green-ink hover:underline font-semibold"
         >
           Manage Memory
         </button>
       </div>
 
       {/* Explanatory note */}
-      <p className="text-[11px] text-[#8E8E93] leading-relaxed">
+      <p className="text-[11px] text-muted leading-relaxed">
         Nuvia uses your stored health targets and verified log patterns to personalize daily meal recommendations and workout pacing.
       </p>
 
       {/* Stored Food & Lifestyle Preferences */}
       <div className="space-y-2 pt-0.5">
-        <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/[0.04] space-y-1.5">
+        <div className="p-3 rounded-2xl bg-fg/[0.03] border border-fg/[0.04] space-y-1.5">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">
+            <span className="text-[10px] font-bold text-muted uppercase tracking-wider">
               Dietary Profile
             </span>
-            <span className="text-[10px] text-[#30D158] font-semibold">User Confirmed</span>
+            <span className="text-[10px] text-green-ink font-semibold">User Confirmed</span>
           </div>
-          <p className="text-xs font-medium text-white">
+          <p className="text-xs font-medium text-fg">
             {profile?.dietary_preference || 'Balanced / Halal'}
           </p>
         </div>
 
         {/* Cautious Learned Habits */}
-        <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/[0.04] space-y-2">
+        <div className="p-3 rounded-2xl bg-fg/[0.03] border border-fg/[0.04] space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">
+            <span className="text-[10px] font-bold text-muted uppercase tracking-wider">
               Identified Patterns
             </span>
             <span className="text-[10px] text-zinc-400 font-medium">Adaptive Memory</span>
@@ -144,7 +144,7 @@ export function AIPersonalizationSection({ userId, profile }: AIPersonalizationS
                 </div>
               ))
             ) : (
-              <p className="text-xs text-[#8E8E93] italic">
+              <p className="text-xs text-muted italic">
                 Your personalization profile is still learning. Keep using Nuvia and your preferences will become more tailored.
               </p>
             )}
@@ -153,8 +153,8 @@ export function AIPersonalizationSection({ userId, profile }: AIPersonalizationS
       </div>
 
       {/* Control Trigger Callout */}
-      <div className="p-2.5 rounded-xl bg-black/30 border border-white/[0.04] flex items-center gap-2 text-xs">
-        <Info className="w-3.5 h-3.5 text-[#0A84FF] shrink-0" />
+      <div className="p-2.5 rounded-xl bg-app/30 border border-fg/[0.04] flex items-center gap-2 text-xs">
+        <Info className="w-3.5 h-3.5 text-blue-ink shrink-0" />
         <span className="text-[11px] text-zinc-400">Explicit user corrections always override AI assumptions.</span>
       </div>
 
@@ -163,36 +163,36 @@ export function AIPersonalizationSection({ userId, profile }: AIPersonalizationS
       {/* ============================================================ */}
       {isMemoryModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
-          <div className="w-full max-w-md bg-[#1C1C1E] border-t sm:border border-white/10 rounded-t-3xl sm:rounded-3xl p-5 space-y-4 max-h-[90vh] overflow-y-auto">
+          <div className="w-full max-w-md bg-card border-t sm:border border-fg/10 rounded-t-3xl sm:rounded-3xl p-5 space-y-4 max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
-            <div className="flex items-center justify-between pb-2 border-b border-white/10">
+            <div className="flex items-center justify-between pb-2 border-b border-fg/10">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-[#30D158]/15 text-[#30D158] flex items-center justify-center">
+                <div className="w-7 h-7 rounded-lg bg-[#30D158]/15 text-green-ink flex items-center justify-center">
                   <Brain className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-white">AI Personalization Memory</h3>
-                  <p className="text-[11px] text-[#8E8E93]">Review and control what Nuvia learns about you</p>
+                  <h3 className="text-base font-bold text-fg">AI Personalization Memory</h3>
+                  <p className="text-[11px] text-muted">Review and control what Nuvia learns about you</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setIsMemoryModalOpen(false)}
-                className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-zinc-400"
+                className="w-8 h-8 rounded-full bg-fg/5 hover:bg-fg/10 flex items-center justify-center text-zinc-400"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             {resetNotice && (
-              <div className="p-2.5 rounded-xl bg-[#30D158]/15 border border-[#30D158]/30 text-[#30D158] text-xs font-semibold">
+              <div className="p-2.5 rounded-xl bg-[#30D158]/15 border border-[#30D158]/30 text-green-ink text-xs font-semibold">
                 AI learned memory has been reset to default.
               </div>
             )}
 
             {/* List of active preferences */}
             <div className="space-y-2">
-              <span className="text-[11px] font-bold text-[#8E8E93] uppercase tracking-wider block">
+              <span className="text-[11px] font-bold text-muted uppercase tracking-wider block">
                 Active Personalization Rules
               </span>
 
@@ -200,7 +200,7 @@ export function AIPersonalizationSection({ userId, profile }: AIPersonalizationS
                 {customPreferences.map((pref) => (
                   <div
                     key={pref.id}
-                    className="p-3 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between gap-3 text-xs"
+                    className="p-3 rounded-xl bg-fg/5 border border-fg/10 flex items-center justify-between gap-3 text-xs"
                   >
                     <span className="text-zinc-200 leading-snug">{pref.text}</span>
                     <button
@@ -217,8 +217,8 @@ export function AIPersonalizationSection({ userId, profile }: AIPersonalizationS
             </div>
 
             {/* Add Custom User Instruction */}
-            <form onSubmit={handleAddPreference} className="space-y-2 pt-2 border-t border-white/10">
-              <label className="block text-[11px] font-bold text-[#8E8E93] uppercase tracking-wider">
+            <form onSubmit={handleAddPreference} className="space-y-2 pt-2 border-t border-fg/10">
+              <label className="block text-[11px] font-bold text-muted uppercase tracking-wider">
                 Add Explicit Rule / Override
               </label>
               <div className="flex gap-2">
@@ -227,7 +227,7 @@ export function AIPersonalizationSection({ userId, profile }: AIPersonalizationS
                   value={newPrefText}
                   onChange={(e) => setNewPrefText(e.target.value)}
                   placeholder="e.g. Prefer Malaysian cuisine, no dairy after 8pm"
-                  className="flex-1 px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs placeholder:text-zinc-500 focus:outline-none focus:border-[#30D158]"
+                  className="flex-1 px-3 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg text-xs placeholder:text-zinc-500 focus:outline-none focus:border-[#30D158]"
                 />
                 <button
                   type="submit"
@@ -241,7 +241,7 @@ export function AIPersonalizationSection({ userId, profile }: AIPersonalizationS
             </form>
 
             {/* Actions: Reset and Close */}
-            <div className="pt-2 flex items-center justify-between border-t border-white/10 text-xs">
+            <div className="pt-2 flex items-center justify-between border-t border-fg/10 text-xs">
               <button
                 type="button"
                 onClick={handleResetPreferences}
@@ -254,7 +254,7 @@ export function AIPersonalizationSection({ userId, profile }: AIPersonalizationS
               <button
                 type="button"
                 onClick={() => setIsMemoryModalOpen(false)}
-                className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white font-semibold transition-colors"
+                className="px-4 py-2 rounded-xl bg-fg/10 hover:bg-fg/15 text-fg font-semibold transition-colors"
               >
                 Done
               </button>

@@ -64,7 +64,7 @@ export function PwaInstallBanner() {
 
   return (
     <div className="w-full px-4 pt-3 pb-1">
-      <div className="bg-gradient-to-r from-slate-900/95 via-slate-900/80 to-slate-950 p-3 rounded-2xl border border-emerald-500/30 shadow-lg flex items-center justify-between gap-3 text-xs text-white">
+      <div className="bg-gradient-to-r from-slate-900/95 via-slate-900/80 to-slate-950 p-3 rounded-2xl border border-emerald-500/30 shadow-lg flex items-center justify-between gap-3 text-xs text-fg">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30">
             {isIOS ? <Share className="w-4 h-4" /> : <Download className="w-4 h-4" />}
@@ -90,7 +90,7 @@ export function PwaInstallBanner() {
           )}
           <button
             onClick={handleDismiss}
-            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
+            className="p-1 rounded-lg text-slate-400 hover:text-fg hover:bg-slate-800"
           >
             <X className="w-4 h-4" />
           </button>

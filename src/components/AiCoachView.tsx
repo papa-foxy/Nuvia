@@ -153,39 +153,39 @@ export function AiCoachView() {
     <div className="flex-1 flex flex-col pb-20 px-5 pt-4 w-full max-w-md mx-auto space-y-6">
       {/* Title */}
       <div className="pt-2">
-        <p className="text-[11px] font-semibold tracking-wider text-[#8E8E93] uppercase">
+        <p className="text-[11px] font-semibold tracking-wider text-muted uppercase">
           Intelligence
         </p>
-        <h1 className="text-3xl font-bold tracking-tight text-white mt-0.5">
+        <h1 className="text-3xl font-bold tracking-tight text-fg mt-0.5">
           Nuvia
         </h1>
       </div>
 
       {/* Primary Insights List (Apple Health Inset Grouped Rows) */}
       <div className="space-y-3">
-        <p className="text-xs font-semibold text-[#8E8E93] uppercase tracking-wider">
+        <p className="text-xs font-semibold text-muted uppercase tracking-wider">
           Daily Analysis
         </p>
 
         {loadingAdvice ? (
           <div className="space-y-2">
             {[1, 2, 3].map((n) => (
-              <div key={n} className="h-16 rounded-2xl bg-[#1C1C1E] animate-pulse" />
+              <div key={n} className="h-16 rounded-2xl bg-card animate-pulse" />
             ))}
           </div>
         ) : (
-          <div className="ios-card divide-y divide-white/[0.06] overflow-hidden">
+          <div className="ios-card divide-y divide-fg/[0.06] overflow-hidden">
             {advice?.priorities?.map((item, idx) => (
               <div key={idx} className="p-4 space-y-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-white">
+                  <span className="text-xs font-semibold text-fg">
                     {item.category}
                   </span>
-                  <span className="text-[10px] text-[#8E8E93] font-medium">
+                  <span className="text-[10px] text-muted font-medium">
                     Priority {item.priority}
                   </span>
                 </div>
-                <p className="text-xs text-[#D1D1D6] leading-relaxed">
+                <p className="text-xs text-fg-soft leading-relaxed">
                   {item.message}
                 </p>
               </div>
@@ -198,7 +198,7 @@ export function AiCoachView() {
 
       {/* Ask Nuvia Section (Clean Query & Answer Box) */}
       <div className="space-y-3">
-        <p className="text-xs font-semibold text-[#8E8E93] uppercase tracking-wider">
+        <p className="text-xs font-semibold text-muted uppercase tracking-wider">
           Ask Nuvia
         </p>
 
@@ -208,7 +208,7 @@ export function AiCoachView() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Ask about your calories, dinner ideas..."
-            className="flex-1 bg-[#1C1C1E] border border-white/[0.08] text-xs text-white placeholder-[#8E8E93] px-3.5 py-3 rounded-2xl focus:border-[#30D158] focus:outline-none"
+            className="flex-1 bg-card border border-fg/[0.08] text-xs text-fg placeholder-muted px-3.5 py-3 rounded-2xl focus:border-[#30D158] focus:outline-none"
           />
           <button
             type="submit"
@@ -235,7 +235,7 @@ export function AiCoachView() {
                 setQuery(prompt);
                 handleAsk(undefined, prompt);
               }}
-              className="text-[11px] whitespace-nowrap px-3 py-1.5 rounded-full bg-[#1C1C1E] hover:bg-[#2C2C2E] text-[#8E8E93] hover:text-white border border-white/[0.06] transition-colors"
+              className="text-[11px] whitespace-nowrap px-3 py-1.5 rounded-full bg-card hover:bg-elevated text-muted hover:text-fg border border-fg/[0.06] transition-colors"
             >
               {prompt}
             </button>
@@ -244,20 +244,20 @@ export function AiCoachView() {
 
         {/* Nuvia Response */}
         {answering && (
-          <div className="p-4 rounded-2xl bg-[#1C1C1E] text-xs text-[#8E8E93] animate-pulse">
+          <div className="p-4 rounded-2xl bg-card text-xs text-muted animate-pulse">
             Analyzing your training plan & recovery...
           </div>
         )}
 
         {answer && !answering && (
-          <div className="p-4 rounded-2xl bg-[#1C1C1E] border border-white/[0.08] text-xs text-white leading-relaxed space-y-3">
+          <div className="p-4 rounded-2xl bg-card border border-fg/[0.08] text-xs text-fg leading-relaxed space-y-3">
             <div className="space-y-1">
-              <p className="font-semibold text-[#30D158]">Nuvia</p>
-              <p className="text-[#D1D1D6]">{answer}</p>
+              <p className="font-semibold text-green-ink">Nuvia</p>
+              <p className="text-fg-soft">{answer}</p>
             </div>
 
             {activeProposal && (
-              <div className="pt-2 border-t border-white/[0.06]">
+              <div className="pt-2 border-t border-fg/[0.06]">
                 <IntentProposalCard
                   proposal={activeProposal}
                   onAccept={handleAcceptProposal}
@@ -267,7 +267,7 @@ export function AiCoachView() {
             )}
 
             {lastAdaptedChange && !activeProposal && (
-              <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between text-xs text-[#8E8E93]">
+              <div className="pt-2 border-t border-fg/[0.06] flex items-center justify-between text-xs text-muted">
                 <span>Plan adjusted ({lastAdaptedChange.routine_title || 'Workout'} {lastAdaptedChange.action}).</span>
                 <button
                   onClick={handleUndo}

@@ -306,12 +306,12 @@ export function AboutYouSection({
   };
 
   return (
-    <div className="ios-card divide-y divide-white/[0.06] overflow-hidden text-xs">
+    <div className="ios-card divide-y divide-fg/[0.06] overflow-hidden text-xs">
       {/* Header */}
       <div className="p-4 flex items-center justify-between">
         <div className="flex items-center gap-1.5">
-          <User className="w-3.5 h-3.5 text-[#30D158]" />
-          <span className="font-bold text-white uppercase tracking-wider text-xs">
+          <User className="w-3.5 h-3.5 text-green-ink" />
+          <span className="font-bold text-fg uppercase tracking-wider text-xs">
             About You
           </span>
         </div>
@@ -322,7 +322,7 @@ export function AboutYouSection({
             type="button"
             disabled={isRecalculating}
             onClick={handleRecalculate}
-            className="text-[11px] text-[#30D158] hover:text-[#28B84D] disabled:opacity-50 flex items-center gap-1.5 transition-colors cursor-pointer font-semibold"
+            className="text-[11px] text-green-ink hover:text-green-ink disabled:opacity-50 flex items-center gap-1.5 transition-colors cursor-pointer font-semibold"
             title="Recalculate calorie & macro targets from current measurements"
           >
             <RefreshCw className={`w-3 h-3 ${isRecalculating ? 'animate-spin' : ''}`} />
@@ -333,7 +333,7 @@ export function AboutYouSection({
           <button
             type="button"
             onClick={openEditModal}
-            className="text-[11px] text-[#8E8E93] hover:text-white flex items-center gap-1 transition-colors cursor-pointer"
+            className="text-[11px] text-muted hover:text-fg flex items-center gap-1 transition-colors cursor-pointer"
             title="Edit profile measurements"
           >
             <Pencil className="w-3 h-3" />
@@ -347,7 +347,7 @@ export function AboutYouSection({
         <div
           className={`p-3 text-xs flex items-center gap-2 ${
             statusBanner.type === 'success'
-              ? 'bg-[#30D158]/10 text-[#30D158] border-b border-[#30D158]/20'
+              ? 'bg-[#30D158]/10 text-green-ink border-b border-[#30D158]/20'
               : 'bg-red-500/10 text-red-400 border-b border-red-500/20'
           }`}
         >
@@ -361,35 +361,35 @@ export function AboutYouSection({
       )}
 
       {/* Clean iOS-style display rows */}
-      <div className="divide-y divide-white/[0.04]">
+      <div className="divide-y divide-fg/[0.04]">
         <div className="w-full p-3.5 flex justify-between items-center text-left">
-          <span className="text-[#8E8E93]">Height</span>
-          <span className="font-semibold text-white">{profile?.height_cm || 175} cm</span>
+          <span className="text-muted">Height</span>
+          <span className="font-semibold text-fg">{profile?.height_cm || 175} cm</span>
         </div>
 
         <div className="w-full p-3.5 flex justify-between items-center text-left">
-          <span className="text-[#8E8E93]">Current Weight</span>
-          <span className="font-semibold text-white">{profile?.weight_kg || 73} kg</span>
+          <span className="text-muted">Current Weight</span>
+          <span className="font-semibold text-fg">{profile?.weight_kg || 73} kg</span>
         </div>
 
         <div className="w-full p-3.5 flex justify-between items-center text-left">
-          <span className="text-[#8E8E93]">Biological Sex</span>
-          <span className="font-semibold text-white capitalize">{profile?.sex || 'Male'}</span>
+          <span className="text-muted">Biological Sex</span>
+          <span className="font-semibold text-fg capitalize">{profile?.sex || 'Male'}</span>
         </div>
 
         <div className="w-full p-3.5 flex justify-between items-center text-left">
-          <span className="text-[#8E8E93]">Activity Level</span>
-          <span className="font-semibold text-white">{formatActivity(profile?.activity_level)}</span>
+          <span className="text-muted">Activity Level</span>
+          <span className="font-semibold text-fg">{formatActivity(profile?.activity_level)}</span>
         </div>
 
         <div className="w-full p-3.5 flex justify-between items-center text-left">
-          <span className="text-[#8E8E93]">Primary Goal</span>
-          <span className="font-semibold text-[#30D158]">{formatGoal(profile?.goal)}</span>
+          <span className="text-muted">Primary Goal</span>
+          <span className="font-semibold text-green-ink">{formatGoal(profile?.goal)}</span>
         </div>
 
         <div className="w-full p-3.5 flex justify-between items-center text-left">
-          <span className="text-[#8E8E93]">Dietary Style</span>
-          <span className="font-semibold text-white truncate max-w-[170px]">
+          <span className="text-muted">Dietary Style</span>
+          <span className="font-semibold text-fg truncate max-w-[170px]">
             {profile?.dietary_preference || 'Halal / Balanced'}
           </span>
         </div>
@@ -400,53 +400,53 @@ export function AboutYouSection({
           const currentType = fp.current_physique || 'soft_low_muscle';
           const desiredType = fp.desired_physique || 'athletic';
           return (
-            <div className="p-3.5 bg-black/40 border-b border-white/[0.04] space-y-2.5">
+            <div className="p-3.5 bg-app/40 border-b border-fg/[0.04] space-y-2.5">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider">
+                <span className="text-[11px] font-semibold text-muted uppercase tracking-wider">
                   Transformation Direction
                 </span>
-                <span className="text-[10px] text-[#30D158] bg-[#30D158]/10 px-2 py-0.5 rounded-full border border-[#30D158]/20">
+                <span className="text-[10px] text-green-ink bg-[#30D158]/10 px-2 py-0.5 rounded-full border border-[#30D158]/20">
                   Visual Baseline
                 </span>
               </div>
 
-              <div className="flex items-center justify-around py-1 bg-white/[0.02] rounded-xl border border-white/[0.04]">
+              <div className="flex items-center justify-around py-1 bg-fg/[0.02] rounded-xl border border-fg/[0.04]">
                 <div className="flex flex-col items-center">
-                  <span className="text-[9px] uppercase font-semibold text-[#8E8E93] mb-1">Starting</span>
-                  <div className="w-12 h-18 rounded-lg bg-black/50 border border-white/10 p-0.5 flex items-center justify-center">
+                  <span className="text-[9px] uppercase font-semibold text-muted mb-1">Starting</span>
+                  <div className="w-12 h-18 rounded-lg bg-app/50 border border-fg/10 p-0.5 flex items-center justify-center">
                     <PhysiqueIllustration sex={profile?.sex || 'male'} type={currentType} className="w-full h-full" />
                   </div>
-                  <span className="text-[10px] font-semibold text-white mt-1 text-center truncate max-w-[90px]">
+                  <span className="text-[10px] font-semibold text-fg mt-1 text-center truncate max-w-[90px]">
                     {fp.current_physique_label || 'Soft'}
                   </span>
                 </div>
 
-                <div className="flex flex-col items-center text-[#30D158]">
+                <div className="flex flex-col items-center text-green-ink">
                   <ArrowRight className="w-4 h-4" />
-                  <span className="text-[8px] text-[#8E8E93] mt-0.5">Target</span>
+                  <span className="text-[8px] text-muted mt-0.5">Target</span>
                 </div>
 
                 <div className="flex flex-col items-center">
-                  <span className="text-[9px] uppercase font-semibold text-[#30D158] mb-1">Desired</span>
+                  <span className="text-[9px] uppercase font-semibold text-green-ink mb-1">Desired</span>
                   <div className="w-12 h-18 rounded-lg bg-[#30D158]/10 border border-[#30D158]/30 p-0.5 flex items-center justify-center">
                     <PhysiqueIllustration sex={profile?.sex || 'male'} type={desiredType} className="w-full h-full" selected />
                   </div>
-                  <span className="text-[10px] font-semibold text-[#30D158] mt-1 text-center truncate max-w-[90px]">
+                  <span className="text-[10px] font-semibold text-green-ink mt-1 text-center truncate max-w-[90px]">
                     {fp.desired_look || 'Athletic'}
                   </span>
                 </div>
               </div>
 
               <div className="flex justify-between items-center text-[11px] pt-1 text-left">
-                <span className="text-[#8E8E93]">Equipment Limits</span>
-                <span className="font-semibold text-white truncate max-w-[190px]">
+                <span className="text-muted">Equipment Limits</span>
+                <span className="font-semibold text-fg truncate max-w-[190px]">
                   {(fp.constraints.available_equipment || ['dumbbells', 'bodyweight']).slice(0, 3).join(', ')}
                 </span>
               </div>
 
               <div className="flex justify-between items-center text-[11px] pt-1 text-left">
-                <span className="text-[#8E8E93]">Adaptive Training</span>
-                <span className="font-semibold text-white">
+                <span className="text-muted">Adaptive Training</span>
+                <span className="font-semibold text-fg">
                   {fp.adaptive_plan_mode === 'auto_adjust' ? 'Auto-adjust minor changes' : 'Ask me before changing'}
                 </span>
               </div>
@@ -455,13 +455,13 @@ export function AboutYouSection({
         })()}
 
         {/* Recalibrate / Replay Onboarding Button */}
-        <div className="p-3 bg-white/[0.02] flex justify-center">
+        <div className="p-3 bg-fg/[0.02] flex justify-center">
           <button
             type="button"
             onClick={onReplayOnboarding}
-            className="w-full py-2.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] text-xs font-semibold text-zinc-300 hover:text-white transition-all flex items-center justify-center gap-1.5"
+            className="w-full py-2.5 rounded-xl bg-fg/[0.06] hover:bg-fg/[0.1] text-xs font-semibold text-zinc-300 hover:text-fg transition-all flex items-center justify-center gap-1.5"
           >
-            <Sparkles className="w-3.5 h-3.5 text-[#30D158]" />
+            <Sparkles className="w-3.5 h-3.5 text-green-ink" />
             <span>Recalibrate Body &amp; Training Vision</span>
           </button>
         </div>
@@ -477,24 +477,24 @@ export function AboutYouSection({
         <form onSubmit={handleSave} className="space-y-3.5 text-xs">
           {/* Name */}
           <div>
-            <label className="block text-[#8E8E93] mb-1 font-medium">Display Name</label>
+            <label className="block text-muted mb-1 font-medium">Display Name</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white font-semibold focus:outline-none focus:border-[#30D158]"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg font-semibold focus:outline-none focus:border-[#30D158]"
               placeholder="Your Name"
             />
           </div>
 
           {/* Profile Photo / Avatar URL */}
           <div>
-            <label className="block text-[#8E8E93] mb-1 font-medium">Profile Picture / Google Avatar URL</label>
+            <label className="block text-muted mb-1 font-medium">Profile Picture / Google Avatar URL</label>
             <input
               type="url"
               value={avatarUrl}
               onChange={(e) => setAvatarUrl(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white font-medium placeholder:text-zinc-500 focus:outline-none focus:border-[#30D158]"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg font-medium placeholder:text-zinc-500 focus:outline-none focus:border-[#30D158]"
               placeholder="https://lh3.googleusercontent.com/... or image link"
             />
           </div>
@@ -502,130 +502,130 @@ export function AboutYouSection({
           {/* Sex & Height & Weight */}
           <div className="grid grid-cols-3 gap-2.5">
             <div>
-              <label className="block text-[#8E8E93] mb-1 font-medium">Sex</label>
+              <label className="block text-muted mb-1 font-medium">Sex</label>
               <select
                 value={sex}
                 onChange={(e) => setSex(e.target.value as 'male' | 'female')}
-                className="w-full px-2.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white font-semibold focus:outline-none focus:border-[#30D158]"
+                className="w-full px-2.5 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg font-semibold focus:outline-none focus:border-[#30D158]"
               >
-                <option value="male" className="bg-[#1C1C1E]">Male</option>
-                <option value="female" className="bg-[#1C1C1E]">Female</option>
+                <option value="male" className="bg-card">Male</option>
+                <option value="female" className="bg-card">Female</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-[#8E8E93] mb-1 font-medium">Height (cm)</label>
+              <label className="block text-muted mb-1 font-medium">Height (cm)</label>
               <input
                 type="number"
                 value={heightCm}
                 onChange={(e) => setHeightCm(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white font-semibold focus:outline-none focus:border-[#30D158]"
+                className="w-full px-3 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg font-semibold focus:outline-none focus:border-[#30D158]"
               />
             </div>
 
             <div>
-              <label className="block text-[#8E8E93] mb-1 font-medium">Weight (kg)</label>
+              <label className="block text-muted mb-1 font-medium">Weight (kg)</label>
               <input
                 type="number"
                 step="0.1"
                 value={weightKg}
                 onChange={(e) => setWeightKg(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white font-semibold focus:outline-none focus:border-[#30D158]"
+                className="w-full px-3 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg font-semibold focus:outline-none focus:border-[#30D158]"
               />
             </div>
           </div>
 
           {/* Activity Level */}
           <div>
-            <label className="block text-[#8E8E93] mb-1 font-medium">Activity Level</label>
+            <label className="block text-muted mb-1 font-medium">Activity Level</label>
             <select
               value={activityLevel}
               onChange={(e) => setActivityLevel(e.target.value as ActivityLevel)}
-              className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white font-semibold focus:outline-none focus:border-[#30D158]"
+              className="w-full px-3 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg font-semibold focus:outline-none focus:border-[#30D158]"
             >
-              <option value="sedentary" className="bg-[#1C1C1E]">Sedentary (Little to no exercise)</option>
-              <option value="lightly_active" className="bg-[#1C1C1E]">Lightly Active (1-3 days/week)</option>
-              <option value="moderately_active" className="bg-[#1C1C1E]">Moderately Active (3-5 days/week)</option>
-              <option value="very_active" className="bg-[#1C1C1E]">Very Active (6-7 days/week)</option>
-              <option value="extremely_active" className="bg-[#1C1C1E]">Extremely Active (Athletic/Physical Job)</option>
+              <option value="sedentary" className="bg-card">Sedentary (Little to no exercise)</option>
+              <option value="lightly_active" className="bg-card">Lightly Active (1-3 days/week)</option>
+              <option value="moderately_active" className="bg-card">Moderately Active (3-5 days/week)</option>
+              <option value="very_active" className="bg-card">Very Active (6-7 days/week)</option>
+              <option value="extremely_active" className="bg-card">Extremely Active (Athletic/Physical Job)</option>
             </select>
           </div>
 
           {/* Goal */}
           <div>
-            <label className="block text-[#8E8E93] mb-1 font-medium">Primary Goal</label>
+            <label className="block text-muted mb-1 font-medium">Primary Goal</label>
             <select
               value={goal}
               onChange={(e) => setGoal(e.target.value as UserGoal)}
-              className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white font-semibold focus:outline-none focus:border-[#30D158]"
+              className="w-full px-3 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg font-semibold focus:outline-none focus:border-[#30D158]"
             >
-              <option value="recomposition" className="bg-[#1C1C1E]">Lose Fat &amp; Build Muscle (Recomposition)</option>
-              <option value="lose_weight" className="bg-[#1C1C1E]">Lose Weight</option>
-              <option value="build_muscle" className="bg-[#1C1C1E]">Build Muscle</option>
-              <option value="maintain_weight" className="bg-[#1C1C1E]">Maintain Weight</option>
-              <option value="gain_weight" className="bg-[#1C1C1E]">Gain Weight</option>
+              <option value="recomposition" className="bg-card">Lose Fat &amp; Build Muscle (Recomposition)</option>
+              <option value="lose_weight" className="bg-card">Lose Weight</option>
+              <option value="build_muscle" className="bg-card">Build Muscle</option>
+              <option value="maintain_weight" className="bg-card">Maintain Weight</option>
+              <option value="gain_weight" className="bg-card">Gain Weight</option>
             </select>
           </div>
 
           {/* Dietary Preference */}
           <div>
-            <label className="block text-[#8E8E93] mb-1 font-medium">Dietary Style & Restrictions</label>
+            <label className="block text-muted mb-1 font-medium">Dietary Style & Restrictions</label>
             <input
               type="text"
               value={dietaryPreference}
               onChange={(e) => setDietaryPreference(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white font-semibold focus:outline-none focus:border-[#30D158]"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg font-semibold focus:outline-none focus:border-[#30D158]"
               placeholder="e.g. Halal, High-Protein, Low-Carb, Peanut Allergy"
             />
           </div>
 
           {/* Starting & Target Physique Visual Selector */}
-          <div className="space-y-2 pt-2 border-t border-white/[0.08]">
-            <label className="block text-[#8E8E93] font-medium">Starting &amp; Target Physique</label>
+          <div className="space-y-2 pt-2 border-t border-fg/[0.08]">
+            <label className="block text-muted font-medium">Starting &amp; Target Physique</label>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <span className="text-[10px] text-[#8E8E93] mb-1 block">Current</span>
+                <span className="text-[10px] text-muted mb-1 block">Current</span>
                 <select
                   value={currentPhysique}
                   onChange={(e) => setCurrentPhysique(e.target.value as any)}
-                  className="w-full px-2.5 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs font-semibold focus:outline-none focus:border-[#30D158]"
+                  className="w-full px-2.5 py-2 rounded-xl bg-fg/5 border border-fg/10 text-fg text-xs font-semibold focus:outline-none focus:border-[#30D158]"
                 >
-                  <option value="lean" className="bg-[#1C1C1E]">Lean</option>
-                  <option value="average" className="bg-[#1C1C1E]">Average</option>
-                  <option value="soft_low_muscle" className="bg-[#1C1C1E]">Soft</option>
-                  <option value="higher_body_fat" className="bg-[#1C1C1E]">Higher body fat</option>
-                  <option value="muscular_some_fat" className="bg-[#1C1C1E]">Muscular</option>
-                  <option value="not_sure" className="bg-[#1C1C1E]">Not sure</option>
+                  <option value="lean" className="bg-card">Lean</option>
+                  <option value="average" className="bg-card">Average</option>
+                  <option value="soft_low_muscle" className="bg-card">Soft</option>
+                  <option value="higher_body_fat" className="bg-card">Higher body fat</option>
+                  <option value="muscular_some_fat" className="bg-card">Muscular</option>
+                  <option value="not_sure" className="bg-card">Not sure</option>
                 </select>
               </div>
 
               <div>
-                <span className="text-[10px] text-[#8E8E93] mb-1 block">Desired</span>
+                <span className="text-[10px] text-muted mb-1 block">Desired</span>
                 <select
                   value={desiredPhysique}
                   onChange={(e) => setDesiredPhysique(e.target.value as any)}
-                  className="w-full px-2.5 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs font-semibold focus:outline-none focus:border-[#30D158]"
+                  className="w-full px-2.5 py-2 rounded-xl bg-fg/5 border border-fg/10 text-fg text-xs font-semibold focus:outline-none focus:border-[#30D158]"
                 >
-                  <option value="lean" className="bg-[#1C1C1E]">Lean</option>
-                  <option value="athletic" className="bg-[#1C1C1E]">Athletic</option>
-                  <option value="lean_muscular" className="bg-[#1C1C1E]">Lean + Muscular</option>
-                  <option value="muscular" className="bg-[#1C1C1E]">Muscular</option>
-                  <option value="strong_powerful" className="bg-[#1C1C1E]">Strong</option>
-                  <option value="general_fitness" className="bg-[#1C1C1E]">General Fitness</option>
+                  <option value="lean" className="bg-card">Lean</option>
+                  <option value="athletic" className="bg-card">Athletic</option>
+                  <option value="lean_muscular" className="bg-card">Lean + Muscular</option>
+                  <option value="muscular" className="bg-card">Muscular</option>
+                  <option value="strong_powerful" className="bg-card">Strong</option>
+                  <option value="general_fitness" className="bg-card">General Fitness</option>
                 </select>
               </div>
             </div>
 
-            <div className="flex items-center justify-around py-1.5 bg-black/40 rounded-xl border border-white/[0.04]">
+            <div className="flex items-center justify-around py-1.5 bg-app/40 rounded-xl border border-fg/[0.04]">
               <div className="flex flex-col items-center">
-                <span className="text-[8px] text-[#8E8E93] mb-0.5 uppercase font-medium">Current</span>
-                <div className="w-10 h-16 rounded bg-white/[0.03] p-0.5 flex items-center justify-center">
+                <span className="text-[8px] text-muted mb-0.5 uppercase font-medium">Current</span>
+                <div className="w-10 h-16 rounded bg-fg/[0.03] p-0.5 flex items-center justify-center">
                   <PhysiqueIllustration sex={sex} type={currentPhysique} className="w-full h-full" />
                 </div>
               </div>
-              <ArrowRight className="w-3.5 h-3.5 text-[#30D158]" />
+              <ArrowRight className="w-3.5 h-3.5 text-green-ink" />
               <div className="flex flex-col items-center">
-                <span className="text-[8px] text-[#30D158] mb-0.5 uppercase font-medium">Desired</span>
+                <span className="text-[8px] text-green-ink mb-0.5 uppercase font-medium">Desired</span>
                 <div className="w-10 h-16 rounded bg-[#30D158]/5 p-0.5 border border-[#30D158]/20 flex items-center justify-center">
                   <PhysiqueIllustration sex={sex} type={desiredPhysique} className="w-full h-full" selected />
                 </div>
@@ -634,26 +634,26 @@ export function AboutYouSection({
           </div>
 
           {/* Adaptive Training Plan Strategy */}
-          <div className="space-y-1.5 pt-2 border-t border-white/[0.08]">
-            <label className="block text-[#8E8E93] font-medium">Adaptive Training Strategy</label>
+          <div className="space-y-1.5 pt-2 border-t border-fg/[0.08]">
+            <label className="block text-muted font-medium">Adaptive Training Strategy</label>
             <div className="space-y-2 pt-1">
               <button
                 type="button"
                 onClick={() => setAdaptivePlanMode('ask_first')}
                 className={`w-full p-3 rounded-xl border text-left flex items-start justify-between transition-all ${
                   adaptivePlanMode === 'ask_first'
-                    ? 'bg-[#30D158]/10 border-[#30D158]/40 text-white'
-                    : 'bg-white/5 border-white/10 text-[#8E8E93] hover:text-white'
+                    ? 'bg-[#30D158]/10 border-[#30D158]/40 text-fg'
+                    : 'bg-fg/5 border-fg/10 text-muted hover:text-fg'
                 }`}
               >
                 <div>
-                  <p className="text-xs font-semibold text-white">Ask me before changing my plan</p>
-                  <p className="text-[10px] text-[#8E8E93] mt-0.5">
+                  <p className="text-xs font-semibold text-fg">Ask me before changing my plan</p>
+                  <p className="text-[10px] text-muted mt-0.5">
                     Recommended. Proposals include explanation, recovery reasoning, and clear options.
                   </p>
                 </div>
                 {adaptivePlanMode === 'ask_first' && (
-                  <CheckCircle2 className="w-4 h-4 text-[#30D158] shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-4 h-4 text-green-ink shrink-0 mt-0.5" />
                 )}
               </button>
 
@@ -662,58 +662,58 @@ export function AboutYouSection({
                 onClick={() => setAdaptivePlanMode('auto_adjust')}
                 className={`w-full p-3 rounded-xl border text-left flex items-start justify-between transition-all ${
                   adaptivePlanMode === 'auto_adjust'
-                    ? 'bg-[#30D158]/10 border-[#30D158]/40 text-white'
-                    : 'bg-white/5 border-white/10 text-[#8E8E93] hover:text-white'
+                    ? 'bg-[#30D158]/10 border-[#30D158]/40 text-fg'
+                    : 'bg-fg/5 border-fg/10 text-muted hover:text-fg'
                 }`}
               >
                 <div>
-                  <p className="text-xs font-semibold text-white">Automatically adjust minor schedule changes</p>
-                  <p className="text-[10px] text-[#8E8E93] mt-0.5">
+                  <p className="text-xs font-semibold text-fg">Automatically adjust minor schedule changes</p>
+                  <p className="text-[10px] text-muted mt-0.5">
                     Adapts missed workouts automatically with transparent inline [Undo].
                   </p>
                 </div>
                 {adaptivePlanMode === 'auto_adjust' && (
-                  <CheckCircle2 className="w-4 h-4 text-[#30D158] shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-4 h-4 text-green-ink shrink-0 mt-0.5" />
                 )}
               </button>
             </div>
           </div>
 
           {/* Scientific Live Calculation Preview */}
-          <div className="p-3.5 rounded-2xl bg-black/40 border border-[#30D158]/30 space-y-2.5">
+          <div className="p-3.5 rounded-2xl bg-app/40 border border-[#30D158]/30 space-y-2.5">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold text-[#30D158] uppercase tracking-wider flex items-center gap-1">
+              <span className="text-[10px] font-bold text-green-ink uppercase tracking-wider flex items-center gap-1">
                 <Sparkles className="w-3 h-3" />
                 <span>Scientific Calculation</span>
               </span>
-              <span className="text-[10px] font-semibold text-[#8E8E93]">Mifflin-St Jeor</span>
+              <span className="text-[10px] font-semibold text-muted">Mifflin-St Jeor</span>
             </div>
 
             <div className="flex items-baseline justify-between">
               <div>
-                <span className="text-xl font-black text-white">{calculatedPreview.calorie_target.toLocaleString()}</span>
-                <span className="text-[10px] text-[#8E8E93] ml-1">kcal / day</span>
+                <span className="text-xl font-black text-fg">{calculatedPreview.calorie_target.toLocaleString()}</span>
+                <span className="text-[10px] text-muted ml-1">kcal / day</span>
               </div>
-              <div className="text-right text-[10px] text-[#8E8E93]">
-                <span>BMR: <strong className="text-white">{calculatedPreview.bmr}</strong></span>
+              <div className="text-right text-[10px] text-muted">
+                <span>BMR: <strong className="text-fg">{calculatedPreview.bmr}</strong></span>
                 <span className="mx-1">·</span>
-                <span>TDEE: <strong className="text-white">{calculatedPreview.tdee}</strong></span>
+                <span>TDEE: <strong className="text-fg">{calculatedPreview.tdee}</strong></span>
               </div>
             </div>
 
             {/* Macros Mini Badges */}
             <div className="grid grid-cols-3 gap-1.5 text-center text-[10px]">
-              <div className="p-1.5 rounded-lg bg-white/[0.04] border border-white/[0.06]">
+              <div className="p-1.5 rounded-lg bg-fg/[0.04] border border-fg/[0.06]">
                 <span className="text-emerald-400 block font-medium">Protein</span>
-                <strong className="text-white text-xs">{calculatedPreview.protein_target}g</strong>
+                <strong className="text-fg text-xs">{calculatedPreview.protein_target}g</strong>
               </div>
-              <div className="p-1.5 rounded-lg bg-white/[0.04] border border-white/[0.06]">
+              <div className="p-1.5 rounded-lg bg-fg/[0.04] border border-fg/[0.06]">
                 <span className="text-amber-400 block font-medium">Carbs</span>
-                <strong className="text-white text-xs">{calculatedPreview.carbohydrate_target}g</strong>
+                <strong className="text-fg text-xs">{calculatedPreview.carbohydrate_target}g</strong>
               </div>
-              <div className="p-1.5 rounded-lg bg-white/[0.04] border border-white/[0.06]">
+              <div className="p-1.5 rounded-lg bg-fg/[0.04] border border-fg/[0.06]">
                 <span className="text-sky-400 block font-medium">Fats</span>
-                <strong className="text-white text-xs">{calculatedPreview.fat_target}g</strong>
+                <strong className="text-fg text-xs">{calculatedPreview.fat_target}g</strong>
               </div>
             </div>
 
@@ -725,7 +725,7 @@ export function AboutYouSection({
                 onChange={(e) => setSyncTargets(e.target.checked)}
                 className="w-3.5 h-3.5 accent-[#30D158] rounded cursor-pointer"
               />
-              <span className="text-[11px] text-[#D1D1D6] font-medium">
+              <span className="text-[11px] text-fg-soft font-medium">
                 Auto-update daily calorie &amp; macro targets with these values
               </span>
             </label>
@@ -736,7 +736,7 @@ export function AboutYouSection({
             <button
               type="button"
               onClick={closeEditModal}
-              className="flex-1 py-3 rounded-xl bg-white/10 hover:bg-white/15 text-white font-semibold transition-colors cursor-pointer"
+              className="flex-1 py-3 rounded-xl bg-fg/10 hover:bg-fg/15 text-fg font-semibold transition-colors cursor-pointer"
             >
               Cancel
             </button>

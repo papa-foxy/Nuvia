@@ -78,16 +78,16 @@ export function IntentProposalCard({
 
   if (appliedAdaptationId) {
     return (
-      <div className="p-3.5 rounded-2xl bg-[#0A84FF]/15 border border-[#0A84FF]/30 text-xs text-white flex items-center justify-between gap-3 animate-fadeIn">
+      <div className="p-3.5 rounded-2xl bg-[#0A84FF]/15 border border-[#0A84FF]/30 text-xs text-fg flex items-center justify-between gap-3 animate-fadeIn">
         <div className="flex items-center gap-2">
-          <Check className="w-4 h-4 text-[#0A84FF]" />
+          <Check className="w-4 h-4 text-blue-ink" />
           <span>Plan updated based on your intent.</span>
         </div>
         <button
           type="button"
           onClick={handleUndo}
           disabled={loading}
-          className="px-3 py-1 rounded-xl bg-white/10 hover:bg-white/20 text-[#0A84FF] font-bold text-xs flex items-center gap-1 transition-colors"
+          className="px-3 py-1 rounded-xl bg-fg/10 hover:bg-fg/20 text-blue-ink font-bold text-xs flex items-center gap-1 transition-colors"
         >
           <RotateCcw className="w-3 h-3" />
           <span>Undo</span>
@@ -97,7 +97,7 @@ export function IntentProposalCard({
   }
 
   return (
-    <div className="p-4 rounded-2xl bg-gradient-to-br from-[#1C1C1E] to-[#121A15] border border-emerald-500/30 text-xs space-y-3 shadow-lg animate-fadeIn">
+    <div className="p-4 rounded-2xl bg-gradient-to-br from-card to-card dark:to-[#121A15] border border-emerald-500/30 text-xs space-y-3 shadow-lg animate-fadeIn">
       <div className="flex items-center justify-between">
         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
           <Sparkles className="w-3 h-3" />
@@ -107,7 +107,7 @@ export function IntentProposalCard({
           <button
             type="button"
             onClick={onReject || onDismiss}
-            className="text-[#8E8E93] hover:text-white p-1"
+            className="text-muted hover:text-fg p-1"
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -115,14 +115,14 @@ export function IntentProposalCard({
       </div>
 
       <div>
-        <p className="font-bold text-white text-sm">
+        <p className="font-bold text-fg text-sm">
           {proposal.reason}
         </p>
-        <p className="text-[#8E8E93] mt-1 leading-relaxed">
+        <p className="text-muted mt-1 leading-relaxed">
           {proposal.recovery_analysis}
         </p>
         {proposal.conflict_warning && (
-          <p className="text-[#FF9F0A] mt-1 flex items-center gap-1">
+          <p className="text-orange-ink mt-1 flex items-center gap-1">
             <AlertCircle className="w-3.5 h-3.5 shrink-0" />
             <span>{proposal.conflict_warning}</span>
           </p>
@@ -146,8 +146,8 @@ export function IntentProposalCard({
             }}
             className={`w-full py-2.5 px-3.5 rounded-xl font-bold text-xs flex items-center justify-between transition-all ${
               opt.action === 'move'
-                ? 'bg-white text-black hover:bg-[#F5F5F7]'
-                : 'bg-white/10 hover:bg-white/15 text-white border border-white/10'
+                ? 'bg-fg text-app hover:bg-fg/85'
+                : 'bg-fg/10 hover:bg-fg/15 text-fg border border-fg/10'
             }`}
           >
             <span>{opt.label}</span>

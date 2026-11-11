@@ -259,7 +259,7 @@ export function DayDetailsModal({
               : `translateY(${dragY}px)`,
             transition: isDragging ? 'none' : 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
           }}
-          className="pointer-events-auto relative z-10 w-full max-w-md bg-[#1C1C1E] border-t border-x border-b-0 border-white/10 rounded-t-[28px] rounded-b-none max-h-[calc(100dvh-var(--bottom-nav-height,56px)-env(safe-area-inset-bottom,0px)-1rem)] flex flex-col shadow-2xl overflow-hidden will-change-transform"
+          className="pointer-events-auto relative z-10 w-full max-w-md bg-card border-t border-x border-b-0 border-fg/10 rounded-t-[28px] rounded-b-none max-h-[calc(100dvh-var(--bottom-nav-height,56px)-env(safe-area-inset-bottom,0px)-1rem)] flex flex-col shadow-2xl overflow-hidden will-change-transform"
         >
         {/* iOS Drag Handle */}
         <div
@@ -267,9 +267,9 @@ export function DayDetailsModal({
           onTouchMove={(e) => handleTouchMove(e, true)}
           onTouchEnd={handleTouchEnd}
           onMouseDown={handleMouseDown}
-          className="flex flex-col items-center justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing w-full touch-none select-none hover:bg-white/[0.02] transition-colors"
+          className="flex flex-col items-center justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing w-full touch-none select-none hover:bg-fg/[0.02] transition-colors"
         >
-          <div className="w-12 h-1.5 rounded-full bg-white/30 hover:bg-white/50 transition-colors" />
+          <div className="w-12 h-1.5 rounded-full bg-fg/30 hover:bg-fg/50 transition-colors" />
         </div>
 
         {/* Modal Top Header */}
@@ -278,20 +278,20 @@ export function DayDetailsModal({
           onTouchMove={(e) => handleTouchMove(e, true)}
           onTouchEnd={handleTouchEnd}
           onMouseDown={handleMouseDown}
-          className="flex items-center justify-between px-5 py-2.5 border-b border-white/5 cursor-grab active:cursor-grabbing touch-none select-none"
+          className="flex items-center justify-between px-5 py-2.5 border-b border-fg/5 cursor-grab active:cursor-grabbing touch-none select-none"
         >
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white">
-              <Calendar className="w-4 h-4 text-[#30D158]" />
+            <div className="w-8 h-8 rounded-full bg-fg/10 flex items-center justify-center text-fg">
+              <Calendar className="w-4 h-4 text-green-ink" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-white tracking-tight">Day Details</h2>
-              <p className="text-[11px] text-[#8E8E93]">{formattedDate}</p>
+              <h2 className="text-base font-bold text-fg tracking-tight">Day Details</h2>
+              <p className="text-[11px] text-muted">{formattedDate}</p>
             </div>
           </div>
           <button
             onClick={triggerClose}
-            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/15 flex items-center justify-center text-zinc-300 hover:text-white transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-full bg-fg/10 hover:bg-fg/15 flex items-center justify-center text-zinc-300 hover:text-fg transition-colors cursor-pointer"
             aria-label="Close"
           >
             <X className="w-4 h-4" />
@@ -307,16 +307,16 @@ export function DayDetailsModal({
           className="flex-1 overflow-y-auto px-5 py-4 pb-6 sm:pb-8 space-y-4 overscroll-contain"
         >
           {/* Status Banner */}
-          <div className="ios-card p-4 space-y-3 border border-white/10 bg-gradient-to-br from-white/[0.05] to-transparent">
+          <div className="ios-card p-4 space-y-3 border border-fg/10 bg-gradient-to-br from-fg/[0.05] to-transparent">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div
                   className={`w-9 h-9 rounded-xl flex items-center justify-center ${
                     hasExercises
-                      ? 'bg-[#30D158]/20 text-[#30D158]'
+                      ? 'bg-[#30D158]/20 text-green-ink'
                       : routine
-                      ? 'bg-[#FF9500]/20 text-[#FF9500]'
-                      : 'bg-[#0A84FF]/20 text-[#0A84FF]'
+                      ? 'bg-[#FF9500]/20 text-orange-ink'
+                      : 'bg-[#0A84FF]/20 text-blue-ink'
                   }`}
                 >
                   {hasExercises ? (
@@ -328,7 +328,7 @@ export function DayDetailsModal({
                   )}
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-white">
+                  <h3 className="text-sm font-bold text-fg">
                     {hasExercises
                       ? `Workout Logged (${exercises.length} ${exercises.length === 1 ? 'Exercise' : 'Exercises'})`
                       : routine
@@ -344,10 +344,10 @@ export function DayDetailsModal({
               <span
                 className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
                   hasExercises
-                    ? 'bg-[#30D158]/20 text-[#30D158] border border-[#30D158]/30'
+                    ? 'bg-[#30D158]/20 text-green-ink border border-[#30D158]/30'
                     : routine
-                    ? 'bg-[#FF9500]/20 text-[#FF9500] border border-[#FF9500]/30'
-                    : 'bg-[#0A84FF]/20 text-[#0A84FF] border border-[#0A84FF]/30'
+                    ? 'bg-[#FF9500]/20 text-orange-ink border border-[#FF9500]/30'
+                    : 'bg-[#0A84FF]/20 text-blue-ink border border-[#0A84FF]/30'
                 }`}
               >
                 {hasExercises ? 'Completed' : routine ? 'Prescribed' : 'Rest Day'}
@@ -356,21 +356,21 @@ export function DayDetailsModal({
 
             {/* Quick Metrics */}
             <div className="grid grid-cols-3 gap-2 pt-1">
-              <div className="bg-black/30 rounded-xl p-2 text-center border border-white/5">
+              <div className="bg-app/30 rounded-xl p-2 text-center border border-fg/5">
                 <span className="text-[10px] text-zinc-400 uppercase tracking-wider block">Intake</span>
-                <span className="text-sm font-bold text-white mt-0.5 block">
+                <span className="text-sm font-bold text-fg mt-0.5 block">
                   {summary?.calories_consumed || 0} <span className="text-[9px] font-normal text-zinc-400">kcal</span>
                 </span>
               </div>
-              <div className="bg-black/30 rounded-xl p-2 text-center border border-white/5">
+              <div className="bg-app/30 rounded-xl p-2 text-center border border-fg/5">
                 <span className="text-[10px] text-zinc-400 uppercase tracking-wider block">Burned</span>
-                <span className="text-sm font-bold text-[#FF9500] mt-0.5 block">
+                <span className="text-sm font-bold text-orange-ink mt-0.5 block">
                   {summary?.calories_burned || 0} <span className="text-[9px] font-normal text-zinc-400">kcal</span>
                 </span>
               </div>
-              <div className="bg-black/30 rounded-xl p-2 text-center border border-white/5">
+              <div className="bg-app/30 rounded-xl p-2 text-center border border-fg/5">
                 <span className="text-[10px] text-zinc-400 uppercase tracking-wider block">Protein</span>
-                <span className="text-sm font-bold text-[#30D158] mt-0.5 block">
+                <span className="text-sm font-bold text-green-ink mt-0.5 block">
                   {summary?.protein_consumed || 0} <span className="text-[9px] font-normal text-zinc-400">g</span>
                 </span>
               </div>
@@ -379,15 +379,15 @@ export function DayDetailsModal({
 
           {/* SCHEDULED ROUTINE MOVEMENTS (If day has routine prescribed & not completed yet) */}
           {routine && !hasExercises && (
-            <div className="ios-card p-4 space-y-3 border border-[#30D158]/25 bg-gradient-to-br from-[#30D158]/10 via-[#1C1C1E] to-[#121214]">
+            <div className="ios-card p-4 space-y-3 border border-[#30D158]/25 bg-gradient-to-br from-[#30D158]/10 via-card to-surface">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-[#30D158]/20 text-[#30D158] flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-xl bg-[#30D158]/20 text-green-ink flex items-center justify-center">
                     <Dumbbell className="w-4 h-4" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-white">{routine.title}</h4>
-                    <p className="text-[11px] text-[#30D158]">
+                    <h4 className="text-sm font-bold text-fg">{routine.title}</h4>
+                    <p className="text-[11px] text-green-ink">
                       {routine.focus || 'Training'} · {routine.exercises.length} movements
                     </p>
                   </div>
@@ -398,7 +398,7 @@ export function DayDetailsModal({
               </div>
 
               <p className="text-xs text-zinc-300 leading-relaxed">
-                <strong className="text-white">Guideline:</strong> This day is programmed for strength training. Complete your movements with controlled tempo and rest 60–90 seconds between sets.
+                <strong className="text-fg">Guideline:</strong> This day is programmed for strength training. Complete your movements with controlled tempo and rest 60–90 seconds between sets.
               </p>
 
               {/* Exercises List */}
@@ -406,18 +406,18 @@ export function DayDetailsModal({
                 {routine.exercises.map((ex, idx) => (
                   <div
                     key={ex.id || idx}
-                    className="flex items-center justify-between p-2 rounded-xl bg-black/40 border border-white/5 text-xs"
+                    className="flex items-center justify-between p-2 rounded-xl bg-app/40 border border-fg/5 text-xs"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-8 h-8 rounded-lg overflow-hidden bg-black/60 shrink-0 border border-white/10">
+                      <div className="w-8 h-8 rounded-lg overflow-hidden bg-app/60 shrink-0 border border-fg/10">
                         <ExerciseThumbnail exercise={ex} aspectRatio="1/1" className="w-full h-full" />
                       </div>
                       <div className="min-w-0">
-                        <p className="font-semibold text-white truncate text-xs">{ex.name}</p>
-                        <p className="text-[10px] text-[#8E8E93] truncate">{ex.target_muscle}</p>
+                        <p className="font-semibold text-fg truncate text-xs">{ex.name}</p>
+                        <p className="text-[10px] text-muted truncate">{ex.target_muscle}</p>
                       </div>
                     </div>
-                    <span className="text-xs font-mono font-bold text-[#30D158] shrink-0 ml-2">
+                    <span className="text-xs font-mono font-bold text-green-ink shrink-0 ml-2">
                       {ex.sets} × {ex.reps}
                     </span>
                   </div>
@@ -428,9 +428,9 @@ export function DayDetailsModal({
 
           {/* REST DAY GUIDELINE (If no workout routine scheduled & no workout logged) */}
           {!routine && !hasExercises && (
-            <div className="ios-card p-4 space-y-2.5 border border-[#0A84FF]/25 bg-gradient-to-br from-[#0A84FF]/10 via-[#1C1C1E] to-[#121214]">
+            <div className="ios-card p-4 space-y-2.5 border border-[#0A84FF]/25 bg-gradient-to-br from-[#0A84FF]/10 via-card to-surface">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-[#0A84FF]">
+                <div className="flex items-center gap-2 text-blue-ink">
                   <Heart className="w-4 h-4" />
                   <span className="text-xs font-bold uppercase tracking-wider">Rest & Recovery Guideline</span>
                 </div>
@@ -442,19 +442,19 @@ export function DayDetailsModal({
                 No workout routine is scheduled for this day. Muscles rebuild and strengthen during recovery. Prioritize hydration, adequate protein intake, light walking, and 7–8 hours of restorative sleep.
               </p>
               <div className="grid grid-cols-2 gap-2 pt-1 text-[11px] text-zinc-300">
-                <div className="p-2 rounded-xl bg-black/30 border border-white/5 flex items-center gap-2">
-                  <Droplets className="w-3.5 h-3.5 text-[#0A84FF] shrink-0" />
+                <div className="p-2 rounded-xl bg-app/30 border border-fg/5 flex items-center gap-2">
+                  <Droplets className="w-3.5 h-3.5 text-blue-ink shrink-0" />
                   <span>2.5L+ Hydration</span>
                 </div>
-                <div className="p-2 rounded-xl bg-black/30 border border-white/5 flex items-center gap-2">
-                  <Flame className="w-3.5 h-3.5 text-[#FF9500] shrink-0" />
+                <div className="p-2 rounded-xl bg-app/30 border border-fg/5 flex items-center gap-2">
+                  <Flame className="w-3.5 h-3.5 text-orange-ink shrink-0" />
                   <span>Protein synthesis</span>
                 </div>
-                <div className="p-2 rounded-xl bg-black/30 border border-white/5 flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-app/30 border border-fg/5 flex items-center gap-2">
                   <Heart className="w-3.5 h-3.5 text-pink-400 shrink-0" />
                   <span>Light 15m walk</span>
                 </div>
-                <div className="p-2 rounded-xl bg-black/30 border border-white/5 flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-app/30 border border-fg/5 flex items-center gap-2">
                   <Moon className="w-3.5 h-3.5 text-purple-400 shrink-0" />
                   <span>7–8h Deep sleep</span>
                 </div>
@@ -479,7 +479,7 @@ export function DayDetailsModal({
           {/* LOGGED MEALS ON THIS SPECIFIC DAY */}
           <div className="space-y-2.5 pt-1">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-[#8E8E93] uppercase tracking-wider">
+              <span className="text-xs font-semibold text-muted uppercase tracking-wider">
                 Meals Logged ({meals.length})
               </span>
               {isToday && onOpenAddMeal && (
@@ -488,7 +488,7 @@ export function DayDetailsModal({
                     onClose();
                     onOpenAddMeal();
                   }}
-                  className="text-xs text-[#30D158] hover:underline font-semibold flex items-center gap-1"
+                  className="text-xs text-green-ink hover:underline font-semibold flex items-center gap-1"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   Log Meal
@@ -497,7 +497,7 @@ export function DayDetailsModal({
             </div>
 
             {meals.length === 0 ? (
-              <div className="ios-card p-4 text-center space-y-1.5 border border-white/5">
+              <div className="ios-card p-4 text-center space-y-1.5 border border-fg/5">
                 <Utensils className="w-5 h-5 text-zinc-500 mx-auto" />
                 <p className="text-xs text-zinc-400">
                   {isToday ? 'No meals logged yet today.' : 'No meal records logged for this day.'}
@@ -511,28 +511,28 @@ export function DayDetailsModal({
                   return (
                     <div
                       key={m.id}
-                      className="ios-card overflow-hidden border border-white/5"
+                      className="ios-card overflow-hidden border border-fg/5"
                     >
                       <div
                         onClick={() => setExpandedMealId(isExpanded ? null : m.id)}
-                        className="p-3 flex items-center justify-between cursor-pointer hover:bg-white/[0.02]"
+                        className="p-3 flex items-center justify-between cursor-pointer hover:bg-fg/[0.02]"
                       >
                         <div className="flex items-center gap-2.5">
                           {m.image_url ? (
                             <img
                               src={m.image_url}
                               alt={m.description || 'Meal'}
-                              className="w-9 h-9 rounded-xl object-cover border border-white/10"
+                              className="w-9 h-9 rounded-xl object-cover border border-fg/10"
                             />
                           ) : (
-                            <div className="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center text-zinc-400">
+                            <div className="w-9 h-9 rounded-xl bg-fg/5 flex items-center justify-center text-zinc-400">
                               <Utensils className="w-3.5 h-3.5 text-zinc-400" />
                             </div>
                           )}
 
                           <div>
                             <div className="flex items-center gap-1.5">
-                              <span className="text-xs font-bold text-white capitalize">
+                              <span className="text-xs font-bold text-fg capitalize">
                                 {m.meal_type}
                               </span>
                               <span className="text-[9px] text-zinc-500 font-mono">
@@ -547,7 +547,7 @@ export function DayDetailsModal({
 
                         <div className="flex items-center gap-2 text-right">
                           <div>
-                            <span className="text-xs font-bold text-white block">
+                            <span className="text-xs font-bold text-fg block">
                               {m.calories} <span className="text-[9px] text-zinc-400 font-normal">kcal</span>
                             </span>
                           </div>
@@ -561,19 +561,19 @@ export function DayDetailsModal({
 
                       {/* Expanded details */}
                       {isExpanded && (
-                        <div className="px-3 pb-3 pt-2 border-t border-white/5 space-y-2 bg-black/20 text-xs">
+                        <div className="px-3 pb-3 pt-2 border-t border-fg/5 space-y-2 bg-app/20 text-xs">
                           <div className="grid grid-cols-3 gap-1 text-center">
-                            <div className="bg-white/5 p-1 rounded-lg">
+                            <div className="bg-fg/5 p-1 rounded-lg">
                               <span className="text-[9px] text-zinc-400 block">Carbs</span>
-                              <span className="text-xs font-semibold text-white">{m.carbs_g}g</span>
+                              <span className="text-xs font-semibold text-fg">{m.carbs_g}g</span>
                             </div>
-                            <div className="bg-white/5 p-1 rounded-lg">
+                            <div className="bg-fg/5 p-1 rounded-lg">
                               <span className="text-[9px] text-zinc-400 block">Protein</span>
-                              <span className="text-xs font-semibold text-white">{m.protein_g}g</span>
+                              <span className="text-xs font-semibold text-fg">{m.protein_g}g</span>
                             </div>
-                            <div className="bg-white/5 p-1 rounded-lg">
+                            <div className="bg-fg/5 p-1 rounded-lg">
                               <span className="text-[9px] text-zinc-400 block">Fat</span>
-                              <span className="text-xs font-semibold text-white">{m.fat_g}g</span>
+                              <span className="text-xs font-semibold text-fg">{m.fat_g}g</span>
                             </div>
                           </div>
 
@@ -587,7 +587,7 @@ export function DayDetailsModal({
                                   <span className="text-zinc-300">
                                     {it.name} {it.estimated_quantity ? `(${it.estimated_quantity} ${it.estimated_unit || ''})` : ''}
                                   </span>
-                                  <span className="font-mono text-white">{it.calories} kcal</span>
+                                  <span className="font-mono text-fg">{it.calories} kcal</span>
                                 </div>
                               ))}
                             </div>

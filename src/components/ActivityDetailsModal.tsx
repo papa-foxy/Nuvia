@@ -56,7 +56,7 @@ export function ActivityDetailsModal({
       type="button"
       onClick={handleDelete}
       disabled={deleting}
-      className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-[#8E8E93] hover:text-[#FF453A] transition-colors cursor-pointer"
+      className="w-8 h-8 rounded-full bg-fg/5 hover:bg-fg/10 flex items-center justify-center text-muted hover:text-red-ink transition-colors cursor-pointer"
       title="Delete activity record"
     >
       <Trash2 className="w-3.5 h-3.5" />
@@ -74,12 +74,12 @@ export function ActivityDetailsModal({
             className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider border ${
               data.isPartial
                 ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
-                : 'bg-[#30D158]/15 text-[#30D158] border-[#30D158]/30'
+                : 'bg-[#30D158]/15 text-green-ink border-[#30D158]/30'
             }`}
           >
             {data.statusLabel}
           </span>
-          <span className="text-[11px] font-medium text-[#8E8E93] flex items-center gap-1">
+          <span className="text-[11px] font-medium text-muted flex items-center gap-1">
             <Activity className="w-3 h-3" />
             <span>{data.sourceLabel}</span>
           </span>
@@ -89,16 +89,16 @@ export function ActivityDetailsModal({
       <div className="space-y-4">
         {/* Title and Date Info */}
         <div className="space-y-1">
-          <h2 className="text-xl font-black text-white tracking-tight">
+          <h2 className="text-xl font-black text-fg tracking-tight">
             {data.cleanTitle}
           </h2>
           {data.equipmentSubtitle && (
-            <p className="text-xs font-semibold text-[#30D158] flex items-center gap-1.5">
+            <p className="text-xs font-semibold text-green-ink flex items-center gap-1.5">
               <Dumbbell className="w-3.5 h-3.5" />
               <span>{data.equipmentSubtitle}</span>
             </p>
           )}
-          <p className="text-xs text-[#8E8E93] flex items-center gap-1.5 pt-0.5">
+          <p className="text-xs text-muted flex items-center gap-1.5 pt-0.5">
             <Calendar className="w-3.5 h-3.5" />
             <span>{data.fullDate}</span>
             <span>·</span>
@@ -109,44 +109,44 @@ export function ActivityDetailsModal({
 
         {/* Primary Metrics Strip */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#FF453A]/15 text-[#FF453A] flex items-center justify-center shrink-0">
+          <div className="p-3.5 rounded-2xl bg-fg/[0.04] border border-fg/[0.06] flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[#FF453A]/15 text-red-ink flex items-center justify-center shrink-0">
               <Flame className="w-5 h-5" />
             </div>
             <div>
-              <span className="text-[10px] text-[#8E8E93] uppercase font-bold tracking-wider block">
+              <span className="text-[10px] text-muted uppercase font-bold tracking-wider block">
                 Calories Burned
               </span>
-              <span className="text-base font-black text-white">
-                ~{data.caloriesBurned} <span className="text-xs font-normal text-[#8E8E93]">kcal</span>
+              <span className="text-base font-black text-fg">
+                ~{data.caloriesBurned} <span className="text-xs font-normal text-muted">kcal</span>
               </span>
             </div>
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#0A84FF]/15 text-[#0A84FF] flex items-center justify-center shrink-0">
+          <div className="p-3.5 rounded-2xl bg-fg/[0.04] border border-fg/[0.06] flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[#0A84FF]/15 text-blue-ink flex items-center justify-center shrink-0">
               <Clock className="w-5 h-5" />
             </div>
             <div>
-              <span className="text-[10px] text-[#8E8E93] uppercase font-bold tracking-wider block">
+              <span className="text-[10px] text-muted uppercase font-bold tracking-wider block">
                 Duration
               </span>
-              <span className="text-base font-black text-white">
-                {data.durationMinutes} <span className="text-xs font-normal text-[#8E8E93]">min</span>
+              <span className="text-base font-black text-fg">
+                {data.durationMinutes} <span className="text-xs font-normal text-muted">min</span>
               </span>
             </div>
           </div>
 
           {data.movementsSummary && (
-            <div className="col-span-2 sm:col-span-1 p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-[#30D158]/15 text-[#30D158] flex items-center justify-center shrink-0">
+            <div className="col-span-2 sm:col-span-1 p-3.5 rounded-2xl bg-fg/[0.04] border border-fg/[0.06] flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-[#30D158]/15 text-green-ink flex items-center justify-center shrink-0">
                 <Dumbbell className="w-5 h-5" />
               </div>
               <div>
-                <span className="text-[10px] text-[#8E8E93] uppercase font-bold tracking-wider block">
+                <span className="text-[10px] text-muted uppercase font-bold tracking-wider block">
                   Movements
                 </span>
-                <span className="text-base font-black text-white">
+                <span className="text-base font-black text-fg">
                   {data.movementsSummary}
                 </span>
               </div>
@@ -167,7 +167,7 @@ export function ActivityDetailsModal({
         {/* Set-by-Set Movement Execution Breakdown */}
         {actualPerformance && actualPerformance.length > 0 ? (
           <div className="space-y-2 pt-1">
-            <span className="text-[11px] font-bold text-[#8E8E93] uppercase tracking-wider block px-1">
+            <span className="text-[11px] font-bold text-muted uppercase tracking-wider block px-1">
               Logged Movements ({actualPerformance.length})
             </span>
             <div className="space-y-2">
@@ -178,19 +178,19 @@ export function ActivityDetailsModal({
                 return (
                   <div
                     key={item.exercise_id || idx}
-                    className="p-3 rounded-2xl bg-white/[0.03] border border-white/[0.06] space-y-2"
+                    className="p-3 rounded-2xl bg-fg/[0.03] border border-fg/[0.06] space-y-2"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         {isItemCompleted ? (
-                          <CheckCircle2 className="w-4 h-4 text-[#30D158] shrink-0" />
+                          <CheckCircle2 className="w-4 h-4 text-green-ink shrink-0" />
                         ) : (
-                          <div className="w-4 h-4 rounded-full border border-white/20 shrink-0" />
+                          <div className="w-4 h-4 rounded-full border border-fg/20 shrink-0" />
                         )}
                         <div>
-                          <p className="text-xs font-bold text-white leading-snug">{item.name}</p>
+                          <p className="text-xs font-bold text-fg leading-snug">{item.name}</p>
                           {item.target_muscle && (
-                            <p className="text-[10px] text-[#8E8E93]">{item.target_muscle}</p>
+                            <p className="text-[10px] text-muted">{item.target_muscle}</p>
                           )}
                         </div>
                       </div>
@@ -207,8 +207,8 @@ export function ActivityDetailsModal({
                             key={sIdx}
                             className={`text-[10px] px-2 py-0.5 rounded-lg border font-mono ${
                               s.completed
-                                ? 'bg-[#30D158]/10 text-[#30D158] border-[#30D158]/30'
-                                : 'bg-white/5 text-[#8E8E93] border-white/10'
+                                ? 'bg-[#30D158]/10 text-green-ink border-[#30D158]/30'
+                                : 'bg-fg/5 text-muted border-fg/10'
                             }`}
                           >
                             Set {s.set_number || sIdx + 1}: {s.reps} reps
@@ -224,10 +224,10 @@ export function ActivityDetailsModal({
           </div>
         ) : log.description ? (
           <div className="space-y-1.5 pt-1">
-            <span className="text-[11px] font-bold text-[#8E8E93] uppercase tracking-wider block px-1">
+            <span className="text-[11px] font-bold text-muted uppercase tracking-wider block px-1">
               Session Notes
             </span>
-            <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/[0.06] text-xs text-zinc-300 leading-relaxed">
+            <div className="p-3 rounded-2xl bg-fg/[0.03] border border-fg/[0.06] text-xs text-zinc-300 leading-relaxed">
               {log.description}
             </div>
           </div>
@@ -235,7 +235,7 @@ export function ActivityDetailsModal({
 
         {/* AI Tip / Feedback if present */}
         {log.ai_analysis?.ai_tip && (
-          <div className="p-3 rounded-2xl bg-[#0A84FF]/10 border border-[#0A84FF]/20 flex items-start gap-2.5 text-xs text-[#0A84FF]">
+          <div className="p-3 rounded-2xl bg-[#0A84FF]/10 border border-[#0A84FF]/20 flex items-start gap-2.5 text-xs text-blue-ink">
             <Sparkles className="w-4 h-4 shrink-0 mt-0.5" />
             <p className="leading-relaxed">{log.ai_analysis.ai_tip}</p>
           </div>

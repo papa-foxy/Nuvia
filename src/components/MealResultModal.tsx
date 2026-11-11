@@ -150,21 +150,21 @@ export function MealResultModal({
       >
         <div
           onClick={(e) => e.stopPropagation()}
-          className="pointer-events-auto w-full max-w-md bg-[#1C1C1E] border-t border-x border-b-0 border-white/[0.08] rounded-t-[28px] rounded-b-none max-h-[calc(100dvh-var(--bottom-nav-height,56px)-env(safe-area-inset-bottom,0px)-0.75rem)] flex flex-col overflow-hidden shadow-2xl animate-slideUp"
+          className="pointer-events-auto w-full max-w-md bg-card border-t border-x border-b-0 border-fg/[0.08] rounded-t-[28px] rounded-b-none max-h-[calc(100dvh-var(--bottom-nav-height,56px)-env(safe-area-inset-bottom,0px)-0.75rem)] flex flex-col overflow-hidden shadow-2xl animate-slideUp"
         >
         {/* Header */}
-        <div className="px-5 py-4 border-b border-white/[0.08] flex items-center justify-between">
+        <div className="px-5 py-4 border-b border-fg/[0.08] flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-[#8E8E93] uppercase tracking-wider">
+            <span className="text-xs font-semibold text-muted uppercase tracking-wider">
               {mealType}
             </span>
-            <span className="text-xs text-[#636366]">
+            <span className="text-xs text-subtle">
               {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
           </div>
           <button
             onClick={onClose}
-            className="w-7 h-7 rounded-full bg-[#2C2C2E] flex items-center justify-center text-[#8E8E93] hover:text-white"
+            className="w-7 h-7 rounded-full bg-elevated flex items-center justify-center text-muted hover:text-fg"
           >
             <X className="w-4 h-4" />
           </button>
@@ -174,9 +174,9 @@ export function MealResultModal({
         <div className="p-5 overflow-y-auto space-y-5">
           {/* Captured Food Photo Preview */}
           {imagePreviewUrl && (
-            <div className="relative rounded-2xl overflow-hidden h-44 border border-white/[0.08] shadow-lg bg-black">
+            <div className="relative rounded-2xl overflow-hidden h-44 border border-fg/[0.08] shadow-lg bg-app">
               <img src={imagePreviewUrl} alt="Analyzed Food" className="w-full h-full object-cover" />
-              <div className="absolute top-2 left-2 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md text-[10px] font-bold text-white flex items-center gap-1.5 border border-white/10">
+              <div className="absolute top-2 left-2 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md text-[10px] font-bold text-white flex items-center gap-1.5 border border-fg/10">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#30D158]" />
                 <span>AI Photo Analyzed</span>
               </div>
@@ -185,10 +185,10 @@ export function MealResultModal({
 
           {/* Nuvia Food Memory Context Badge */}
           {contextBadge && (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#30D158]/10 border border-[#30D158]/25 text-xs text-[#30D158]">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#30D158]/10 border border-[#30D158]/25 text-xs text-green-ink">
               <Sparkles className="w-3.5 h-3.5 shrink-0" />
               <span className="font-semibold">{contextBadge}</span>
-              {contextNote && <span className="text-[#8E8E93] text-[11px]">· {contextNote}</span>}
+              {contextNote && <span className="text-muted text-[11px]">· {contextNote}</span>}
             </div>
           )}
 
@@ -198,73 +198,73 @@ export function MealResultModal({
               type="text"
               value={mealName}
               onChange={(e) => setMealName(e.target.value)}
-              className="bg-transparent text-white font-bold text-2xl tracking-tight focus:outline-none w-full"
+              className="bg-transparent text-fg font-bold text-2xl tracking-tight focus:outline-none w-full"
             />
           </div>
 
           {/* Primary Nutrition Stats (Typography Hierarchy) */}
-          <div className="bg-[#121214] p-4 rounded-2xl border border-white/[0.06] flex items-baseline justify-between">
+          <div className="bg-surface p-4 rounded-2xl border border-fg/[0.06] flex items-baseline justify-between">
             <div>
-              <p className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider">
+              <p className="text-[11px] font-semibold text-muted uppercase tracking-wider">
                 Total Calories
               </p>
               <div className="flex items-baseline gap-1 mt-0.5">
-                <span className="text-3xl font-semibold text-white tracking-tight">
+                <span className="text-3xl font-semibold text-fg tracking-tight">
                   {totalCalories}
                 </span>
-                <span className="text-xs text-[#8E8E93]">kcal (est.)</span>
+                <span className="text-xs text-muted">kcal (est.)</span>
               </div>
             </div>
 
             <div className="text-right text-xs space-y-0.5">
-              <p className="text-white font-medium">{totalProtein}g <span className="text-[#8E8E93]">protein</span></p>
-              <p className="text-[#8E8E93]">{totalCarbs}g carbs · {totalFat}g fat</p>
+              <p className="text-fg font-medium">{totalProtein}g <span className="text-muted">protein</span></p>
+              <p className="text-muted">{totalCarbs}g carbs · {totalFat}g fat</p>
             </div>
           </div>
 
           {/* Inline Nuvia Contextual Note */}
-          <div className="bg-[#121214] p-3.5 rounded-2xl border border-white/[0.06] space-y-1">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-white">
+          <div className="bg-surface p-3.5 rounded-2xl border border-fg/[0.06] space-y-1">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-fg">
               <span className="w-1.5 h-1.5 rounded-full bg-[#30D158]" />
               <span>Nuvia Estimation Note</span>
             </div>
-            <p className="text-xs text-[#D1D1D6] leading-relaxed">
+            <p className="text-xs text-fg-soft leading-relaxed">
               {initialData.assumptions?.[0] || 'Values estimated from portion and ingredient visibility. Review or adjust items before saving.'}
             </p>
           </div>
 
           {/* Food Items Breakdown */}
           <div className="space-y-2">
-            <p className="text-xs font-semibold text-[#8E8E93] uppercase tracking-wider">
+            <p className="text-xs font-semibold text-muted uppercase tracking-wider">
               Ingredients ({foods.length})
             </p>
 
-            <div className="bg-[#121214] rounded-2xl border border-white/[0.06] divide-y divide-white/[0.06] overflow-hidden">
+            <div className="bg-surface rounded-2xl border border-fg/[0.06] divide-y divide-fg/[0.06] overflow-hidden">
               {foods.map((food, idx) => (
                 <div key={idx} className="p-3 flex items-center justify-between text-xs">
                   <div>
-                    <p className="font-semibold text-white">{food.name}</p>
-                    <p className="text-[11px] text-[#8E8E93]">
+                    <p className="font-semibold text-fg">{food.name}</p>
+                    <p className="text-[11px] text-muted">
                       {food.calories} kcal · {food.protein_g}g P
                     </p>
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <div className="flex items-center bg-[#2C2C2E] rounded-lg px-2 py-0.5">
+                    <div className="flex items-center bg-elevated rounded-lg px-2 py-0.5">
                       <button
                         type="button"
                         onClick={() => updateItemQty(idx, -20)}
-                        className="text-[#8E8E93] hover:text-white px-1"
+                        className="text-muted hover:text-fg px-1"
                       >
                         -
                       </button>
-                      <span className="px-1.5 text-[11px] font-medium text-white">
+                      <span className="px-1.5 text-[11px] font-medium text-fg">
                         {food.estimated_quantity}{food.unit}
                       </span>
                       <button
                         type="button"
                         onClick={() => updateItemQty(idx, 20)}
-                        className="text-[#8E8E93] hover:text-white px-1"
+                        className="text-muted hover:text-fg px-1"
                       >
                         +
                       </button>
@@ -272,7 +272,7 @@ export function MealResultModal({
 
                     <button
                       onClick={() => removeItem(idx)}
-                      className="p-1 text-[#636366] hover:text-[#FF453A]"
+                      className="p-1 text-subtle hover:text-red-ink"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -288,18 +288,18 @@ export function MealResultModal({
                 value={newItemName}
                 onChange={(e) => setNewItemName(e.target.value)}
                 placeholder="Add missing ingredient..."
-                className="flex-1 px-3 py-2 bg-[#121214] border border-white/[0.06] rounded-xl text-xs text-white placeholder-[#8E8E93]"
+                className="flex-1 px-3 py-2 bg-surface border border-fg/[0.06] rounded-xl text-xs text-fg placeholder-muted"
               />
               <input
                 type="number"
                 value={newItemCals}
                 onChange={(e) => setNewItemCals(e.target.value)}
                 placeholder="kcal"
-                className="w-16 px-2 py-2 bg-[#121214] border border-white/[0.06] rounded-xl text-xs text-white placeholder-[#8E8E93]"
+                className="w-16 px-2 py-2 bg-surface border border-fg/[0.06] rounded-xl text-xs text-fg placeholder-muted"
               />
               <button
                 onClick={handleAddNewItem}
-                className="px-3 py-2 bg-[#2C2C2E] hover:bg-[#3A3A3C] text-white rounded-xl text-xs font-semibold"
+                className="px-3 py-2 bg-elevated hover:bg-elevated-2 text-fg rounded-xl text-xs font-semibold"
               >
                 Add
               </button>
@@ -308,8 +308,8 @@ export function MealResultModal({
 
           {savedSuccess && (
             <div className="p-3 rounded-xl bg-[#30D158]/15 border border-[#30D158]/30 flex items-center gap-2">
-              <Check className="w-4 h-4 text-[#30D158] shrink-0" />
-              <span className="text-xs text-[#30D158] font-bold">
+              <Check className="w-4 h-4 text-green-ink shrink-0" />
+              <span className="text-xs text-green-ink font-bold">
                 Recorded +{totalCalories} kcal to today's daily calories!
               </span>
             </div>
@@ -317,7 +317,7 @@ export function MealResultModal({
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 border-t border-white/[0.08] flex gap-2">
+        <div className="p-4 border-t border-fg/[0.08] flex gap-2">
           {!savedSuccess ? (
             <>
               <button
@@ -329,7 +329,7 @@ export function MealResultModal({
               </button>
               <button
                 onClick={onClose}
-                className="px-4 py-3.5 rounded-2xl bg-[#2C2C2E] hover:bg-[#3A3A3C] text-white font-medium text-sm transition-colors"
+                className="px-4 py-3.5 rounded-2xl bg-elevated hover:bg-elevated-2 text-fg font-medium text-sm transition-colors"
               >
                 Cancel
               </button>
@@ -338,7 +338,7 @@ export function MealResultModal({
             <>
               <button
                 onClick={onAddAnother}
-                className="flex-1 py-3.5 rounded-2xl bg-[#2C2C2E] text-white font-semibold text-sm hover:bg-[#3A3A3C] transition-colors"
+                className="flex-1 py-3.5 rounded-2xl bg-elevated text-fg font-semibold text-sm hover:bg-elevated-2 transition-colors"
               >
                 Add Another
               </button>

@@ -223,14 +223,14 @@ export function AddExerciseModal({
       >
         <div
           onClick={(e) => e.stopPropagation()}
-          className="pointer-events-auto w-full max-w-md bg-[#1C1C1E] border-t border-x border-b-0 border-white/[0.08] rounded-t-[28px] rounded-b-none max-h-[calc(100dvh-var(--bottom-nav-height,56px)-env(safe-area-inset-bottom,0px)-0.75rem)] flex flex-col overflow-hidden shadow-2xl animate-slideUp"
+          className="pointer-events-auto w-full max-w-md bg-card border-t border-x border-b-0 border-fg/[0.08] rounded-t-[28px] rounded-b-none max-h-[calc(100dvh-var(--bottom-nav-height,56px)-env(safe-area-inset-bottom,0px)-0.75rem)] flex flex-col overflow-hidden shadow-2xl animate-slideUp"
         >
         {/* Header */}
-        <div className="px-5 py-4 border-b border-white/[0.08] flex items-center justify-between">
-          <h3 className="text-base font-semibold text-white">Log Activity</h3>
+        <div className="px-5 py-4 border-b border-fg/[0.08] flex items-center justify-between">
+          <h3 className="text-base font-semibold text-fg">Log Activity</h3>
           <button
             onClick={onClose}
-            className="w-7 h-7 rounded-full bg-[#2C2C2E] flex items-center justify-center text-[#8E8E93] hover:text-white"
+            className="w-7 h-7 rounded-full bg-elevated flex items-center justify-center text-muted hover:text-fg"
           >
             <X className="w-4 h-4" />
           </button>
@@ -238,7 +238,7 @@ export function AddExerciseModal({
 
         {/* Mode Switcher */}
         <div className="p-4 pb-0">
-          <div className="grid grid-cols-2 gap-1 p-1 bg-[#121214] rounded-xl border border-white/[0.06]">
+          <div className="grid grid-cols-2 gap-1 p-1 bg-surface rounded-xl border border-fg/[0.06]">
             <button
               type="button"
               onClick={() => {
@@ -246,7 +246,7 @@ export function AddExerciseModal({
                 setParsedResult(null);
               }}
               className={`py-2 text-xs font-semibold rounded-lg transition-all ${
-                activeTab === 'manual' ? 'bg-[#2C2C2E] text-white shadow' : 'text-[#8E8E93]'
+                activeTab === 'manual' ? 'bg-elevated text-fg shadow' : 'text-muted'
               }`}
             >
               Select Activity
@@ -258,7 +258,7 @@ export function AddExerciseModal({
                 setParsedResult(null);
               }}
               className={`py-2 text-xs font-semibold rounded-lg transition-all ${
-                activeTab === 'ai' ? 'bg-[#2C2C2E] text-white shadow' : 'text-[#8E8E93]'
+                activeTab === 'ai' ? 'bg-elevated text-fg shadow' : 'text-muted'
               }`}
             >
               Prompt
@@ -271,7 +271,7 @@ export function AddExerciseModal({
           {activeTab === 'manual' && (
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-[#8E8E93] uppercase tracking-wider mb-2">
+                <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-2">
                   Activity
                 </label>
                 <div className="grid grid-cols-2 gap-1.5">
@@ -291,8 +291,8 @@ export function AddExerciseModal({
                       onClick={() => setExerciseType(type)}
                       className={`p-3 rounded-xl text-xs font-medium text-left transition-colors ${
                         exerciseType === type
-                          ? 'bg-white text-black font-semibold'
-                          : 'bg-[#121214] text-[#8E8E93] hover:text-white border border-white/[0.04]'
+                          ? 'bg-fg text-app font-semibold'
+                          : 'bg-surface text-muted hover:text-fg border border-fg/[0.04]'
                       }`}
                     >
                       {type}
@@ -303,7 +303,7 @@ export function AddExerciseModal({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-[#8E8E93] mb-1">
+                  <label className="block text-xs text-muted mb-1">
                     Duration (minutes)
                   </label>
                   <input
@@ -311,12 +311,12 @@ export function AddExerciseModal({
                     value={durationMinutes}
                     onChange={(e) => setDurationMinutes(e.target.value)}
                     placeholder="30"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#121214] border border-white/[0.06] text-sm text-white focus:outline-none focus:border-[#30D158]"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-surface border border-fg/[0.06] text-sm text-fg focus:outline-none focus:border-[#30D158]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs text-[#8E8E93] mb-1">
+                  <label className="block text-xs text-muted mb-1">
                     Distance (km, optional)
                   </label>
                   <input
@@ -325,13 +325,13 @@ export function AddExerciseModal({
                     value={distanceKm}
                     onChange={(e) => setDistanceKm(e.target.value)}
                     placeholder="e.g. 5.0"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#121214] border border-white/[0.06] text-sm text-white focus:outline-none focus:border-[#30D158]"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-surface border border-fg/[0.06] text-sm text-fg focus:outline-none focus:border-[#30D158]"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs text-[#8E8E93] mb-1">
+                <label className="block text-xs text-muted mb-1">
                   Intensity
                 </label>
                 <div className="grid grid-cols-3 gap-2">
@@ -342,8 +342,8 @@ export function AddExerciseModal({
                       onClick={() => setIntensity(lvl)}
                       className={`py-2 rounded-xl text-xs font-medium capitalize transition-colors ${
                         intensity === lvl
-                          ? 'bg-white text-black font-semibold'
-                          : 'bg-[#121214] text-[#8E8E93] hover:text-white border border-white/[0.04]'
+                          ? 'bg-fg text-app font-semibold'
+                          : 'bg-surface text-muted hover:text-fg border border-fg/[0.04]'
                       }`}
                     >
                       {lvl}
@@ -361,7 +361,7 @@ export function AddExerciseModal({
                 value={textPrompt}
                 onChange={(e) => setTextPrompt(e.target.value)}
                 placeholder="Tell Nuvia what you did (e.g. Ran 5km in 30 minutes, or did my usual Saturday walk)..."
-                className="w-full p-3.5 rounded-xl bg-[#121214] border border-white/[0.06] text-xs text-white placeholder-[#8E8E93] focus:outline-none focus:border-[#30D158] resize-none"
+                className="w-full p-3.5 rounded-xl bg-surface border border-fg/[0.06] text-xs text-fg placeholder-muted focus:outline-none focus:border-[#30D158] resize-none"
               />
 
               {suggestions.length > 0 && (
@@ -371,10 +371,10 @@ export function AddExerciseModal({
                       key={idx}
                       type="button"
                       onClick={() => setTextPrompt(preset.text)}
-                      className="text-[11px] px-2.5 py-1 rounded-full bg-[#121214] hover:bg-[#2C2C2E] text-[#8E8E93] hover:text-white border border-white/[0.06] transition-colors flex items-center gap-1.5"
+                      className="text-[11px] px-2.5 py-1 rounded-full bg-surface hover:bg-elevated text-muted hover:text-fg border border-fg/[0.06] transition-colors flex items-center gap-1.5"
                     >
                       {preset.badge && (
-                        <span className="text-[9px] px-1 py-0.2 rounded bg-[#30D158]/20 text-[#30D158] font-bold">
+                        <span className="text-[9px] px-1 py-0.2 rounded bg-[#30D158]/20 text-green-ink font-bold">
                           {preset.badge}
                         </span>
                       )}
@@ -387,7 +387,7 @@ export function AddExerciseModal({
           )}
 
           {errorMsg && (
-            <p className="text-xs text-[#FF453A] flex items-center gap-1.5">
+            <p className="text-xs text-red-ink flex items-center gap-1.5">
               <AlertCircle className="w-3.5 h-3.5" />
               <span>{errorMsg}</span>
             </p>
@@ -395,34 +395,34 @@ export function AddExerciseModal({
 
           {/* Parsed Result (Apple Health Inset Cell) */}
           {parsedResult && (
-            <div className="bg-[#121214] p-4 rounded-2xl border border-white/[0.08] space-y-2">
+            <div className="bg-surface p-4 rounded-2xl border border-fg/[0.08] space-y-2">
               {contextBadge && (
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#30D158]/10 border border-[#30D158]/25 text-xs text-[#30D158] mb-1">
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#30D158]/10 border border-[#30D158]/25 text-xs text-green-ink mb-1">
                   <Sparkles className="w-3.5 h-3.5 shrink-0" />
                   <span className="font-semibold">{contextBadge}</span>
-                  {contextNote && <span className="text-[#8E8E93] text-[11px]">· {contextNote}</span>}
+                  {contextNote && <span className="text-muted text-[11px]">· {contextNote}</span>}
                 </div>
               )}
               <div className="flex items-baseline justify-between">
                 <div>
-                  <h4 className="text-base font-semibold text-white">
+                  <h4 className="text-base font-semibold text-fg">
                     {parsedResult.exercise_type}
                   </h4>
-                  <p className="text-xs text-[#8E8E93]">
+                  <p className="text-xs text-muted">
                     {parsedResult.duration_minutes} min
                     {parsedResult.distance_km ? ` · ${parsedResult.distance_km} km` : ''} ·{' '}
                     <span className="capitalize">{parsedResult.intensity}</span>
                   </p>
                 </div>
                 <div className="text-right">
-                  <span className="text-2xl font-bold text-white">~{parsedResult.calories_burned}</span>
-                  <span className="text-xs text-[#8E8E93] ml-1">kcal</span>
+                  <span className="text-2xl font-bold text-fg">~{parsedResult.calories_burned}</span>
+                  <span className="text-xs text-muted ml-1">kcal</span>
                 </div>
               </div>
 
               {parsedResult.ai_tip && (
-                <p className="text-xs text-[#A1A1A6] pt-1 border-t border-white/[0.06]">
-                  <span className="font-semibold text-white">Nuvia: </span>
+                <p className="text-xs text-[#A1A1A6] pt-1 border-t border-fg/[0.06]">
+                  <span className="font-semibold text-fg">Nuvia: </span>
                   {parsedResult.ai_tip}
                 </p>
               )}
@@ -431,7 +431,7 @@ export function AddExerciseModal({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-white/[0.08]">
+        <div className="p-4 border-t border-fg/[0.08]">
           {!parsedResult ? (
             <button
               onClick={handleParse}
@@ -451,7 +451,7 @@ export function AddExerciseModal({
               </button>
               <button
                 onClick={() => setParsedResult(null)}
-                className="px-4 py-3.5 rounded-2xl bg-[#2C2C2E] text-white font-medium text-sm"
+                className="px-4 py-3.5 rounded-2xl bg-elevated text-fg font-medium text-sm"
               >
                 Edit
               </button>

@@ -212,17 +212,17 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
       {/* ── TOP HEADER ─────────────────────────────────────────────────── */}
       <div className="flex items-end justify-between pt-1">
         <div>
-          <p className="text-[11px] font-semibold tracking-wider text-[#8E8E93] uppercase">
+          <p className="text-[11px] font-semibold tracking-wider text-muted uppercase">
             Configuration
           </p>
-          <h1 className="text-3xl font-bold tracking-tight text-white mt-0.5">
+          <h1 className="text-3xl font-bold tracking-tight text-fg mt-0.5">
             Goals
           </h1>
         </div>
         {onNavigateTab && (
           <button
             onClick={() => onNavigateTab('home')}
-            className="text-xs font-semibold text-[#30D158] hover:text-[#28B84D] px-2.5 py-1 rounded-full bg-white/[0.04] border border-white/[0.08] transition-colors mb-1 cursor-pointer"
+            className="text-xs font-semibold text-green-ink hover:text-green-ink px-2.5 py-1 rounded-full bg-fg/[0.04] border border-fg/[0.08] transition-colors mb-1 cursor-pointer"
           >
             Today →
           </button>
@@ -231,26 +231,26 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
 
       {/* ── RECALCULATION NOTIFICATION BANNER ───────────────────────────── */}
       {recalcNotice && (
-        <div className="p-3.5 rounded-2xl bg-gradient-to-r from-[#30D158]/15 via-white/[0.03] to-black border border-[#30D158]/30 flex items-start justify-between gap-3 animate-slideDown">
+        <div className="p-3.5 rounded-2xl bg-gradient-to-r from-[#30D158]/15 via-fg/[0.03] to-black border border-[#30D158]/30 flex items-start justify-between gap-3 animate-slideDown">
           <div className="flex items-start gap-2.5">
             <div className="w-6 h-6 rounded-full bg-[#30D158] text-black flex items-center justify-center shrink-0 mt-0.5">
               <Sparkles className="w-3.5 h-3.5 fill-black" />
             </div>
             <div>
-              <p className="text-xs font-bold text-white flex items-center gap-1.5">
+              <p className="text-xs font-bold text-fg flex items-center gap-1.5">
                 <span>Calorie target updated</span>
-                <span className="text-[#30D158]">
+                <span className="text-green-ink">
                   {recalcNotice.prevCal.toLocaleString()} → {recalcNotice.newCal.toLocaleString()} kcal
                 </span>
               </p>
-              <p className="text-[11px] text-[#8E8E93] mt-0.5">
+              <p className="text-[11px] text-muted mt-0.5">
                 Recalculated using your latest profile & activity settings. Synchronized across Today and AI Coach.
               </p>
             </div>
           </div>
           <button
             onClick={() => setRecalcNotice(null)}
-            className="text-zinc-400 hover:text-white p-1 cursor-pointer"
+            className="text-zinc-400 hover:text-fg p-1 cursor-pointer"
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -260,20 +260,20 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
       {/* ── 1. HERO SECTION: YOUR GOAL ─────────────────────────────────── */}
       <div className="ios-card p-5 space-y-4">
         <div className="flex items-center justify-between">
-          <span className="text-[11px] font-bold tracking-wider text-[#8E8E93] uppercase">
+          <span className="text-[11px] font-bold tracking-wider text-muted uppercase">
             Your Goal
           </span>
-          <span className="text-[10px] font-semibold text-[#30D158] px-2.5 py-0.5 rounded-full bg-[#30D158]/10 border border-[#30D158]/20">
+          <span className="text-[10px] font-semibold text-green-ink px-2.5 py-0.5 rounded-full bg-[#30D158]/10 border border-[#30D158]/20">
             Active Plan
           </span>
         </div>
 
         {/* Big Typography Goal Name */}
         <div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight uppercase">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-fg tracking-tight uppercase">
             {goalLabel}
           </h2>
-          <p className="text-xs text-[#8E8E93] mt-1">
+          <p className="text-xs text-muted mt-1">
             {goalType === 'lose_weight' && 'A calorie target below your estimated maintenance to support weight loss.'}
             {goalType === 'maintain_weight' && 'A calorie target balanced with your estimated maintenance level.'}
             {goalType === 'build_muscle' && 'A controlled surplus with optimized protein for muscle growth.'}
@@ -282,48 +282,48 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
         </div>
 
         {/* Current -> Target Weight Hero Block */}
-        <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-between">
+        <div className="p-3.5 rounded-2xl bg-fg/[0.03] border border-fg/[0.06] flex items-center justify-between">
           <div>
-            <span className="text-[10px] uppercase font-semibold text-[#8E8E93] block">
+            <span className="text-[10px] uppercase font-semibold text-muted block">
               Current Weight
             </span>
             <div className="flex items-baseline gap-1 mt-0.5">
-              <span className="text-2xl font-extrabold text-white tracking-tight">
+              <span className="text-2xl font-extrabold text-fg tracking-tight">
                 {currentWeight}
               </span>
-              <span className="text-xs font-semibold text-[#8E8E93]">kg</span>
+              <span className="text-xs font-semibold text-muted">kg</span>
             </div>
           </div>
 
           <div className="flex flex-col items-center px-2">
             {isLosing ? (
-              <TrendingDown className="w-5 h-5 text-[#30D158]" />
+              <TrendingDown className="w-5 h-5 text-green-ink" />
             ) : isGaining ? (
-              <TrendingUp className="w-5 h-5 text-[#0A84FF]" />
+              <TrendingUp className="w-5 h-5 text-blue-ink" />
             ) : (
               <Minus className="w-5 h-5 text-zinc-400" />
             )}
-            <span className="text-[9px] font-bold uppercase tracking-wider text-[#8E8E93] mt-0.5">
+            <span className="text-[9px] font-bold uppercase tracking-wider text-muted mt-0.5">
               {isAtGoal ? 'Maintaining' : `${weightDiff} kg ${isLosing ? 'to lose' : 'to gain'}`}
             </span>
           </div>
 
           <div className="text-right">
-            <span className="text-[10px] uppercase font-semibold text-[#8E8E93] block">
+            <span className="text-[10px] uppercase font-semibold text-muted block">
               Target Weight
             </span>
             <div className="flex items-baseline justify-end gap-1 mt-0.5">
-              <span className="text-2xl font-extrabold text-white tracking-tight">
+              <span className="text-2xl font-extrabold text-fg tracking-tight">
                 {targetWeight}
               </span>
-              <span className="text-xs font-semibold text-[#8E8E93]">kg</span>
+              <span className="text-xs font-semibold text-muted">kg</span>
             </div>
           </div>
         </div>
 
         {/* ── GOAL TYPE SELECTOR PILLS ─────────────────────────────────── */}
         <div className="pt-1">
-          <label className="text-[11px] font-semibold text-[#8E8E93] block mb-2">
+          <label className="text-[11px] font-semibold text-muted block mb-2">
             Switch Objective
           </label>
           <div className="grid grid-cols-2 gap-2">
@@ -340,8 +340,8 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
                   }}
                   className={`p-2.5 rounded-xl text-left border transition-all cursor-pointer ${
                     isSelected
-                      ? 'bg-white text-black font-bold border-white shadow-md'
-                      : 'bg-white/[0.03] text-zinc-300 hover:text-white border-white/[0.06] hover:bg-white/[0.06]'
+                      ? 'bg-fg text-app font-bold border-fg shadow-md'
+                      : 'bg-fg/[0.03] text-zinc-300 hover:text-fg border-fg/[0.06] hover:bg-fg/[0.06]'
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -350,7 +350,7 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
                   </div>
                   <span
                     className={`text-[10px] block mt-0.5 truncate ${
-                      isSelected ? 'text-zinc-700' : 'text-[#8E8E93]'
+                      isSelected ? 'text-zinc-700' : 'text-muted'
                     }`}
                   >
                     {opt.desc}
@@ -366,14 +366,14 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
       <div className="ios-card p-5 space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
-            <Flame className="w-4 h-4 text-[#FF9500]" />
-            <span className="text-[11px] font-bold tracking-wider text-white uppercase">
+            <Flame className="w-4 h-4 text-orange-ink" />
+            <span className="text-[11px] font-bold tracking-wider text-fg uppercase">
               Daily Calories
             </span>
           </div>
           <button
             onClick={() => setShowWhySheet(true)}
-            className="text-[11px] font-semibold text-[#30D158] hover:underline flex items-center gap-1 cursor-pointer"
+            className="text-[11px] font-semibold text-green-ink hover:underline flex items-center gap-1 cursor-pointer"
           >
             <Info className="w-3 h-3" />
             <span>Why this target?</span>
@@ -383,17 +383,17 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
         {/* Comparison Grid: Maintenance vs Goal Target */}
         <div className="grid grid-cols-2 gap-3 pt-1">
           {/* Estimated Maintenance */}
-          <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.05]">
-            <span className="text-[11px] font-medium text-[#8E8E93] block">
+          <div className="p-3.5 rounded-2xl bg-fg/[0.03] border border-fg/[0.05]">
+            <span className="text-[11px] font-medium text-muted block">
               Estimated maintenance
             </span>
             <div className="flex items-baseline gap-1 mt-1">
-              <span className="text-2xl font-bold tracking-tight text-white">
+              <span className="text-2xl font-bold tracking-tight text-fg">
                 {currentCalc.tdee.toLocaleString()}
               </span>
-              <span className="text-xs text-[#8E8E93]">kcal</span>
+              <span className="text-xs text-muted">kcal</span>
             </div>
-            <span className="text-[10px] text-[#8E8E93] block mt-1">
+            <span className="text-[10px] text-muted block mt-1">
               BMR ({currentCalc.bmr}) × activity
             </span>
           </div>
@@ -401,16 +401,16 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
           {/* Goal Target */}
           <div className="p-3.5 rounded-2xl bg-gradient-to-b from-[#30D158]/10 to-transparent border border-[#30D158]/30 relative overflow-hidden">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-white block">
+              <span className="text-[11px] font-bold text-fg block">
                 Daily goal target
               </span>
               <span
                 className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded-md ${
                   currentCalc.adjustment < 0
-                    ? 'bg-emerald-500/20 text-[#30D158]'
+                    ? 'bg-emerald-500/20 text-green-ink'
                     : currentCalc.adjustment > 0
-                    ? 'bg-[#0A84FF]/20 text-[#0A84FF]'
-                    : 'bg-white/10 text-zinc-300'
+                    ? 'bg-[#0A84FF]/20 text-blue-ink'
+                    : 'bg-fg/10 text-zinc-300'
                 }`}
               >
                 {currentCalc.adjustment < 0
@@ -421,12 +421,12 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
               </span>
             </div>
             <div className="flex items-baseline gap-1 mt-1">
-              <span className="text-2xl font-extrabold tracking-tight text-white">
+              <span className="text-2xl font-extrabold tracking-tight text-fg">
                 {calorieTarget.toLocaleString()}
               </span>
-              <span className="text-xs text-[#8E8E93]">kcal</span>
+              <span className="text-xs text-muted">kcal</span>
             </div>
-            <span className="text-[10px] text-[#8E8E93] block mt-1">
+            <span className="text-[10px] text-muted block mt-1">
               {currentCalc.adjustment < 0
                 ? `${Math.abs(currentCalc.adjustment)} kcal/day deficit`
                 : currentCalc.adjustment > 0
@@ -437,18 +437,18 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
         </div>
 
         {/* Visual Connector / Flow Path */}
-        <div className="p-3 rounded-xl bg-black/40 border border-white/[0.04] flex items-center justify-between text-xs">
+        <div className="p-3 rounded-xl bg-app/40 border border-fg/[0.04] flex items-center justify-between text-xs">
           <div className="flex items-center gap-2">
             <span className="text-zinc-400 font-medium">Maintenance {currentCalc.tdee}</span>
-            <ArrowRight className="w-3.5 h-3.5 text-[#8E8E93]" />
-            <span className="font-bold text-white">Target {calorieTarget} kcal</span>
+            <ArrowRight className="w-3.5 h-3.5 text-muted" />
+            <span className="font-bold text-fg">Target {calorieTarget} kcal</span>
           </div>
           <span
             className={`font-semibold text-xs ${
               currentCalc.adjustment < 0
-                ? 'text-[#30D158]'
+                ? 'text-green-ink'
                 : currentCalc.adjustment > 0
-                ? 'text-[#0A84FF]'
+                ? 'text-blue-ink'
                 : 'text-zinc-400'
             }`}
           >
@@ -461,25 +461,25 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
         </div>
 
         {/* Concise Contextual Explanation */}
-        <p className="text-xs text-[#8E8E93] leading-relaxed">
+        <p className="text-xs text-muted leading-relaxed">
           {goalType === 'lose_weight' && (
             <>
-              Your target is <span className="text-white font-medium">below estimated maintenance</span> to support steady, sustainable weight loss without metabolic crash.
+              Your target is <span className="text-fg font-medium">below estimated maintenance</span> to support steady, sustainable weight loss without metabolic crash.
             </>
           )}
           {goalType === 'maintain_weight' && (
             <>
-              Your target is <span className="text-white font-medium">at your estimated maintenance level</span> to sustain your current weight, energy, and muscle mass.
+              Your target is <span className="text-fg font-medium">at your estimated maintenance level</span> to sustain your current weight, energy, and muscle mass.
             </>
           )}
           {goalType === 'build_muscle' && (
             <>
-              Your target is <span className="text-white font-medium">above estimated maintenance</span> to supply adequate energy for progressive muscle hypertrophy.
+              Your target is <span className="text-fg font-medium">above estimated maintenance</span> to supply adequate energy for progressive muscle hypertrophy.
             </>
           )}
           {goalType === 'gain_weight' && (
             <>
-              Your target is <span className="text-white font-medium">in a healthy surplus</span> to facilitate steady body weight gain.
+              Your target is <span className="text-fg font-medium">in a healthy surplus</span> to facilitate steady body weight gain.
             </>
           )}
         </p>
@@ -489,19 +489,19 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
       <div className="ios-card p-5 space-y-3.5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
-            <Target className="w-4 h-4 text-[#30D158]" />
-            <span className="text-[11px] font-bold tracking-wider text-white uppercase">
+            <Target className="w-4 h-4 text-green-ink" />
+            <span className="text-[11px] font-bold tracking-wider text-fg uppercase">
               Goal Progress
             </span>
           </div>
-          <span className="text-xs font-semibold text-white">
+          <span className="text-xs font-semibold text-fg">
             {currentWeight} kg → {targetWeight} kg
           </span>
         </div>
 
         {/* Visual Progress Bar Path */}
         <div className="space-y-1.5 pt-1">
-          <div className="relative h-2.5 w-full bg-white/[0.08] rounded-full overflow-hidden">
+          <div className="relative h-2.5 w-full bg-fg/[0.08] rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-[#30D158] to-[#0A84FF] rounded-full transition-all duration-500"
               style={{
@@ -514,34 +514,34 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
               }}
             />
           </div>
-          <div className="flex items-center justify-between text-[10px] text-[#8E8E93] px-0.5">
+          <div className="flex items-center justify-between text-[10px] text-muted px-0.5">
             <span>Current: {currentWeight} kg</span>
-            <span className="font-semibold text-white">
+            <span className="font-semibold text-fg">
               {isAtGoal ? 'Target Achieved' : `${weightDiff} kg to goal`}
             </span>
             <span>Target: {targetWeight} kg</span>
           </div>
         </div>
 
-        <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.04] text-xs text-[#8E8E93] flex items-center justify-between">
+        <div className="p-3 rounded-xl bg-fg/[0.02] border border-fg/[0.04] text-xs text-muted flex items-center justify-between">
           <span>Target pace</span>
-          <span className="font-semibold text-white">{currentPace} kg / week</span>
+          <span className="font-semibold text-fg">{currentPace} kg / week</span>
         </div>
       </div>
 
       {/* ── 4. DAILY MACROS SECTION ────────────────────────────────────── */}
       <div className="ios-card p-5 space-y-4">
         <div className="flex items-center justify-between">
-          <span className="text-[11px] font-bold tracking-wider text-white uppercase">
+          <span className="text-[11px] font-bold tracking-wider text-fg uppercase">
             Daily Macros
           </span>
-          <span className="text-[11px] text-[#8E8E93]">
+          <span className="text-[11px] text-muted">
             {calorieTarget} kcal total
           </span>
         </div>
 
         {/* Macro Ratio Split Bar */}
-        <div className="h-2 w-full bg-white/[0.06] rounded-full flex overflow-hidden">
+        <div className="h-2 w-full bg-fg/[0.06] rounded-full flex overflow-hidden">
           <div
             className="bg-[#30D158] h-full"
             style={{ width: `${proteinPct}%` }}
@@ -560,16 +560,16 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
         </div>
 
         {/* Apple-style Grouped Macro Rows */}
-        <div className="divide-y divide-white/[0.06] text-xs">
+        <div className="divide-y divide-fg/[0.06] text-xs">
           {/* Protein Row */}
           <div className="py-2.5 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="w-6 h-6 rounded-lg bg-[#30D158]/15 text-[#30D158] flex items-center justify-center shrink-0">
+              <div className="w-6 h-6 rounded-lg bg-[#30D158]/15 text-green-ink flex items-center justify-center shrink-0">
                 <Beef className="w-3.5 h-3.5" />
               </div>
               <div>
-                <span className="font-semibold text-white block">Protein</span>
-                <span className="text-[10px] text-[#8E8E93]">
+                <span className="font-semibold text-fg block">Protein</span>
+                <span className="text-[10px] text-muted">
                   {goalType === 'build_muscle' || goalType === 'lose_weight'
                     ? 'Primary muscle retention target'
                     : 'Essential daily intake'}
@@ -577,8 +577,8 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
               </div>
             </div>
             <div className="text-right">
-              <span className="font-bold text-white text-sm">{proteinTarget} g</span>
-              <span className="text-[10px] text-[#8E8E93] block">{proteinPct}% of cals</span>
+              <span className="font-bold text-fg text-sm">{proteinTarget} g</span>
+              <span className="text-[10px] text-muted block">{proteinPct}% of cals</span>
             </div>
           </div>
 
@@ -589,30 +589,30 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
                 <Wheat className="w-3.5 h-3.5" />
               </div>
               <div>
-                <span className="font-semibold text-white block">Carbohydrates</span>
-                <span className="text-[10px] text-[#8E8E93]">Energy & workout fuel</span>
+                <span className="font-semibold text-fg block">Carbohydrates</span>
+                <span className="text-[10px] text-muted">Energy & workout fuel</span>
               </div>
             </div>
             <div className="text-right">
-              <span className="font-bold text-white text-sm">{carbTarget} g</span>
-              <span className="text-[10px] text-[#8E8E93] block">{carbPct}% of cals</span>
+              <span className="font-bold text-fg text-sm">{carbTarget} g</span>
+              <span className="text-[10px] text-muted block">{carbPct}% of cals</span>
             </div>
           </div>
 
           {/* Fat Row */}
           <div className="py-2.5 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="w-6 h-6 rounded-lg bg-[#0A84FF]/15 text-[#0A84FF] flex items-center justify-center shrink-0">
+              <div className="w-6 h-6 rounded-lg bg-[#0A84FF]/15 text-blue-ink flex items-center justify-center shrink-0">
                 <Droplets className="w-3.5 h-3.5" />
               </div>
               <div>
-                <span className="font-semibold text-white block">Healthy Fats</span>
-                <span className="text-[10px] text-[#8E8E93]">Hormones & cellular health</span>
+                <span className="font-semibold text-fg block">Healthy Fats</span>
+                <span className="text-[10px] text-muted">Hormones & cellular health</span>
               </div>
             </div>
             <div className="text-right">
-              <span className="font-bold text-white text-sm">{fatTarget} g</span>
-              <span className="text-[10px] text-[#8E8E93] block">{fatPct}% of cals</span>
+              <span className="font-bold text-fg text-sm">{fatTarget} g</span>
+              <span className="text-[10px] text-muted block">{fatPct}% of cals</span>
             </div>
           </div>
         </div>
@@ -620,26 +620,26 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
 
       {/* ── 5. YOUR PLAN / GOAL INPUTS (FOCUSED EDITORS) ─────────────────── */}
       <div className="space-y-2">
-        <span className="text-[11px] font-bold tracking-wider text-[#8E8E93] uppercase px-1">
+        <span className="text-[11px] font-bold tracking-wider text-muted uppercase px-1">
           Your Plan
         </span>
 
-        <div className="ios-card divide-y divide-white/[0.06] overflow-hidden text-xs">
+        <div className="ios-card divide-y divide-fg/[0.06] overflow-hidden text-xs">
           {/* Row 1: Goal Objective */}
           <button
             onClick={() => {
               setDraftGoal(goalType);
               setActiveEditor('goal');
             }}
-            className="w-full p-3.5 flex items-center justify-between hover:bg-white/[0.02] transition-colors text-left cursor-pointer"
+            className="w-full p-3.5 flex items-center justify-between hover:bg-fg/[0.02] transition-colors text-left cursor-pointer"
           >
             <div className="flex items-center gap-2.5">
-              <Target className="w-4 h-4 text-[#30D158]" />
-              <span className="font-medium text-[#8E8E93]">Goal</span>
+              <Target className="w-4 h-4 text-green-ink" />
+              <span className="font-medium text-muted">Goal</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="font-semibold text-white">{goalLabel}</span>
-              <ChevronRight className="w-4 h-4 text-[#8E8E93]" />
+              <span className="font-semibold text-fg">{goalLabel}</span>
+              <ChevronRight className="w-4 h-4 text-muted" />
             </div>
           </button>
 
@@ -649,15 +649,15 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
               setDraftWeight(targetWeight);
               setActiveEditor('target_weight');
             }}
-            className="w-full p-3.5 flex items-center justify-between hover:bg-white/[0.02] transition-colors text-left cursor-pointer"
+            className="w-full p-3.5 flex items-center justify-between hover:bg-fg/[0.02] transition-colors text-left cursor-pointer"
           >
             <div className="flex items-center gap-2.5">
-              <Activity className="w-4 h-4 text-[#FF9500]" />
-              <span className="font-medium text-[#8E8E93]">Target Weight</span>
+              <Activity className="w-4 h-4 text-orange-ink" />
+              <span className="font-medium text-muted">Target Weight</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="font-semibold text-white">{targetWeight} kg</span>
-              <ChevronRight className="w-4 h-4 text-[#8E8E93]" />
+              <span className="font-semibold text-fg">{targetWeight} kg</span>
+              <ChevronRight className="w-4 h-4 text-muted" />
             </div>
           </button>
 
@@ -667,17 +667,17 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
               setDraftActivity(profile?.activity_level || 'moderately_active');
               setActiveEditor('activity');
             }}
-            className="w-full p-3.5 flex items-center justify-between hover:bg-white/[0.02] transition-colors text-left cursor-pointer"
+            className="w-full p-3.5 flex items-center justify-between hover:bg-fg/[0.02] transition-colors text-left cursor-pointer"
           >
             <div className="flex items-center gap-2.5">
-              <Sliders className="w-4 h-4 text-[#0A84FF]" />
-              <span className="font-medium text-[#8E8E93]">Activity Level</span>
+              <Sliders className="w-4 h-4 text-blue-ink" />
+              <span className="font-medium text-muted">Activity Level</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="font-semibold text-white">
+              <span className="font-semibold text-fg">
                 {ACTIVITY_LABELS[profile?.activity_level || 'moderately_active']?.label || 'Moderate'}
               </span>
-              <ChevronRight className="w-4 h-4 text-[#8E8E93]" />
+              <ChevronRight className="w-4 h-4 text-muted" />
             </div>
           </button>
 
@@ -687,15 +687,15 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
               setDraftPace(currentPace);
               setActiveEditor('pace');
             }}
-            className="w-full p-3.5 flex items-center justify-between hover:bg-white/[0.02] transition-colors text-left cursor-pointer"
+            className="w-full p-3.5 flex items-center justify-between hover:bg-fg/[0.02] transition-colors text-left cursor-pointer"
           >
             <div className="flex items-center gap-2.5">
               <Flame className="w-4 h-4 text-emerald-400" />
-              <span className="font-medium text-[#8E8E93]">Weekly Pace</span>
+              <span className="font-medium text-muted">Weekly Pace</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="font-semibold text-white">{currentPace} kg / week</span>
-              <ChevronRight className="w-4 h-4 text-[#8E8E93]" />
+              <span className="font-semibold text-fg">{currentPace} kg / week</span>
+              <ChevronRight className="w-4 h-4 text-muted" />
             </div>
           </button>
         </div>
@@ -703,28 +703,28 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
 
       {/* ── 6. HOW NUVIA CALCULATES YOUR TARGET ─────────────────────────── */}
       <div className="ios-card p-5 space-y-3">
-        <span className="text-[11px] font-bold tracking-wider text-[#8E8E93] uppercase block">
+        <span className="text-[11px] font-bold tracking-wider text-muted uppercase block">
           How Nuvia Calculates Your Target
         </span>
-        <p className="text-xs text-[#8E8E93] leading-relaxed">
+        <p className="text-xs text-muted leading-relaxed">
           Your calorie recommendation is calculated from your body metrics using the clinical{' '}
-          <strong className="text-white">Mifflin-St Jeor formula</strong> and physical activity multiplier:
+          <strong className="text-fg">Mifflin-St Jeor formula</strong> and physical activity multiplier:
         </p>
 
-        <div className="p-3.5 rounded-2xl bg-black/40 border border-white/[0.04] space-y-2 text-xs">
+        <div className="p-3.5 rounded-2xl bg-app/40 border border-fg/[0.04] space-y-2 text-xs">
           <div className="flex items-center justify-between">
-            <span className="text-[#8E8E93]">Estimated maintenance (TDEE)</span>
-            <span className="font-bold text-white">{currentCalc.tdee.toLocaleString()} kcal</span>
+            <span className="text-muted">Estimated maintenance (TDEE)</span>
+            <span className="font-bold text-fg">{currentCalc.tdee.toLocaleString()} kcal</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-[#8E8E93]">Goal adjustment ({goalLabel})</span>
+            <span className="text-muted">Goal adjustment ({goalLabel})</span>
             <span
               className={`font-bold ${
                 currentCalc.adjustment < 0
-                  ? 'text-[#30D158]'
+                  ? 'text-green-ink'
                   : currentCalc.adjustment > 0
-                  ? 'text-[#0A84FF]'
-                  : 'text-white'
+                  ? 'text-blue-ink'
+                  : 'text-fg'
               }`}
             >
               {currentCalc.adjustment < 0
@@ -734,9 +734,9 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
                 : '0 kcal'}
             </span>
           </div>
-          <div className="pt-2 border-t border-white/10 flex items-center justify-between">
-            <span className="font-bold text-white">Daily Recommended Target</span>
-            <span className="text-sm font-extrabold text-[#30D158]">
+          <div className="pt-2 border-t border-fg/10 flex items-center justify-between">
+            <span className="font-bold text-fg">Daily Recommended Target</span>
+            <span className="text-sm font-extrabold text-green-ink">
               {calorieTarget.toLocaleString()} kcal
             </span>
           </div>
@@ -760,18 +760,18 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
           >
             <div
               onClick={(e) => e.stopPropagation()}
-              className="pointer-events-auto w-full max-w-md bg-[#1C1C1E] border-t border-x border-b-0 border-white/10 rounded-t-[28px] rounded-b-none p-5 space-y-4 max-h-[calc(100dvh-var(--bottom-nav-height,56px)-env(safe-area-inset-bottom,0px)-0.75rem)] overflow-y-auto animate-slideUp"
+              className="pointer-events-auto w-full max-w-md bg-card border-t border-x border-b-0 border-fg/10 rounded-t-[28px] rounded-b-none p-5 space-y-4 max-h-[calc(100dvh-var(--bottom-nav-height,56px)-env(safe-area-inset-bottom,0px)-0.75rem)] overflow-y-auto animate-slideUp"
             >
-            <div className="flex items-center justify-between pb-2 border-b border-white/10">
+            <div className="flex items-center justify-between pb-2 border-b border-fg/10">
               <div>
-                <h3 className="text-base font-bold text-white">
+                <h3 className="text-base font-bold text-fg">
                   Why is my target {calorieTarget.toLocaleString()} kcal?
                 </h3>
-                <p className="text-[11px] text-[#8E8E93]">Transparent calculation breakdown</p>
+                <p className="text-[11px] text-muted">Transparent calculation breakdown</p>
               </div>
               <button
                 onClick={() => setShowWhySheet(false)}
-                className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-zinc-400 cursor-pointer"
+                className="w-8 h-8 rounded-full bg-fg/5 hover:bg-fg/10 flex items-center justify-center text-zinc-400 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -779,31 +779,31 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
 
             {/* Profile inputs used */}
             <div className="space-y-1.5">
-              <span className="text-[11px] font-bold text-[#8E8E93] uppercase">
+              <span className="text-[11px] font-bold text-muted uppercase">
                 Factors From Your Profile
               </span>
               <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.04]">
-                  <span className="text-[10px] text-[#8E8E93] block">Sex & Age</span>
-                  <span className="font-semibold text-white">
+                <div className="p-2.5 rounded-xl bg-fg/[0.03] border border-fg/[0.04]">
+                  <span className="text-[10px] text-muted block">Sex & Age</span>
+                  <span className="font-semibold text-fg">
                     {profile?.sex || 'Male'}, {calcContext.age} yrs
                   </span>
                 </div>
-                <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.04]">
-                  <span className="text-[10px] text-[#8E8E93] block">Height & Weight</span>
-                  <span className="font-semibold text-white">
+                <div className="p-2.5 rounded-xl bg-fg/[0.03] border border-fg/[0.04]">
+                  <span className="text-[10px] text-muted block">Height & Weight</span>
+                  <span className="font-semibold text-fg">
                     {profile?.height_cm || 175} cm, {currentWeight} kg
                   </span>
                 </div>
-                <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.04]">
-                  <span className="text-[10px] text-[#8E8E93] block">Activity Level</span>
-                  <span className="font-semibold text-white">
+                <div className="p-2.5 rounded-xl bg-fg/[0.03] border border-fg/[0.04]">
+                  <span className="text-[10px] text-muted block">Activity Level</span>
+                  <span className="font-semibold text-fg">
                     {ACTIVITY_LABELS[profile?.activity_level || 'moderately_active']?.label || 'Moderate'}
                   </span>
                 </div>
-                <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.04]">
-                  <span className="text-[10px] text-[#8E8E93] block">Goal & Pace</span>
-                  <span className="font-semibold text-white">
+                <div className="p-2.5 rounded-xl bg-fg/[0.03] border border-fg/[0.04]">
+                  <span className="text-[10px] text-muted block">Goal & Pace</span>
+                  <span className="font-semibold text-fg">
                     {goalLabel} ({currentPace} kg/wk)
                   </span>
                 </div>
@@ -812,34 +812,34 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
 
             {/* Step-by-step Math */}
             <div className="space-y-2.5 pt-1">
-              <span className="text-[11px] font-bold text-[#8E8E93] uppercase">
+              <span className="text-[11px] font-bold text-muted uppercase">
                 Calculation Steps
               </span>
 
-              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.05] space-y-1 text-xs">
-                <div className="flex items-center justify-between font-semibold text-white">
+              <div className="p-3 rounded-xl bg-fg/[0.02] border border-fg/[0.05] space-y-1 text-xs">
+                <div className="flex items-center justify-between font-semibold text-fg">
                   <span>1. Basal Metabolic Rate (BMR)</span>
                   <span>{currentCalc.bmr} kcal</span>
                 </div>
-                <p className="text-[11px] text-[#8E8E93]">
+                <p className="text-[11px] text-muted">
                   Energy burned at complete rest to keep organs functioning.
                 </p>
               </div>
 
-              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.05] space-y-1 text-xs">
-                <div className="flex items-center justify-between font-semibold text-white">
+              <div className="p-3 rounded-xl bg-fg/[0.02] border border-fg/[0.05] space-y-1 text-xs">
+                <div className="flex items-center justify-between font-semibold text-fg">
                   <span>2. Maintenance Calories (TDEE)</span>
                   <span>{currentCalc.tdee} kcal</span>
                 </div>
-                <p className="text-[11px] text-[#8E8E93]">
+                <p className="text-[11px] text-muted">
                   BMR × Activity factor. Eating this amount maintains your current {currentWeight} kg.
                 </p>
               </div>
 
-              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.05] space-y-1 text-xs">
-                <div className="flex items-center justify-between font-semibold text-white">
+              <div className="p-3 rounded-xl bg-fg/[0.02] border border-fg/[0.05] space-y-1 text-xs">
+                <div className="flex items-center justify-between font-semibold text-fg">
                   <span>3. Goal Adjustment</span>
-                  <span className="text-[#30D158]">
+                  <span className="text-green-ink">
                     {currentCalc.adjustment < 0
                       ? `${currentCalc.adjustment} kcal`
                       : currentCalc.adjustment > 0
@@ -847,7 +847,7 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
                       : '0 kcal'}
                   </span>
                 </div>
-                <p className="text-[11px] text-[#8E8E93]">
+                <p className="text-[11px] text-muted">
                   {goalType === 'lose_weight'
                     ? `Safe daily deficit for your target pace of ${currentPace} kg/week.`
                     : goalType === 'build_muscle'
@@ -856,24 +856,24 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
                 </p>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-gradient-to-r from-[#30D158]/20 to-[#1C1C1E] border border-[#30D158]/40 flex items-center justify-between text-xs">
+              <div className="p-3.5 rounded-xl bg-gradient-to-r from-[#30D158]/20 to-card border border-[#30D158]/40 flex items-center justify-between text-xs">
                 <div>
-                  <span className="font-bold text-white block">Recommended Daily Target</span>
-                  <span className="text-[10px] text-[#8E8E93]">Synchronized across Nuvia</span>
+                  <span className="font-bold text-fg block">Recommended Daily Target</span>
+                  <span className="text-[10px] text-muted">Synchronized across Nuvia</span>
                 </div>
-                <span className="text-base font-extrabold text-[#30D158]">
+                <span className="text-base font-extrabold text-green-ink">
                   {calorieTarget.toLocaleString()} kcal/day
                 </span>
               </div>
             </div>
 
-            <p className="text-[11px] text-[#8E8E93] pt-1 leading-relaxed">
+            <p className="text-[11px] text-muted pt-1 leading-relaxed">
               Nuvia recalculates your targets automatically whenever your weight, activity level, or goal changes in your profile.
             </p>
 
             <button
               onClick={() => setShowWhySheet(false)}
-              className="w-full py-3 rounded-xl bg-white text-black font-bold text-xs hover:bg-zinc-200 transition-colors cursor-pointer"
+              className="w-full py-3 rounded-xl bg-fg text-app font-bold text-xs hover:bg-fg/85 transition-colors cursor-pointer"
             >
               Got it
             </button>
@@ -901,13 +901,13 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
           >
             <div
               onClick={(e) => e.stopPropagation()}
-              className="pointer-events-auto w-full max-w-md bg-[#1C1C1E] border-t border-x border-b-0 border-white/10 rounded-t-[28px] rounded-b-none p-5 space-y-4 max-h-[calc(100dvh-var(--bottom-nav-height,56px)-env(safe-area-inset-bottom,0px)-0.75rem)] animate-slideUp"
+              className="pointer-events-auto w-full max-w-md bg-card border-t border-x border-b-0 border-fg/10 rounded-t-[28px] rounded-b-none p-5 space-y-4 max-h-[calc(100dvh-var(--bottom-nav-height,56px)-env(safe-area-inset-bottom,0px)-0.75rem)] animate-slideUp"
             >
-            <div className="flex items-center justify-between pb-2 border-b border-white/10">
-              <h3 className="text-base font-bold text-white">Select Your Goal</h3>
+            <div className="flex items-center justify-between pb-2 border-b border-fg/10">
+              <h3 className="text-base font-bold text-fg">Select Your Goal</h3>
               <button
                 onClick={() => setActiveEditor(null)}
-                className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-zinc-400 cursor-pointer"
+                className="w-8 h-8 rounded-full bg-fg/5 hover:bg-fg/10 flex items-center justify-center text-zinc-400 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -920,33 +920,33 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
                   onClick={() => setDraftGoal(opt.id)}
                   className={`w-full p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
                     draftGoal === opt.id
-                      ? 'bg-white/[0.08] border-[#30D158] text-white'
-                      : 'bg-white/[0.02] border-white/[0.06] text-[#8E8E93] hover:text-white'
+                      ? 'bg-fg/[0.08] border-[#30D158] text-fg'
+                      : 'bg-fg/[0.02] border-fg/[0.06] text-muted hover:text-fg'
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-bold text-white">{opt.label}</span>
-                    {draftGoal === opt.id && <Check className="w-4 h-4 text-[#30D158]" />}
+                    <span className="text-sm font-bold text-fg">{opt.label}</span>
+                    {draftGoal === opt.id && <Check className="w-4 h-4 text-green-ink" />}
                   </div>
-                  <p className="text-xs text-[#8E8E93] mt-0.5">{opt.desc}</p>
+                  <p className="text-xs text-muted mt-0.5">{opt.desc}</p>
                 </button>
               ))}
             </div>
 
             {/* Live Recalculation Preview */}
-            <div className="p-3.5 rounded-2xl bg-black/40 border border-white/[0.06] flex items-center justify-between text-xs">
+            <div className="p-3.5 rounded-2xl bg-app/40 border border-fg/[0.06] flex items-center justify-between text-xs">
               <div>
-                <span className="text-[#8E8E93] block">Preview target</span>
-                <span className="text-sm font-bold text-white">
+                <span className="text-muted block">Preview target</span>
+                <span className="text-sm font-bold text-fg">
                   {previewCalc.calorie_target.toLocaleString()} kcal/day
                 </span>
               </div>
               <span
                 className={`font-semibold ${
                   previewCalc.adjustment < 0
-                    ? 'text-[#30D158]'
+                    ? 'text-green-ink'
                     : previewCalc.adjustment > 0
-                    ? 'text-[#0A84FF]'
+                    ? 'text-blue-ink'
                     : 'text-zinc-400'
                 }`}
               >
@@ -961,7 +961,7 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
             <div className="pt-2 flex gap-2">
               <button
                 onClick={() => setActiveEditor(null)}
-                className="flex-1 py-3 rounded-xl bg-white/10 text-white font-semibold text-xs cursor-pointer"
+                className="flex-1 py-3 rounded-xl bg-fg/10 text-fg font-semibold text-xs cursor-pointer"
               >
                 Cancel
               </button>
@@ -993,43 +993,43 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
           >
             <div
               onClick={(e) => e.stopPropagation()}
-              className="pointer-events-auto w-full max-w-md bg-[#1C1C1E] border-t border-x border-b-0 border-white/10 rounded-t-[28px] rounded-b-none p-5 space-y-4 max-h-[calc(100dvh-var(--bottom-nav-height,56px)-env(safe-area-inset-bottom,0px)-0.75rem)] animate-slideUp"
+              className="pointer-events-auto w-full max-w-md bg-card border-t border-x border-b-0 border-fg/10 rounded-t-[28px] rounded-b-none p-5 space-y-4 max-h-[calc(100dvh-var(--bottom-nav-height,56px)-env(safe-area-inset-bottom,0px)-0.75rem)] animate-slideUp"
             >
-            <div className="flex items-center justify-between pb-2 border-b border-white/10">
-              <h3 className="text-base font-bold text-white">Target Weight</h3>
+            <div className="flex items-center justify-between pb-2 border-b border-fg/10">
+              <h3 className="text-base font-bold text-fg">Target Weight</h3>
               <button
                 onClick={() => setActiveEditor(null)}
-                className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-zinc-400 cursor-pointer"
+                className="w-8 h-8 rounded-full bg-fg/5 hover:bg-fg/10 flex items-center justify-center text-zinc-400 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <div className="text-center py-3">
-              <span className="text-[11px] text-[#8E8E93] block">Set your desired goal weight</span>
+              <span className="text-[11px] text-muted block">Set your desired goal weight</span>
               <div className="flex items-center justify-center gap-4 mt-3">
                 <button
                   type="button"
                   onClick={() => setDraftWeight((prev) => Math.max(30, Math.round((prev - 0.5) * 10) / 10))}
-                  className="w-12 h-12 rounded-2xl bg-white/10 hover:bg-white/15 text-white font-bold text-xl flex items-center justify-center active:scale-95 transition-transform cursor-pointer"
+                  className="w-12 h-12 rounded-2xl bg-fg/10 hover:bg-fg/15 text-fg font-bold text-xl flex items-center justify-center active:scale-95 transition-transform cursor-pointer"
                 >
                   −
                 </button>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-4xl font-extrabold text-white tracking-tight">
+                  <span className="text-4xl font-extrabold text-fg tracking-tight">
                     {draftWeight}
                   </span>
-                  <span className="text-base font-semibold text-[#8E8E93]">kg</span>
+                  <span className="text-base font-semibold text-muted">kg</span>
                 </div>
                 <button
                   type="button"
                   onClick={() => setDraftWeight((prev) => Math.min(250, Math.round((prev + 0.5) * 10) / 10))}
-                  className="w-12 h-12 rounded-2xl bg-white/10 hover:bg-white/15 text-white font-bold text-xl flex items-center justify-center active:scale-95 transition-transform cursor-pointer"
+                  className="w-12 h-12 rounded-2xl bg-fg/10 hover:bg-fg/15 text-fg font-bold text-xl flex items-center justify-center active:scale-95 transition-transform cursor-pointer"
                 >
                   +
                 </button>
               </div>
-              <span className="text-xs text-[#8E8E93] block mt-2">
+              <span className="text-xs text-muted block mt-2">
                 Current weight: {currentWeight} kg ({Math.round(Math.abs(currentWeight - draftWeight) * 10) / 10} kg difference)
               </span>
             </div>
@@ -1037,7 +1037,7 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
             <div className="pt-2 flex gap-2">
               <button
                 onClick={() => setActiveEditor(null)}
-                className="flex-1 py-3 rounded-xl bg-white/10 text-white font-semibold text-xs cursor-pointer"
+                className="flex-1 py-3 rounded-xl bg-fg/10 text-fg font-semibold text-xs cursor-pointer"
               >
                 Cancel
               </button>
@@ -1069,13 +1069,13 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
           >
             <div
               onClick={(e) => e.stopPropagation()}
-              className="pointer-events-auto w-full max-w-md bg-[#1C1C1E] border-t border-x border-b-0 border-white/10 rounded-t-[28px] rounded-b-none p-5 space-y-4 max-h-[calc(100dvh-var(--bottom-nav-height,56px)-env(safe-area-inset-bottom,0px)-0.75rem)] overflow-y-auto animate-slideUp"
+              className="pointer-events-auto w-full max-w-md bg-card border-t border-x border-b-0 border-fg/10 rounded-t-[28px] rounded-b-none p-5 space-y-4 max-h-[calc(100dvh-var(--bottom-nav-height,56px)-env(safe-area-inset-bottom,0px)-0.75rem)] overflow-y-auto animate-slideUp"
             >
-            <div className="flex items-center justify-between pb-2 border-b border-white/10">
-              <h3 className="text-base font-bold text-white">Daily Activity Level</h3>
+            <div className="flex items-center justify-between pb-2 border-b border-fg/10">
+              <h3 className="text-base font-bold text-fg">Daily Activity Level</h3>
               <button
                 onClick={() => setActiveEditor(null)}
-                className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-zinc-400 cursor-pointer"
+                className="w-8 h-8 rounded-full bg-fg/5 hover:bg-fg/10 flex items-center justify-center text-zinc-400 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1091,15 +1091,15 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
                     onClick={() => setDraftActivity(level)}
                     className={`w-full p-3 rounded-2xl border text-left transition-all cursor-pointer ${
                       isSelected
-                        ? 'bg-white/[0.08] border-[#30D158] text-white'
-                        : 'bg-white/[0.02] border-white/[0.06] text-[#8E8E93] hover:text-white'
+                        ? 'bg-fg/[0.08] border-[#30D158] text-fg'
+                        : 'bg-fg/[0.02] border-fg/[0.06] text-muted hover:text-fg'
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-white">{item.label}</span>
-                      {isSelected && <Check className="w-4 h-4 text-[#30D158]" />}
+                      <span className="text-xs font-bold text-fg">{item.label}</span>
+                      {isSelected && <Check className="w-4 h-4 text-green-ink" />}
                     </div>
-                    <p className="text-[11px] text-[#8E8E93] mt-0.5">{item.desc}</p>
+                    <p className="text-[11px] text-muted mt-0.5">{item.desc}</p>
                   </button>
                 );
               })}
@@ -1108,7 +1108,7 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
             <div className="pt-2 flex gap-2">
               <button
                 onClick={() => setActiveEditor(null)}
-                className="flex-1 py-3 rounded-xl bg-white/10 text-white font-semibold text-xs cursor-pointer"
+                className="flex-1 py-3 rounded-xl bg-fg/10 text-fg font-semibold text-xs cursor-pointer"
               >
                 Cancel
               </button>
@@ -1140,16 +1140,16 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
           >
             <div
               onClick={(e) => e.stopPropagation()}
-              className="pointer-events-auto w-full max-w-md bg-[#1C1C1E] border-t border-x border-b-0 border-white/10 rounded-t-[28px] rounded-b-none p-5 space-y-4 max-h-[calc(100dvh-var(--bottom-nav-height,56px)-env(safe-area-inset-bottom,0px)-0.75rem)] animate-slideUp"
+              className="pointer-events-auto w-full max-w-md bg-card border-t border-x border-b-0 border-fg/10 rounded-t-[28px] rounded-b-none p-5 space-y-4 max-h-[calc(100dvh-var(--bottom-nav-height,56px)-env(safe-area-inset-bottom,0px)-0.75rem)] animate-slideUp"
             >
-            <div className="flex items-center justify-between pb-2 border-b border-white/10">
+            <div className="flex items-center justify-between pb-2 border-b border-fg/10">
               <div>
-                <h3 className="text-base font-bold text-white">Target Pace</h3>
-                <p className="text-[11px] text-[#8E8E93]">Rate of weekly weight change</p>
+                <h3 className="text-base font-bold text-fg">Target Pace</h3>
+                <p className="text-[11px] text-muted">Rate of weekly weight change</p>
               </div>
               <button
                 onClick={() => setActiveEditor(null)}
-                className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-zinc-400 cursor-pointer"
+                className="w-8 h-8 rounded-full bg-fg/5 hover:bg-fg/10 flex items-center justify-center text-zinc-400 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1164,29 +1164,29 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
                     onClick={() => setDraftPace(opt.value)}
                     className={`w-full p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
                       isSelected
-                        ? 'bg-white/[0.08] border-[#30D158] text-white'
-                        : 'bg-white/[0.02] border-white/[0.06] text-[#8E8E93] hover:text-white'
+                        ? 'bg-fg/[0.08] border-[#30D158] text-fg'
+                        : 'bg-fg/[0.02] border-fg/[0.06] text-muted hover:text-fg'
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-white">{opt.label}</span>
-                      {isSelected && <Check className="w-4 h-4 text-[#30D158]" />}
+                      <span className="text-xs font-bold text-fg">{opt.label}</span>
+                      {isSelected && <Check className="w-4 h-4 text-green-ink" />}
                     </div>
-                    <p className="text-[11px] text-[#8E8E93] mt-0.5">{opt.desc}</p>
+                    <p className="text-[11px] text-muted mt-0.5">{opt.desc}</p>
                   </button>
                 );
               })}
             </div>
 
             {/* Recalculation Impact */}
-            <div className="p-3.5 rounded-2xl bg-black/40 border border-white/[0.06] flex items-center justify-between text-xs">
+            <div className="p-3.5 rounded-2xl bg-app/40 border border-fg/[0.06] flex items-center justify-between text-xs">
               <div>
-                <span className="text-[#8E8E93] block">Target with {draftPace} kg/wk</span>
-                <span className="text-sm font-bold text-white">
+                <span className="text-muted block">Target with {draftPace} kg/wk</span>
+                <span className="text-sm font-bold text-fg">
                   {previewCalc.calorie_target.toLocaleString()} kcal/day
                 </span>
               </div>
-              <span className="text-[#30D158] font-semibold">
+              <span className="text-green-ink font-semibold">
                 {previewCalc.adjustment} kcal/day
               </span>
             </div>
@@ -1194,7 +1194,7 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
             <div className="pt-2 flex gap-2">
               <button
                 onClick={() => setActiveEditor(null)}
-                className="flex-1 py-3 rounded-xl bg-white/10 text-white font-semibold text-xs cursor-pointer"
+                className="flex-1 py-3 rounded-xl bg-fg/10 text-fg font-semibold text-xs cursor-pointer"
               >
                 Cancel
               </button>

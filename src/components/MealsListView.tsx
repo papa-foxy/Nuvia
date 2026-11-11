@@ -91,10 +91,10 @@ export function MealsListView({ onOpenAddMeal, refreshKey }: MealsListViewProps)
       {/* Title Header with Date Filter */}
       <div className="flex items-center justify-between pt-2">
         <div>
-          <p className="text-[11px] font-semibold tracking-wider text-[#8E8E93] uppercase">
+          <p className="text-[11px] font-semibold tracking-wider text-muted uppercase">
             Nutrition & Diet
           </p>
-          <h1 className="text-3xl font-bold tracking-tight text-white mt-0.5">
+          <h1 className="text-3xl font-bold tracking-tight text-fg mt-0.5">
             Meals
           </h1>
         </div>
@@ -108,12 +108,12 @@ export function MealsListView({ onOpenAddMeal, refreshKey }: MealsListViewProps)
 
       {/* Quick Summary Sub-row */}
       <div className="flex items-center justify-between -mt-2">
-        <span className="text-[11px] text-[#8E8E93]">Daily intake</span>
+        <span className="text-[11px] text-muted">Daily intake</span>
         <div className="text-right ml-auto">
-          <span className="text-sm font-semibold text-white whitespace-nowrap">
-            {totalCals.toLocaleString()} <span className="text-xs text-[#8E8E93] font-normal">kcal</span>
+          <span className="text-sm font-semibold text-fg whitespace-nowrap">
+            {totalCals.toLocaleString()} <span className="text-xs text-muted font-normal">kcal</span>
           </span>
-          <span className="text-xs text-[#8E8E93] ml-2">
+          <span className="text-xs text-muted ml-2">
             ({filtered.length} {filtered.length === 1 ? 'meal' : 'meals'})
           </span>
         </div>
@@ -127,8 +127,8 @@ export function MealsListView({ onOpenAddMeal, refreshKey }: MealsListViewProps)
             onClick={() => setFilterType(tab)}
             className={`px-3.5 py-1.5 rounded-full text-xs font-medium capitalize transition-colors whitespace-nowrap shrink-0 ${
               filterType === tab
-                ? 'bg-white text-black font-semibold shadow-sm'
-                : 'bg-[#1C1C1E] text-[#8E8E93] hover:text-white border border-white/5'
+                ? 'bg-fg text-app font-semibold shadow-sm'
+                : 'bg-card text-muted hover:text-fg border border-fg/5'
             }`}
           >
             {tab}
@@ -141,17 +141,17 @@ export function MealsListView({ onOpenAddMeal, refreshKey }: MealsListViewProps)
         {isInitialLoading ? (
           <div className="space-y-2.5 w-full">
             {[1, 2, 3].map((n) => (
-              <div key={n} className="h-20 bg-[#1C1C1E] rounded-2xl animate-pulse w-full border border-white/5" />
+              <div key={n} className="h-20 bg-card rounded-2xl animate-pulse w-full border border-fg/5" />
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="py-14 text-center space-y-3 w-full bg-[#1C1C1E]/40 rounded-2xl border border-white/[0.04] p-6">
-            <div className="w-12 h-12 rounded-full bg-white/5 mx-auto flex items-center justify-center text-zinc-500">
+          <div className="py-14 text-center space-y-3 w-full bg-card/40 rounded-2xl border border-fg/[0.04] p-6">
+            <div className="w-12 h-12 rounded-full bg-fg/5 mx-auto flex items-center justify-center text-zinc-500">
               <Utensils className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-white">No meals recorded</p>
-              <p className="text-xs text-[#8E8E93] mt-1">
+              <p className="text-sm font-semibold text-fg">No meals recorded</p>
+              <p className="text-xs text-muted mt-1">
                 {filterType === 'all'
                   ? `No meals logged for ${dateLabel}.`
                   : `No ${filterType} logged for ${dateLabel}.`}
@@ -159,14 +159,14 @@ export function MealsListView({ onOpenAddMeal, refreshKey }: MealsListViewProps)
             </div>
             <button
               onClick={onOpenAddMeal}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white text-black text-xs font-semibold hover:bg-zinc-200 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-fg text-app text-xs font-semibold hover:bg-fg/85 transition-colors cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
               Log A Meal Now
             </button>
           </div>
         ) : (
-          <div className="ios-card w-full divide-y divide-white/[0.06] overflow-hidden border border-white/10 shadow-lg">
+          <div className="ios-card w-full divide-y divide-fg/[0.06] overflow-hidden border border-fg/10 shadow-lg">
             {filtered.map((meal) => {
               const mealDate = new Date(meal.meal_time);
               const isToday = mealDate.toDateString() === new Date().toDateString();
@@ -181,7 +181,7 @@ export function MealsListView({ onOpenAddMeal, refreshKey }: MealsListViewProps)
                     setSelectedMeal(meal);
                     setIsDetailsOpen(true);
                   }}
-                  className="p-3.5 flex items-center justify-between gap-3 hover:bg-white/[0.04] active:bg-white/[0.06] transition-colors w-full cursor-pointer group"
+                  className="p-3.5 flex items-center justify-between gap-3 hover:bg-fg/[0.04] active:bg-fg/[0.06] transition-colors w-full cursor-pointer group"
                 >
                   {/* Left Meal Thumbnail / Icon */}
                   <div className="relative shrink-0">
@@ -189,17 +189,17 @@ export function MealsListView({ onOpenAddMeal, refreshKey }: MealsListViewProps)
                       <img
                         src={meal.image_url}
                         alt={meal.description || 'Meal photo'}
-                        className="w-12 h-12 rounded-xl object-cover border border-white/10 group-hover:border-white/25 transition-colors"
+                        className="w-12 h-12 rounded-xl object-cover border border-fg/10 group-hover:border-fg/25 transition-colors"
                       />
                     ) : (
-                      <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-zinc-400 group-hover:bg-white/10 transition-colors">
+                      <div className="w-12 h-12 rounded-xl bg-fg/5 border border-fg/5 flex items-center justify-center text-zinc-400 group-hover:bg-fg/10 transition-colors">
                         <Utensils className="w-5 h-5" />
                       </div>
                     )}
                     {meal.source === 'photo' && (
                       <span
                         title="AI Camera Scan"
-                        className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-[#1C1C1E] border border-white/20 flex items-center justify-center text-zinc-300"
+                        className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-card border border-fg/20 flex items-center justify-center text-zinc-300"
                       >
                         <Camera className="w-2.5 h-2.5" />
                       </span>
@@ -209,21 +209,21 @@ export function MealsListView({ onOpenAddMeal, refreshKey }: MealsListViewProps)
                   {/* Center Meal Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-semibold text-[#8E8E93] uppercase tracking-wider">
+                      <span className="text-[10px] font-semibold text-muted uppercase tracking-wider">
                         {meal.meal_type}
                       </span>
-                      <span className="text-[10px] text-[#636366]">
+                      <span className="text-[10px] text-subtle">
                         {timeLabel}
                       </span>
                       {meal.items && meal.items.length > 0 && (
-                        <span className="text-[9px] text-[#8E8E93] bg-white/[0.04] px-1.5 py-0.5 rounded">
+                        <span className="text-[9px] text-muted bg-fg/[0.04] px-1.5 py-0.5 rounded">
                           {meal.items.length} {meal.items.length === 1 ? 'item' : 'items'}
                         </span>
                       )}
                     </div>
 
                     <h3
-                      className="text-sm font-semibold text-white mt-1 truncate transition-colors"
+                      className="text-sm font-semibold text-fg mt-1 truncate transition-colors"
                       title={meal.description || undefined}
                     >
                       {meal.description || 'Logged Meal'}
@@ -233,10 +233,10 @@ export function MealsListView({ onOpenAddMeal, refreshKey }: MealsListViewProps)
                   {/* Right Calories & Arrow */}
                   <div className="flex items-center gap-2 shrink-0 ml-1">
                     <div className="text-right whitespace-nowrap">
-                      <span className="text-sm font-bold text-white block">
+                      <span className="text-sm font-bold text-fg block">
                         {meal.calories || 0}
                       </span>
-                      <span className="text-[10px] text-[#8E8E93] block">
+                      <span className="text-[10px] text-muted block">
                         kcal
                       </span>
                     </div>
@@ -249,13 +249,13 @@ export function MealsListView({ onOpenAddMeal, refreshKey }: MealsListViewProps)
                           handleDelete(meal.id);
                         }
                       }}
-                      className="p-1.5 text-[#8E8E93] hover:text-[#FF453A] transition-colors rounded-lg hover:bg-white/[0.05] cursor-pointer"
+                      className="p-1.5 text-muted hover:text-red-ink transition-colors rounded-lg hover:bg-fg/[0.05] cursor-pointer"
                       title="Delete meal"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
 
-                    <ChevronRight className="w-4 h-4 text-zinc-600 group-hover:text-white transition-colors" />
+                    <ChevronRight className="w-4 h-4 text-zinc-600 group-hover:text-fg transition-colors" />
                   </div>
                 </div>
               );

@@ -215,8 +215,8 @@ export function NuviaBottomSheet({
 
   // Compute border and corner rounding based on variant
   const cardShapeStyle = isCompact
-    ? 'rounded-3xl border border-white/15 bg-[#1C1C1E] shadow-2xl overflow-hidden'
-    : 'rounded-t-[28px] rounded-b-none border-t border-x border-b-0 border-white/10 bg-[#161618] shadow-2xl overflow-hidden';
+    ? 'rounded-3xl border border-fg/15 bg-card shadow-2xl overflow-hidden'
+    : 'rounded-t-[28px] rounded-b-none border-t border-x border-b-0 border-fg/10 bg-surface shadow-2xl overflow-hidden';
 
   const containerPadding = isCompact ? 'px-3 sm:px-0' : 'px-0';
 
@@ -276,9 +276,9 @@ export function NuviaBottomSheet({
               onTouchMove={(e) => handleTouchMove(e, true)}
               onTouchEnd={handleTouchEnd}
               onMouseDown={handleMouseDown}
-              className="flex flex-col items-center justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing w-full touch-none select-none hover:bg-white/[0.02] transition-colors shrink-0"
+              className="flex flex-col items-center justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing w-full touch-none select-none hover:bg-fg/[0.02] transition-colors shrink-0"
             >
-              <div className="w-12 h-1.5 rounded-full bg-white/30 hover:bg-white/50 transition-colors" />
+              <div className="w-12 h-1.5 rounded-full bg-fg/30 hover:bg-fg/50 transition-colors" />
             </div>
           )}
 
@@ -289,17 +289,17 @@ export function NuviaBottomSheet({
               onTouchMove={(e) => handleTouchMove(e, true)}
               onTouchEnd={handleTouchEnd}
               onMouseDown={handleMouseDown}
-              className="flex items-center justify-between px-5 py-3.5 border-b border-white/5 cursor-grab active:cursor-grabbing touch-none select-none shrink-0"
+              className="flex items-center justify-between px-5 py-3.5 border-b border-fg/5 cursor-grab active:cursor-grabbing touch-none select-none shrink-0"
             >
               <div className="flex-1 pr-2">
                 {typeof title === 'string' ? (
-                  <h3 className="text-base font-bold text-white tracking-tight leading-snug">{title}</h3>
+                  <h3 className="text-base font-bold text-fg tracking-tight leading-snug">{title}</h3>
                 ) : (
                   title
                 )}
                 {subtitle && (
                   typeof subtitle === 'string' ? (
-                    <p className="text-[11px] text-[#8E8E93] mt-0.5">{subtitle}</p>
+                    <p className="text-[11px] text-muted mt-0.5">{subtitle}</p>
                   ) : (
                     subtitle
                   )
@@ -311,7 +311,7 @@ export function NuviaBottomSheet({
                 <button
                   type="button"
                   onClick={triggerClose}
-                  className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                  className="w-7 h-7 rounded-full bg-fg/10 hover:bg-fg/20 flex items-center justify-center text-zinc-400 hover:text-fg transition-colors cursor-pointer"
                   aria-label="Close"
                 >
                   <X className="w-4 h-4" />

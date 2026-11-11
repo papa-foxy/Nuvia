@@ -61,12 +61,12 @@ export function ExerciseThumbnail({
 
   return (
     <div
-      className={`relative overflow-hidden bg-[#18181A] shrink-0 select-none ${rounded} ${aspectClass} ${className}`}
+      className={`relative overflow-hidden bg-card dark:bg-[#18181A] shrink-0 select-none ${rounded} ${aspectClass} ${className}`}
     >
       {/* Subtle Skeleton Loader while image is buffering */}
       {!isLoaded && (
-        <div className="absolute inset-0 bg-[#242426] animate-pulse flex items-center justify-center">
-          <Dumbbell className="w-4 h-4 text-white/10" />
+        <div className="absolute inset-0 bg-elevated animate-pulse flex items-center justify-center">
+          <Dumbbell className="w-4 h-4 text-fg/10" />
         </div>
       )}
 
@@ -86,12 +86,12 @@ export function ExerciseThumbnail({
       />
 
       {/* Subtle inner border to fit Apple-inspired dark aesthetic */}
-      <div className={`absolute inset-0 border border-white/[0.06] pointer-events-none ${rounded}`} />
+      <div className={`absolute inset-0 border border-fg/[0.06] pointer-events-none ${rounded}`} />
 
       {/* Optional Play indicator overlay (e.g. for video tutorials) */}
       {showPlayOverlay && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/25 pointer-events-none">
-          <div className="w-8 h-8 rounded-full bg-black/60 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white shadow-lg">
+          <div className="w-8 h-8 rounded-full bg-black/60 backdrop-blur-sm border border-fg/20 flex items-center justify-center text-white shadow-lg">
             <svg
               className="w-3.5 h-3.5 fill-white ml-0.5"
               viewBox="0 0 24 24"

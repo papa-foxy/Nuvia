@@ -542,14 +542,14 @@ export function ExerciseListView({
       {/* ── HEADER ──────────────────────────────────────────────────────── */}
       <div className="pt-1 flex items-end justify-between">
         <div>
-          <p className="text-[11px] font-semibold tracking-wider text-[#8E8E93] uppercase">
+          <p className="text-[11px] font-semibold tracking-wider text-muted uppercase">
             Fitness & Training
           </p>
-          <h1 className="text-3xl font-bold tracking-tight text-white mt-0.5">Activity</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-fg mt-0.5">Activity</h1>
         </div>
 
         {viewMode === 'today' && (
-          <p className="text-xs text-[#8E8E93] mb-1 font-medium">
+          <p className="text-xs text-muted mb-1 font-medium">
             {todayDayName}
           </p>
         )}
@@ -557,7 +557,7 @@ export function ExerciseListView({
 
       {/* ── TOAST NOTIFICATION ──────────────────────────────────────────── */}
       {successBanner && (
-        <div className="p-3 rounded-2xl bg-[#30D158]/15 border border-[#30D158]/30 text-[#30D158] text-xs font-semibold flex items-center gap-2 animate-fadeIn">
+        <div className="p-3 rounded-2xl bg-[#30D158]/15 border border-[#30D158]/30 text-green-ink text-xs font-semibold flex items-center gap-2 animate-fadeIn">
           <CheckCircle2 className="w-4 h-4 shrink-0" />
           <span>{successBanner}</span>
         </div>
@@ -565,14 +565,14 @@ export function ExerciseListView({
 
       {/* ── ACTIVE IN-PROGRESS WORKOUT RECOVERY BANNER ────────────────────── */}
       {activeSession && (
-        <div className="p-3.5 rounded-2xl bg-gradient-to-r from-[#FF9F0A]/20 via-[#1C1C1E] to-[#1C1C1E] border border-[#FF9F0A]/40 shadow-xl flex items-center justify-between gap-3 animate-fadeIn">
+        <div className="p-3.5 rounded-2xl bg-gradient-to-r from-[#FF9F0A]/20 via-card to-card border border-[#FF9F0A]/40 shadow-xl flex items-center justify-between gap-3 animate-fadeIn">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-8 h-8 rounded-xl bg-[#FF9F0A]/20 text-[#FF9F0A] flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-[#FF9F0A]/20 text-orange-ink flex items-center justify-center shrink-0">
               <Play className="w-4 h-4 fill-[#FF9F0A]" />
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-bold text-white truncate">Session in Progress</p>
-              <p className="text-[11px] text-[#8E8E93] truncate">
+              <p className="text-xs font-bold text-fg truncate">Session in Progress</p>
+              <p className="text-[11px] text-muted truncate">
                 {activeSession.routineTitle} · {activeSession.completedSetsCount}/{activeSession.totalSetsCount} sets
               </p>
             </div>
@@ -582,7 +582,7 @@ export function ExerciseListView({
             <button
               type="button"
               onClick={handleDiscardActiveSession}
-              className="text-[11px] font-semibold text-[#8E8E93] hover:text-white px-2 py-1"
+              className="text-[11px] font-semibold text-muted hover:text-fg px-2 py-1"
             >
               Discard
             </button>
@@ -599,14 +599,14 @@ export function ExerciseListView({
       )}
 
       {/* ── COMPACT APPLE SEGMENTED CONTROL ─────────────────────────────── */}
-      <div className="p-1 bg-[#1C1C1E] border border-white/[0.08] rounded-xl flex items-center">
+      <div className="p-1 bg-card border border-fg/[0.08] rounded-xl flex items-center">
         <button
           type="button"
           onClick={() => setViewMode('today')}
           className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all text-center cursor-pointer ${
             viewMode === 'today'
-              ? 'bg-[#2C2C2E] text-white shadow-sm'
-              : 'text-[#8E8E93] hover:text-white'
+              ? 'bg-elevated text-fg shadow-sm'
+              : 'text-muted hover:text-fg'
           }`}
         >
           Today
@@ -617,8 +617,8 @@ export function ExerciseListView({
           onClick={() => setViewMode('plans')}
           className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all text-center cursor-pointer ${
             viewMode === 'plans'
-              ? 'bg-[#2C2C2E] text-white shadow-sm'
-              : 'text-[#8E8E93] hover:text-white'
+              ? 'bg-elevated text-fg shadow-sm'
+              : 'text-muted hover:text-fg'
           }`}
         >
           Plans
@@ -629,8 +629,8 @@ export function ExerciseListView({
           onClick={() => setViewMode('history')}
           className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all text-center cursor-pointer ${
             viewMode === 'history'
-              ? 'bg-[#2C2C2E] text-white shadow-sm'
-              : 'text-[#8E8E93] hover:text-white'
+              ? 'bg-elevated text-fg shadow-sm'
+              : 'text-muted hover:text-fg'
           }`}
         >
           History
@@ -660,25 +660,25 @@ export function ExerciseListView({
 
           {/* ── ACTIVITY SUMMARY HERO (Large Typography) ─────────────────── */}
           <div className="space-y-1">
-            <span className="text-[11px] font-bold tracking-wider text-[#8E8E93] uppercase block">
+            <span className="text-[11px] font-bold tracking-wider text-muted uppercase block">
               Today · {todayFormatted}
             </span>
 
             <div className="flex items-baseline gap-6 pt-1">
               <div>
-                <span className="text-4xl font-extrabold text-white tracking-tight leading-none block">
+                <span className="text-4xl font-extrabold text-fg tracking-tight leading-none block">
                   {totalMinutes > 0 ? `${totalMinutes}m` : '0m'}
                 </span>
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E8E93] mt-1 block">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-muted mt-1 block">
                   Active Time
                 </span>
               </div>
 
               <div>
-                <span className="text-4xl font-extrabold text-white tracking-tight leading-none block">
+                <span className="text-4xl font-extrabold text-fg tracking-tight leading-none block">
                   {totalBurned > 0 ? totalBurned.toLocaleString() : '0'}
                 </span>
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E8E93] mt-1 block">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-muted mt-1 block">
                   kcal Burned
                 </span>
               </div>
@@ -687,49 +687,49 @@ export function ExerciseListView({
             {/* Concise Status Line */}
             <div className="pt-2 flex items-center gap-2">
               {todayExercises.length > 0 ? (
-                <span className="text-xs font-semibold text-[#30D158] flex items-center gap-1.5">
+                <span className="text-xs font-semibold text-green-ink flex items-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4" />
                   <span>
                     Workout completed · {cleanActivityTitle(todayExercises[todayExercises.length - 1]?.exercise_type).title}
                   </span>
                 </span>
               ) : todayRoutine ? (
-                <span className="text-xs font-medium text-white flex items-center gap-1.5">
-                  <Dumbbell className="w-4 h-4 text-[#0A84FF]" />
+                <span className="text-xs font-medium text-fg flex items-center gap-1.5">
+                  <Dumbbell className="w-4 h-4 text-blue-ink" />
                   <span>
-                    Scheduled today: <strong className="text-white">{cleanActivityTitle(todayRoutine.title).title}</strong>
+                    Scheduled today: <strong className="text-fg">{cleanActivityTitle(todayRoutine.title).title}</strong>
                   </span>
                 </span>
               ) : (
-                <span className="text-xs text-[#8E8E93]">
+                <span className="text-xs text-muted">
                   Recovery day · No workout scheduled for today
                 </span>
               )}
             </div>
           </div>
 
-          <div className="h-px bg-white/[0.06] w-full" />
+          <div className="h-px bg-fg/[0.06] w-full" />
 
           {/* ── UP NEXT (Action-First) ──────────────────────────────────── */}
           <div className="space-y-3">
-            <span className="text-[11px] font-bold tracking-wider text-[#8E8E93] uppercase block">
+            <span className="text-[11px] font-bold tracking-wider text-muted uppercase block">
               Up Next
             </span>
 
             {tomorrowRoutine ? (
               /* Tomorrow is a workout day */
-              <div className="ios-card p-4 space-y-3 hover:border-white/20 transition-all">
+              <div className="ios-card p-4 space-y-3 hover:border-fg/20 transition-all">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#0A84FF]/20 text-[#0A84FF] border border-[#0A84FF]/30">
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#0A84FF]/20 text-blue-ink border border-[#0A84FF]/30">
                     Tomorrow · Workout Day
                   </span>
-                  <span className="text-xs text-[#8E8E93]">
+                  <span className="text-xs text-muted">
                     {tomorrowRoutine.exercises.length} exercises
                   </span>
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-black/60 border border-white/10 overflow-hidden shrink-0 flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-xl bg-app/60 border border-fg/10 overflow-hidden shrink-0 flex items-center justify-center">
                     {tomorrowRoutine.exercises[0] ? (
                       <ExerciseThumbnail
                         exercise={tomorrowRoutine.exercises[0]}
@@ -737,14 +737,14 @@ export function ExerciseListView({
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <Dumbbell className="w-5 h-5 text-white" />
+                      <Dumbbell className="w-5 h-5 text-fg" />
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h3 className="text-sm font-bold text-white truncate">
+                    <h3 className="text-sm font-bold text-fg truncate">
                       {cleanActivityTitle(tomorrowRoutine.title).title}
                     </h3>
-                    <p className="text-xs text-[#8E8E93] mt-0.5 truncate">
+                    <p className="text-xs text-muted mt-0.5 truncate">
                       Focus: {tomorrowRoutine.focus || 'Strength & Conditioning'}
                     </p>
                   </div>
@@ -753,7 +753,7 @@ export function ExerciseListView({
                 <button
                   type="button"
                   onClick={() => handleStartWorkoutDirect(tomorrowRoutine)}
-                  className="w-full py-2.5 px-4 rounded-xl bg-white text-black font-bold text-xs flex items-center justify-center gap-1.5 hover:bg-zinc-200 transition-colors cursor-pointer"
+                  className="w-full py-2.5 px-4 rounded-xl bg-fg text-app font-bold text-xs flex items-center justify-center gap-1.5 hover:bg-fg/85 transition-colors cursor-pointer"
                 >
                   <Play className="w-3.5 h-3.5 fill-black" />
                   <span>Start Workout</span>
@@ -763,12 +763,12 @@ export function ExerciseListView({
               /* Tomorrow is an active recovery day */
               <div className="ios-card p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/10 text-zinc-300">
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-fg/10 text-zinc-300">
                     Tomorrow · Recovery Day
                   </span>
                   <button
                     onClick={() => setShowRecoverySheet(true)}
-                    className="text-[11px] font-semibold text-[#30D158] hover:underline flex items-center gap-1 cursor-pointer"
+                    className="text-[11px] font-semibold text-green-ink hover:underline flex items-center gap-1 cursor-pointer"
                   >
                     <span>Why recovery?</span>
                     <ChevronRight className="w-3 h-3" />
@@ -776,27 +776,27 @@ export function ExerciseListView({
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-bold text-white">Active Recovery & Restoration</h3>
-                  <p className="text-xs text-[#8E8E93] mt-0.5">
+                  <h3 className="text-sm font-bold text-fg">Active Recovery & Restoration</h3>
+                  <p className="text-xs text-muted mt-0.5">
                     No heavy training scheduled for {tomorrowDayName}. Focus on sleep and nutrition.
                   </p>
                 </div>
 
                 {/* Clean Recovery Checklist */}
                 <div className="grid grid-cols-2 gap-2 text-xs text-zinc-300 pt-1">
-                  <div className="flex items-center gap-2 p-2 rounded-xl bg-white/[0.02] border border-white/[0.04]">
-                    <Droplets className="w-3.5 h-3.5 text-[#0A84FF] shrink-0" />
+                  <div className="flex items-center gap-2 p-2 rounded-xl bg-fg/[0.02] border border-fg/[0.04]">
+                    <Droplets className="w-3.5 h-3.5 text-blue-ink shrink-0" />
                     <span>2.5 L water</span>
                   </div>
-                  <div className="flex items-center gap-2 p-2 rounded-xl bg-white/[0.02] border border-white/[0.04]">
-                    <Flame className="w-3.5 h-3.5 text-[#FF9500] shrink-0" />
+                  <div className="flex items-center gap-2 p-2 rounded-xl bg-fg/[0.02] border border-fg/[0.04]">
+                    <Flame className="w-3.5 h-3.5 text-orange-ink shrink-0" />
                     <span>Hit {goals?.protein_target || 140}g protein</span>
                   </div>
-                  <div className="flex items-center gap-2 p-2 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+                  <div className="flex items-center gap-2 p-2 rounded-xl bg-fg/[0.02] border border-fg/[0.04]">
                     <Heart className="w-3.5 h-3.5 text-pink-400 shrink-0" />
                     <span>15m mobility walk</span>
                   </div>
-                  <div className="flex items-center gap-2 p-2 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+                  <div className="flex items-center gap-2 p-2 rounded-xl bg-fg/[0.02] border border-fg/[0.04]">
                     <Moon className="w-3.5 h-3.5 text-purple-400 shrink-0" />
                     <span>7–8h deep sleep</span>
                   </div>
@@ -806,10 +806,10 @@ export function ExerciseListView({
                   <button
                     type="button"
                     onClick={() => handleOpenRoutineOverview(nextScheduled.routine)}
-                    className="w-full pt-1 text-xs text-[#8E8E93] hover:text-white flex items-center justify-between transition-colors cursor-pointer"
+                    className="w-full pt-1 text-xs text-muted hover:text-fg flex items-center justify-between transition-colors cursor-pointer"
                   >
                     <span>
-                      Next session: <strong className="text-white">{cleanActivityTitle(nextScheduled.routine.title).title}</strong> ({nextScheduled.dayName})
+                      Next session: <strong className="text-fg">{cleanActivityTitle(nextScheduled.routine.title).title}</strong> ({nextScheduled.dayName})
                     </span>
                     <ChevronRight className="w-3.5 h-3.5" />
                   </button>
@@ -819,15 +819,15 @@ export function ExerciseListView({
               /* No routines set up yet */
               <div className="ios-card p-4 flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-bold text-white">No Upcoming Routine</p>
-                  <p className="text-[11px] text-[#8E8E93] mt-0.5">
+                  <p className="text-xs font-bold text-fg">No Upcoming Routine</p>
+                  <p className="text-[11px] text-muted mt-0.5">
                     Add or paste your training routine in the Plans tab.
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setViewMode('plans')}
-                  className="px-3 py-1.5 rounded-xl bg-white text-black font-bold text-xs hover:bg-zinc-200 transition-colors cursor-pointer"
+                  className="px-3 py-1.5 rounded-xl bg-fg text-app font-bold text-xs hover:bg-fg/85 transition-colors cursor-pointer"
                 >
                   Go to Plans
                 </button>
@@ -835,18 +835,18 @@ export function ExerciseListView({
             )}
           </div>
 
-          <div className="h-px bg-white/[0.06] w-full" />
+          <div className="h-px bg-fg/[0.06] w-full" />
 
           {/* ── TODAY'S TIMELINE ────────────────────────────────────────── */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold tracking-wider text-[#8E8E93] uppercase">
+              <span className="text-[11px] font-bold tracking-wider text-muted uppercase">
                 Today&apos;s Activity
               </span>
               <button
                 type="button"
                 onClick={onOpenAddExercise}
-                className="text-xs text-[#30D158] font-semibold hover:underline flex items-center gap-1 cursor-pointer"
+                className="text-xs text-green-ink font-semibold hover:underline flex items-center gap-1 cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Log Activity</span>
@@ -856,13 +856,13 @@ export function ExerciseListView({
             {loadingLogs ? (
               <div className="space-y-2">
                 {[1, 2].map((i) => (
-                  <div key={i} className="h-14 bg-[#1C1C1E] rounded-2xl animate-pulse" />
+                  <div key={i} className="h-14 bg-card rounded-2xl animate-pulse" />
                 ))}
               </div>
             ) : todayExercises.length === 0 ? (
-              <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.04] text-center space-y-2">
-                <p className="text-sm font-semibold text-white">Nothing logged yet</p>
-                <p className="text-xs text-[#8E8E93] max-w-xs mx-auto">
+              <div className="p-6 rounded-2xl bg-fg/[0.02] border border-fg/[0.04] text-center space-y-2">
+                <p className="text-sm font-semibold text-fg">Nothing logged yet</p>
+                <p className="text-xs text-muted max-w-xs mx-auto">
                   Your activity timeline will appear here as you log sessions or complete workouts today.
                 </p>
                 <button
@@ -875,7 +875,7 @@ export function ExerciseListView({
                 </button>
               </div>
             ) : (
-              <div className="divide-y divide-white/[0.06] text-xs">
+              <div className="divide-y divide-fg/[0.06] text-xs">
                 {todayExercises.map((ex) => {
                   const exDate = new Date(ex.created_at || new Date());
                   const timeLabel = exDate.toLocaleTimeString([], {
@@ -886,7 +886,7 @@ export function ExerciseListView({
                   return (
                     <div
                       key={ex.id}
-                      className="py-3 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
+                      className="py-3 flex items-center justify-between hover:bg-fg/[0.02] transition-colors"
                     >
                       <div className="flex items-center gap-3">
                         <div
@@ -894,17 +894,17 @@ export function ExerciseListView({
                           style={{ backgroundColor: intensityColor(ex.intensity || 'moderate') }}
                         />
                         <div>
-                          <p className="font-semibold text-white text-sm">{ex.exercise_type}</p>
-                          <p className="text-[11px] text-[#8E8E93] mt-0.5">
+                          <p className="font-semibold text-fg text-sm">{ex.exercise_type}</p>
+                          <p className="text-[11px] text-muted mt-0.5">
                             {fmtDuration(Number(ex.duration_minutes))}
                             {ex.distance_km ? ` · ${ex.distance_km} km` : ''}
-                            <span className="text-[#636366]"> · {timeLabel}</span>
+                            <span className="text-subtle"> · {timeLabel}</span>
                           </p>
                         </div>
                       </div>
 
                       <div className="flex items-center gap-3">
-                        <span className="font-bold text-white text-sm">
+                        <span className="font-bold text-fg text-sm">
                           ~{ex.calories_burned} kcal
                         </span>
                         <button
@@ -923,24 +923,24 @@ export function ExerciseListView({
             )}
           </div>
 
-          <div className="h-px bg-white/[0.06] w-full" />
+          <div className="h-px bg-fg/[0.06] w-full" />
 
           {/* ── NUVIA COACH INSIGHT ──────────────────────────────────────── */}
-          <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.05] space-y-2 text-xs">
+          <div className="p-4 rounded-2xl bg-fg/[0.03] border border-fg/[0.05] space-y-2 text-xs">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-[#30D158]" />
-                <span className="font-bold text-white text-xs">Coach Insight</span>
+                <Sparkles className="w-3.5 h-3.5 text-green-ink" />
+                <span className="font-bold text-fg text-xs">Coach Insight</span>
               </div>
               <button
                 onClick={() => setShowRecoverySheet(true)}
-                className="text-[11px] text-[#30D158] hover:underline cursor-pointer"
+                className="text-[11px] text-green-ink hover:underline cursor-pointer"
               >
                 Why? →
               </button>
             </div>
 
-            <p className="text-[#8E8E93] leading-relaxed">
+            <p className="text-muted leading-relaxed">
               {todayHasWorkout
                 ? 'Great effort on your session today. Muscles adapt and synthesize new tissue during rest—fuel with adequate protein and aim for 7–8 hours of quality sleep.'
                 : todayRoutine
@@ -959,13 +959,13 @@ export function ExerciseListView({
           {/* Weekly Schedule Strip */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold tracking-wider text-[#8E8E93] uppercase">
+              <span className="text-[11px] font-bold tracking-wider text-muted uppercase">
                 Adapted Weekly Plan
               </span>
               <button
                 type="button"
                 onClick={() => setIsWeeklyReportOpen(true)}
-                className="text-[11px] font-semibold text-[#30D158] hover:underline"
+                className="text-[11px] font-semibold text-green-ink hover:underline"
               >
                 Weekly Report →
               </button>
@@ -976,11 +976,11 @@ export function ExerciseListView({
             />
           </div>
 
-          <div className="h-px bg-white/[0.06] w-full" />
+          <div className="h-px bg-fg/[0.06] w-full" />
 
           {/* Header Action Strip */}
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold tracking-wider text-[#8E8E93] uppercase">
+            <span className="text-[11px] font-bold tracking-wider text-muted uppercase">
               Your Routines ({routines.length})
             </span>
 
@@ -988,7 +988,7 @@ export function ExerciseListView({
               <button
                 type="button"
                 onClick={() => setIsAiPasteOpen(true)}
-                className="px-2.5 py-1.5 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] text-xs font-semibold text-[#30D158] flex items-center gap-1 transition-colors cursor-pointer"
+                className="px-2.5 py-1.5 rounded-lg bg-fg/[0.05] hover:bg-fg/[0.1] text-xs font-semibold text-green-ink flex items-center gap-1 transition-colors cursor-pointer"
               >
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>AI Paste</span>
@@ -997,7 +997,7 @@ export function ExerciseListView({
               <button
                 type="button"
                 onClick={() => setIsManualRoutineOpen(true)}
-                className="px-2.5 py-1.5 rounded-lg bg-white text-black font-bold text-xs flex items-center gap-1 hover:bg-zinc-200 transition-colors cursor-pointer"
+                className="px-2.5 py-1.5 rounded-lg bg-fg text-app font-bold text-xs flex items-center gap-1 hover:bg-fg/85 transition-colors cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Build</span>
@@ -1008,15 +1008,15 @@ export function ExerciseListView({
           {loadingRoutines ? (
             <div className="space-y-3">
               {[1, 2].map((i) => (
-                <div key={i} className="h-36 bg-[#1C1C1E] rounded-2xl animate-pulse" />
+                <div key={i} className="h-36 bg-card rounded-2xl animate-pulse" />
               ))}
             </div>
           ) : routines.length === 0 ? (
             <div className="ios-card p-6 text-center space-y-3">
-              <Dumbbell className="w-8 h-8 text-[#8E8E93] mx-auto" />
+              <Dumbbell className="w-8 h-8 text-muted mx-auto" />
               <div>
-                <p className="text-sm font-bold text-white">No Routines Created</p>
-                <p className="text-xs text-[#8E8E93] mt-1 max-w-xs mx-auto">
+                <p className="text-sm font-bold text-fg">No Routines Created</p>
+                <p className="text-xs text-muted mt-1 max-w-xs mx-auto">
                   Build a custom training split or paste your workout routine from your AI coach.
                 </p>
               </div>
@@ -1024,7 +1024,7 @@ export function ExerciseListView({
                 <button
                   type="button"
                   onClick={() => setIsAiPasteOpen(true)}
-                  className="px-4 py-2 rounded-xl bg-white/[0.08] text-white font-semibold text-xs cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-fg/[0.08] text-fg font-semibold text-xs cursor-pointer"
                 >
                   Paste AI Routine
                 </button>
@@ -1048,7 +1048,7 @@ export function ExerciseListView({
                   <div
                     key={routine.id}
                     onClick={() => handleOpenRoutineOverview(routine)}
-                    className="ios-card p-4 space-y-3 hover:border-white/20 transition-all cursor-pointer group"
+                    className="ios-card p-4 space-y-3 hover:border-fg/20 transition-all cursor-pointer group"
                   >
                     <div className="flex items-start justify-between">
                       <div>
@@ -1058,14 +1058,14 @@ export function ExerciseListView({
                               Today
                             </span>
                           )}
-                          <span className="text-[10px] text-[#8E8E93] uppercase font-semibold">
+                          <span className="text-[10px] text-muted uppercase font-semibold">
                             {routine.days.join(', ') || 'Flexible days'}
                           </span>
                         </div>
-                        <h3 className="text-base font-bold text-white group-hover:text-[#30D158] transition-colors">
+                        <h3 className="text-base font-bold text-fg group-hover:text-green-ink transition-colors">
                           {routine.title}
                         </h3>
-                        <p className="text-xs text-[#8E8E93] mt-0.5">
+                        <p className="text-xs text-muted mt-0.5">
                           {routine.exercises.length} exercises · Focus: {routine.focus || 'Strength'}
                         </p>
                       </div>
@@ -1075,7 +1075,7 @@ export function ExerciseListView({
                         {routine.exercises.slice(0, 3).map((ex, idx) => (
                           <div
                             key={idx}
-                            className="w-10 h-10 rounded-xl bg-black/60 border border-white/10 overflow-hidden shrink-0"
+                            className="w-10 h-10 rounded-xl bg-app/60 border border-fg/10 overflow-hidden shrink-0"
                           >
                             <ExerciseThumbnail
                               exercise={ex}
@@ -1088,12 +1088,12 @@ export function ExerciseListView({
                     </div>
 
                     {/* Action footer */}
-                    <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between">
+                    <div className="pt-2 border-t border-fg/[0.06] flex items-center justify-between">
                       <div className="flex items-center gap-1">
                         <button
                           type="button"
                           onClick={(e) => handleEditRoutine(routine, e)}
-                          className="p-1.5 text-[#8E8E93] hover:text-white transition-colors cursor-pointer"
+                          className="p-1.5 text-muted hover:text-fg transition-colors cursor-pointer"
                           title="Edit"
                         >
                           <Pencil className="w-3.5 h-3.5" />
@@ -1101,7 +1101,7 @@ export function ExerciseListView({
                         <button
                           type="button"
                           onClick={(e) => handleDuplicateRoutine(routine.id, e)}
-                          className="p-1.5 text-[#8E8E93] hover:text-white transition-colors cursor-pointer"
+                          className="p-1.5 text-muted hover:text-fg transition-colors cursor-pointer"
                           title="Duplicate"
                         >
                           <Copy className="w-3.5 h-3.5" />
@@ -1109,7 +1109,7 @@ export function ExerciseListView({
                         <button
                           type="button"
                           onClick={(e) => handleDeleteRoutine(routine.id, e)}
-                          className="p-1.5 text-[#8E8E93] hover:text-red-400 transition-colors cursor-pointer"
+                          className="p-1.5 text-muted hover:text-red-400 transition-colors cursor-pointer"
                           title="Delete"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -1119,7 +1119,7 @@ export function ExerciseListView({
                       <button
                         type="button"
                         onClick={(e) => handleStartWorkoutDirect(routine, e)}
-                        className="px-3 py-1.5 rounded-lg bg-white text-black font-bold text-xs flex items-center gap-1 hover:bg-zinc-200 transition-colors cursor-pointer"
+                        className="px-3 py-1.5 rounded-lg bg-fg text-app font-bold text-xs flex items-center gap-1 hover:bg-fg/85 transition-colors cursor-pointer"
                       >
                         <Play className="w-3 h-3 fill-black" />
                         <span>Start</span>
@@ -1140,29 +1140,29 @@ export function ExerciseListView({
         <div className="space-y-5">
           {/* Monthly Stats Summary */}
           <div className="grid grid-cols-3 gap-2">
-            <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/[0.04] text-center">
-              <span className="text-xl font-bold text-white tracking-tight block">
+            <div className="p-3 rounded-2xl bg-fg/[0.03] border border-fg/[0.04] text-center">
+              <span className="text-xl font-bold text-fg tracking-tight block">
                 {historyStats.activeDays}
               </span>
-              <span className="text-[10px] text-[#8E8E93] uppercase font-semibold block mt-0.5">
+              <span className="text-[10px] text-muted uppercase font-semibold block mt-0.5">
                 Active Days
               </span>
             </div>
 
-            <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/[0.04] text-center">
-              <span className="text-xl font-bold text-white tracking-tight block">
+            <div className="p-3 rounded-2xl bg-fg/[0.03] border border-fg/[0.04] text-center">
+              <span className="text-xl font-bold text-fg tracking-tight block">
                 {historyStats.workoutsCount}
               </span>
-              <span className="text-[10px] text-[#8E8E93] uppercase font-semibold block mt-0.5">
+              <span className="text-[10px] text-muted uppercase font-semibold block mt-0.5">
                 Workouts
               </span>
             </div>
 
-            <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/[0.04] text-center">
-              <span className="text-xl font-bold text-white tracking-tight block">
+            <div className="p-3 rounded-2xl bg-fg/[0.03] border border-fg/[0.04] text-center">
+              <span className="text-xl font-bold text-fg tracking-tight block">
                 {historyStats.totalKcal.toLocaleString()}
               </span>
-              <span className="text-[10px] text-[#8E8E93] uppercase font-semibold block mt-0.5">
+              <span className="text-[10px] text-muted uppercase font-semibold block mt-0.5">
                 kcal Burned
               </span>
             </div>
@@ -1171,13 +1171,13 @@ export function ExerciseListView({
           {/* Minimal Clean Calendar */}
           <div className="ios-card p-4 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-bold text-white">{monthName}</span>
+              <span className="text-sm font-bold text-fg">{monthName}</span>
 
               <div className="flex items-center gap-1">
                 <button
                   type="button"
                   onClick={() => setSelectedMonthOffset((prev) => prev - 1)}
-                  className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-zinc-300 transition-colors cursor-pointer"
+                  className="w-7 h-7 rounded-lg bg-fg/5 hover:bg-fg/10 flex items-center justify-center text-zinc-300 transition-colors cursor-pointer"
                   aria-label="Previous Month"
                 >
                   <ChevronLeft className="w-4 h-4" />
@@ -1188,7 +1188,7 @@ export function ExerciseListView({
                   className={`px-2 h-7 rounded-lg text-[10px] font-semibold transition-colors cursor-pointer ${
                     selectedMonthOffset === 0
                       ? 'text-zinc-500 bg-transparent'
-                      : 'text-zinc-300 bg-white/5 hover:bg-white/10'
+                      : 'text-zinc-300 bg-fg/5 hover:bg-fg/10'
                   }`}
                 >
                   Today
@@ -1196,7 +1196,7 @@ export function ExerciseListView({
                 <button
                   type="button"
                   onClick={() => setSelectedMonthOffset((prev) => prev + 1)}
-                  className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-zinc-300 transition-colors cursor-pointer"
+                  className="w-7 h-7 rounded-lg bg-fg/5 hover:bg-fg/10 flex items-center justify-center text-zinc-300 transition-colors cursor-pointer"
                   aria-label="Next Month"
                 >
                   <ChevronRight className="w-4 h-4" />
@@ -1236,7 +1236,7 @@ export function ExerciseListView({
                     type="button"
                     onClick={() => handleDayClick(dateStr)}
                     className={`relative h-8 rounded-lg flex flex-col items-center justify-center text-xs transition-all cursor-pointer ${
-                      isToday ? 'border border-white text-white font-bold' : 'text-zinc-400 hover:bg-white/5'
+                      isToday ? 'border border-white text-fg font-bold' : 'text-zinc-400 hover:bg-fg/5'
                     }`}
                   >
                     <span className="leading-none text-[11px]">{dayNum}</span>
@@ -1250,7 +1250,7 @@ export function ExerciseListView({
             </div>
 
             {/* Simple Legend */}
-            <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[10px] text-zinc-500">
+            <div className="pt-2 border-t border-fg/5 flex items-center justify-between text-[10px] text-zinc-500">
               <div className="flex items-center gap-3">
                 <span className="flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#30D158]" />
@@ -1267,20 +1267,20 @@ export function ExerciseListView({
 
           {/* Chronological Activity Log */}
           <div className="space-y-3">
-            <span className="text-[11px] font-bold tracking-wider text-[#8E8E93] uppercase block">
+            <span className="text-[11px] font-bold tracking-wider text-muted uppercase block">
               Recent Activity
             </span>
 
             {groupedExercises.length === 0 ? (
-              <p className="text-xs text-[#8E8E93] text-center py-6">No historical activity recorded yet.</p>
+              <p className="text-xs text-muted text-center py-6">No historical activity recorded yet.</p>
             ) : (
               <div className="space-y-4">
                 {groupedExercises.map(([dateTitle, list]) => (
                   <div key={dateTitle} className="space-y-1.5">
-                    <span className="text-[10px] font-bold text-[#8E8E93] uppercase px-1">
+                    <span className="text-[10px] font-bold text-muted uppercase px-1">
                       {dateTitle}
                     </span>
-                    <div className="ios-card divide-y divide-white/[0.06] overflow-hidden text-xs">
+                    <div className="ios-card divide-y divide-fg/[0.06] overflow-hidden text-xs">
                       {list.map((ex) => {
                         const data = getActivityDisplayData(ex);
                         return (
@@ -1290,11 +1290,11 @@ export function ExerciseListView({
                               setSelectedHistoryLog(ex);
                               setIsHistoryDetailOpen(true);
                             }}
-                            className="p-3.5 flex items-center justify-between hover:bg-white/[0.03] active:bg-white/[0.05] transition-colors cursor-pointer group select-none"
+                            className="p-3.5 flex items-center justify-between hover:bg-fg/[0.03] active:bg-fg/[0.05] transition-colors cursor-pointer group select-none"
                           >
                             <div className="flex-1 pr-3">
                               <div className="flex items-center gap-2 flex-wrap">
-                                <p className="font-bold text-white text-xs tracking-tight group-hover:text-[#30D158] transition-colors">
+                                <p className="font-bold text-fg text-xs tracking-tight group-hover:text-green-ink transition-colors">
                                   {data.cleanTitle}
                                 </p>
                                 {data.isPartial && (
@@ -1304,18 +1304,18 @@ export function ExerciseListView({
                                 )}
                               </div>
                               {data.equipmentSubtitle && (
-                                <p className="text-[10px] text-[#30D158] font-medium mt-0.5">
+                                <p className="text-[10px] text-green-ink font-medium mt-0.5">
                                   {data.equipmentSubtitle}
                                 </p>
                               )}
-                              <p className="text-[11px] text-[#8E8E93] mt-0.5">
+                              <p className="text-[11px] text-muted mt-0.5">
                                 {fmtDuration(Number(ex.duration_minutes))}
                                 {ex.distance_km ? ` · ${ex.distance_km} km` : ''}
                                 {data.movementsSummary && !data.isPartial ? ` · ${data.movementsSummary}` : ''}
                               </p>
                             </div>
                             <div className="flex items-center gap-2.5 shrink-0">
-                              <span className="font-black text-white text-xs">~{data.caloriesBurned} kcal</span>
+                              <span className="font-black text-fg text-xs">~{data.caloriesBurned} kcal</span>
                               <ChevronRight className="w-3.5 h-3.5 text-zinc-600 group-hover:text-zinc-400 transition-colors" />
                               <button
                                 type="button"
@@ -1346,15 +1346,15 @@ export function ExerciseListView({
       {/* ══════════════════════════════════════════════════════════════════ */}
       {showRecoverySheet && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
-          <div className="w-full max-w-md bg-[#1C1C1E] border-t sm:border border-white/10 rounded-t-3xl sm:rounded-3xl p-5 space-y-4 max-h-[85vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-2 border-b border-white/10">
+          <div className="w-full max-w-md bg-card border-t sm:border border-fg/10 rounded-t-3xl sm:rounded-3xl p-5 space-y-4 max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-2 border-b border-fg/10">
               <div>
-                <h3 className="text-base font-bold text-white">Why is Recovery Crucial?</h3>
-                <p className="text-[11px] text-[#8E8E93]">The science of muscle adaptation</p>
+                <h3 className="text-base font-bold text-fg">Why is Recovery Crucial?</h3>
+                <p className="text-[11px] text-muted">The science of muscle adaptation</p>
               </div>
               <button
                 onClick={() => setShowRecoverySheet(false)}
-                className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-zinc-400 cursor-pointer"
+                className="w-8 h-8 rounded-full bg-fg/5 hover:bg-fg/10 flex items-center justify-center text-zinc-400 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1362,34 +1362,34 @@ export function ExerciseListView({
 
             <div className="space-y-3 text-xs text-zinc-300 leading-relaxed">
               <p>
-                Muscles don&apos;t grow during your workouts—they grow <strong className="text-white">afterward</strong> while recovering. Strength training creates microscopic micro-tears in muscle fibers. Your body repairs and thickens these fibers during rest periods through muscle protein synthesis.
+                Muscles don&apos;t grow during your workouts—they grow <strong className="text-fg">afterward</strong> while recovering. Strength training creates microscopic micro-tears in muscle fibers. Your body repairs and thickens these fibers during rest periods through muscle protein synthesis.
               </p>
 
-              <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.06] space-y-2">
-                <span className="font-bold text-white block">Key Recovery Pillars</span>
-                <div className="space-y-1.5 text-[11px] text-[#8E8E93]">
+              <div className="p-3.5 rounded-2xl bg-fg/[0.03] border border-fg/[0.06] space-y-2">
+                <span className="font-bold text-fg block">Key Recovery Pillars</span>
+                <div className="space-y-1.5 text-[11px] text-muted">
                   <div className="flex items-center gap-2">
-                    <Droplets className="w-3.5 h-3.5 text-[#0A84FF] shrink-0" />
+                    <Droplets className="w-3.5 h-3.5 text-blue-ink shrink-0" />
                     <span className="text-zinc-300">
-                      <strong className="text-white">Hydration:</strong> 2.5L+ restores cell volume and transports nutrients.
+                      <strong className="text-fg">Hydration:</strong> 2.5L+ restores cell volume and transports nutrients.
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Flame className="w-3.5 h-3.5 text-[#FF9500] shrink-0" />
+                    <Flame className="w-3.5 h-3.5 text-orange-ink shrink-0" />
                     <span className="text-zinc-300">
-                      <strong className="text-white">Protein:</strong> Hit your daily macro target to provide amino acid building blocks.
+                      <strong className="text-fg">Protein:</strong> Hit your daily macro target to provide amino acid building blocks.
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Heart className="w-3.5 h-3.5 text-pink-400 shrink-0" />
                     <span className="text-zinc-300">
-                      <strong className="text-white">Active Mobility:</strong> 15-20 min light walking promotes blood flow without fatigue.
+                      <strong className="text-fg">Active Mobility:</strong> 15-20 min light walking promotes blood flow without fatigue.
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Moon className="w-3.5 h-3.5 text-purple-400 shrink-0" />
                     <span className="text-zinc-300">
-                      <strong className="text-white">Deep Sleep:</strong> 7–8 hours triggers growth hormone release.
+                      <strong className="text-fg">Deep Sleep:</strong> 7–8 hours triggers growth hormone release.
                     </span>
                   </div>
                 </div>
@@ -1398,7 +1398,7 @@ export function ExerciseListView({
 
             <button
               onClick={() => setShowRecoverySheet(false)}
-              className="w-full py-3 rounded-xl bg-white text-black font-bold text-xs hover:bg-zinc-200 transition-colors cursor-pointer"
+              className="w-full py-3 rounded-xl bg-fg text-app font-bold text-xs hover:bg-fg/85 transition-colors cursor-pointer"
             >
               Got it
             </button>

@@ -85,7 +85,7 @@ export function StreakCalendarModal({
   }
 
   const renderBadgeIcon = (iconName: MilestoneBadge['icon'], unlocked: boolean) => {
-    const className = `w-5 h-5 ${unlocked ? 'text-white' : 'text-zinc-500'}`;
+    const className = `w-5 h-5 ${unlocked ? 'text-fg' : 'text-zinc-500'}`;
     switch (iconName) {
       case 'flame':
         return <Flame className={className} />;
@@ -136,27 +136,27 @@ export function StreakCalendarModal({
       >
         <div
           onClick={(e) => e.stopPropagation()}
-          className="pointer-events-auto relative w-full max-w-md bg-[#161618] border-t border-x border-b-0 border-white/10 rounded-t-[28px] rounded-b-none max-h-[calc(100dvh-var(--bottom-nav-height,56px)-env(safe-area-inset-bottom,0px)-0.75rem)] flex flex-col overflow-hidden shadow-2xl z-10 animate-slideUp"
+          className="pointer-events-auto relative w-full max-w-md bg-surface border-t border-x border-b-0 border-fg/10 rounded-t-[28px] rounded-b-none max-h-[calc(100dvh-var(--bottom-nav-height,56px)-env(safe-area-inset-bottom,0px)-0.75rem)] flex flex-col overflow-hidden shadow-2xl z-10 animate-slideUp"
         >
         {/* Grab Handle */}
         <div className="flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 rounded-full bg-white/20" />
+          <div className="w-10 h-1 rounded-full bg-fg/20" />
         </div>
 
         {/* Modal Top Header */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-white/5">
+        <div className="flex items-center justify-between px-5 py-3 border-b border-fg/5">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#FF9500] to-[#FF3B30] flex items-center justify-center shadow-lg shadow-orange-500/20">
-              <Flame className="w-4 h-4 text-white fill-white" />
+              <Flame className="w-4 h-4 text-fg fill-white" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-white tracking-tight">Activity & Streaks</h2>
-              <p className="text-[11px] text-[#8E8E93]">Daily consistency & achievements</p>
+              <h2 className="text-base font-bold text-fg tracking-tight">Activity & Streaks</h2>
+              <p className="text-[11px] text-muted">Daily consistency & achievements</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/15 flex items-center justify-center text-zinc-300 hover:text-white transition-colors"
+            className="w-8 h-8 rounded-full bg-fg/10 hover:bg-fg/15 flex items-center justify-center text-zinc-300 hover:text-fg transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -168,15 +168,15 @@ export function StreakCalendarModal({
           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#FF9500]/20 via-[#FF3B30]/10 to-transparent border border-[#FF9500]/20 p-4">
             <div className="flex items-start justify-between">
               <div>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-[#FF9500]/20 text-[#FF9500] border border-[#FF9500]/30 uppercase">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-[#FF9500]/20 text-orange-ink border border-[#FF9500]/30 uppercase">
                   <Sparkles className="w-3 h-3" />
                   Streak Engine
                 </span>
                 <div className="flex items-baseline gap-2 mt-2">
-                  <span className="text-4xl font-extrabold tracking-tight text-white">
+                  <span className="text-4xl font-extrabold tracking-tight text-fg">
                     {currentStreak}
                   </span>
-                  <span className="text-lg font-bold text-white/90">
+                  <span className="text-lg font-bold text-fg/90">
                     {currentStreak === 1 ? 'Day Active' : 'Days Streak'}
                   </span>
                 </div>
@@ -187,13 +187,13 @@ export function StreakCalendarModal({
 
               {/* Flame Badge Ring */}
               <div className="relative flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#FF9500] to-[#FF3B30] shadow-lg shadow-orange-500/30">
-                <Flame className="w-8 h-8 text-white fill-white animate-pulse" />
+                <Flame className="w-8 h-8 text-fg fill-white animate-pulse" />
               </div>
             </div>
 
             {/* Quick action if today is not logged */}
             {!isTodayLogged && onLogActivity && (
-              <div className="mt-3 pt-3 border-t border-white/10 flex items-center justify-between">
+              <div className="mt-3 pt-3 border-t border-fg/10 flex items-center justify-between">
                 <span className="text-xs text-amber-300 font-medium">
                   Keep streak alive for today!
                 </span>
@@ -213,32 +213,32 @@ export function StreakCalendarModal({
 
           {/* 4-Stat Glance Grid */}
           <div className="grid grid-cols-4 gap-2">
-            <div className="bg-[#1C1C1E] border border-white/5 rounded-xl p-2.5 text-center">
+            <div className="bg-card border border-fg/5 rounded-xl p-2.5 text-center">
               <span className="text-[10px] font-medium text-zinc-400 block uppercase tracking-wider">Current</span>
-              <span className="text-lg font-bold text-white mt-0.5 block">{currentStreak}d</span>
+              <span className="text-lg font-bold text-fg mt-0.5 block">{currentStreak}d</span>
             </div>
-            <div className="bg-[#1C1C1E] border border-white/5 rounded-xl p-2.5 text-center">
+            <div className="bg-card border border-fg/5 rounded-xl p-2.5 text-center">
               <span className="text-[10px] font-medium text-zinc-400 block uppercase tracking-wider">Longest</span>
-              <span className="text-lg font-bold text-white mt-0.5 block">{longestStreak}d</span>
+              <span className="text-lg font-bold text-fg mt-0.5 block">{longestStreak}d</span>
             </div>
-            <div className="bg-[#1C1C1E] border border-white/5 rounded-xl p-2.5 text-center">
+            <div className="bg-card border border-fg/5 rounded-xl p-2.5 text-center">
               <span className="text-[10px] font-medium text-zinc-400 block uppercase tracking-wider">Total</span>
-              <span className="text-lg font-bold text-white mt-0.5 block">{totalActiveDays}d</span>
+              <span className="text-lg font-bold text-fg mt-0.5 block">{totalActiveDays}d</span>
             </div>
-            <div className="bg-[#1C1C1E] border border-white/5 rounded-xl p-2.5 text-center">
+            <div className="bg-card border border-fg/5 rounded-xl p-2.5 text-center">
               <span className="text-[10px] font-medium text-zinc-400 block uppercase tracking-wider">Month</span>
-              <span className="text-lg font-bold text-[#30D158] mt-0.5 block">{monthlyConsistencyPct}%</span>
+              <span className="text-lg font-bold text-green-ink mt-0.5 block">{monthlyConsistencyPct}%</span>
             </div>
           </div>
 
           {/* Section Segment Controls (Calendar vs Badges) */}
-          <div className="flex bg-[#1C1C1E] p-1 rounded-xl border border-white/5">
+          <div className="flex bg-card p-1 rounded-xl border border-fg/5">
             <button
               onClick={() => setActiveTab('calendar')}
               className={`flex-1 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
                 activeTab === 'calendar'
-                  ? 'bg-white/15 text-white shadow-sm'
-                  : 'text-zinc-400 hover:text-white'
+                  ? 'bg-fg/15 text-fg shadow-sm'
+                  : 'text-zinc-400 hover:text-fg'
               }`}
             >
               <CalendarIcon className="w-3.5 h-3.5" />
@@ -248,8 +248,8 @@ export function StreakCalendarModal({
               onClick={() => setActiveTab('badges')}
               className={`flex-1 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
                 activeTab === 'badges'
-                  ? 'bg-white/15 text-white shadow-sm'
-                  : 'text-zinc-400 hover:text-white'
+                  ? 'bg-fg/15 text-fg shadow-sm'
+                  : 'text-zinc-400 hover:text-fg'
               }`}
             >
               <Trophy className="w-3.5 h-3.5" />
@@ -259,14 +259,14 @@ export function StreakCalendarModal({
 
           {/* TAB 1: CALENDAR HEATMAP */}
           {activeTab === 'calendar' && (
-            <div className="bg-[#1C1C1E] rounded-2xl border border-white/5 p-4 space-y-3">
+            <div className="bg-card rounded-2xl border border-fg/5 p-4 space-y-3">
               {/* Month Navigation */}
               <div className="flex items-center justify-between">
-                <span className="text-sm font-bold text-white">{monthName}</span>
+                <span className="text-sm font-bold text-fg">{monthName}</span>
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => setSelectedMonthOffset((prev) => prev - 1)}
-                    className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-zinc-300 transition-colors"
+                    className="w-7 h-7 rounded-lg bg-fg/5 hover:bg-fg/10 flex items-center justify-center text-zinc-300 transition-colors"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
@@ -276,7 +276,7 @@ export function StreakCalendarModal({
                     className={`px-2 h-7 rounded-lg text-[10px] font-semibold transition-colors ${
                       selectedMonthOffset === 0
                         ? 'text-zinc-500 bg-transparent'
-                        : 'text-zinc-300 bg-white/5 hover:bg-white/10'
+                        : 'text-zinc-300 bg-fg/5 hover:bg-fg/10'
                     }`}
                   >
                     Today
@@ -287,7 +287,7 @@ export function StreakCalendarModal({
                     className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${
                       selectedMonthOffset >= 0
                         ? 'text-zinc-600 cursor-not-allowed'
-                        : 'bg-white/5 hover:bg-white/10 text-zinc-300'
+                        : 'bg-fg/5 hover:bg-fg/10 text-zinc-300'
                     }`}
                   >
                     <ChevronRight className="w-4 h-4" />
@@ -326,12 +326,12 @@ export function StreakCalendarModal({
                         d.isFuture
                           ? 'opacity-25 text-zinc-600 cursor-not-allowed'
                           : isSelected
-                          ? 'ring-2 ring-white bg-white/15 text-white font-bold'
+                          ? 'ring-2 ring-white bg-fg/15 text-fg font-bold'
                           : d.isActive
-                          ? 'bg-gradient-to-b from-[#FF9500]/25 to-[#FF3B30]/20 text-white font-semibold hover:bg-orange-500/30'
+                          ? 'bg-gradient-to-b from-[#FF9500]/25 to-[#FF3B30]/20 text-fg font-semibold hover:bg-orange-500/30'
                           : d.isToday
-                          ? 'border border-white/30 text-white font-semibold'
-                          : 'text-zinc-400 hover:bg-white/5'
+                          ? 'border border-fg/30 text-fg font-semibold'
+                          : 'text-zinc-400 hover:bg-fg/5'
                       }`}
                     >
                       <span className="leading-none text-[11px]">{d.dayNumber}</span>
@@ -339,7 +339,7 @@ export function StreakCalendarModal({
                         <div className="w-1.5 h-1.5 rounded-full bg-[#FF9500] mt-1 shadow-sm shadow-orange-500/50" />
                       )}
                       {d.isToday && !d.isActive && (
-                        <div className="w-1 h-1 rounded-full bg-white/60 mt-1" />
+                        <div className="w-1 h-1 rounded-full bg-fg/60 mt-1" />
                       )}
                     </button>
                   );
@@ -347,19 +347,19 @@ export function StreakCalendarModal({
               </div>
 
               {/* Legend & Selected Day Info */}
-              <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[11px] text-zinc-400">
+              <div className="pt-2 border-t border-fg/5 flex items-center justify-between text-[11px] text-zinc-400">
                 <div className="flex items-center gap-3">
                   <span className="flex items-center gap-1">
                     <span className="w-2 h-2 rounded-full bg-[#FF9500]" />
                     Logged Active
                   </span>
                   <span className="flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full border border-white/40" />
+                    <span className="w-2 h-2 rounded-full border border-fg/40" />
                     Today
                   </span>
                 </div>
                 {selectedDateStr && (
-                  <span className="text-white font-medium">
+                  <span className="text-fg font-medium">
                     {activeDatesSet.has(selectedDateStr) ? '🔥 Activity logged' : 'No records'}
                   </span>
                 )}
@@ -378,8 +378,8 @@ export function StreakCalendarModal({
                     key={b.id}
                     className={`p-3.5 rounded-2xl border transition-all flex items-center gap-3.5 ${
                       b.unlocked
-                        ? 'bg-gradient-to-r from-white/[0.07] to-white/[0.03] border-white/10'
-                        : 'bg-[#1C1C1E] border-white/5 opacity-70'
+                        ? 'bg-gradient-to-r from-fg/[0.07] to-fg/[0.03] border-fg/10'
+                        : 'bg-card border-fg/5 opacity-70'
                     }`}
                   >
                     {/* Badge Icon Circle */}
@@ -387,7 +387,7 @@ export function StreakCalendarModal({
                       className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${
                         b.unlocked
                           ? 'bg-gradient-to-tr from-[#FF9500] to-[#FF3B30] shadow-md shadow-orange-500/20'
-                          : 'bg-white/5 border border-white/10'
+                          : 'bg-fg/5 border border-fg/10'
                       }`}
                     >
                       {renderBadgeIcon(b.icon, b.unlocked)}
@@ -396,11 +396,11 @@ export function StreakCalendarModal({
                     {/* Details */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <h4 className={`text-xs font-bold truncate ${b.unlocked ? 'text-white' : 'text-zinc-400'}`}>
+                        <h4 className={`text-xs font-bold truncate ${b.unlocked ? 'text-fg' : 'text-zinc-400'}`}>
                           {b.title}
                         </h4>
                         {b.unlocked ? (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#30D158] bg-[#30D158]/10 px-2 py-0.5 rounded-full">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-green-ink bg-[#30D158]/10 px-2 py-0.5 rounded-full">
                             <CheckCircle2 className="w-3 h-3" />
                             Unlocked
                           </span>
@@ -416,7 +416,7 @@ export function StreakCalendarModal({
 
                       {/* Progress Bar (if not unlocked) */}
                       {!b.unlocked && (
-                        <div className="w-full bg-white/10 h-1.5 rounded-full mt-2 overflow-hidden">
+                        <div className="w-full bg-fg/10 h-1.5 rounded-full mt-2 overflow-hidden">
                           <div
                             className="bg-gradient-to-r from-[#FF9500] to-[#FF3B30] h-full rounded-full transition-all"
                             style={{ width: `${pct}%` }}

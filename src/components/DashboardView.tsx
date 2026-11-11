@@ -362,24 +362,24 @@ export function DashboardView({
     return (
       <div className="flex-1 flex flex-col pb-20 px-5 pt-4 w-full max-w-md mx-auto space-y-6 animate-pulse">
         <div className="pt-2">
-          <div className="h-3 w-32 bg-[#2C2C2E] rounded-full mb-2" />
-          <div className="h-8 w-20 bg-[#2C2C2E] rounded-xl" />
+          <div className="h-3 w-32 bg-elevated rounded-full mb-2" />
+          <div className="h-8 w-20 bg-elevated rounded-xl" />
         </div>
         <div className="space-y-2">
-          <div className="h-12 w-40 bg-[#2C2C2E] rounded-xl" />
-          <div className="h-3 w-48 bg-[#2C2C2E] rounded-full" />
-          <div className="h-1.5 w-full bg-[#2C2C2E] rounded-full" />
+          <div className="h-12 w-40 bg-elevated rounded-xl" />
+          <div className="h-3 w-48 bg-elevated rounded-full" />
+          <div className="h-1.5 w-full bg-elevated rounded-full" />
         </div>
         <div className="grid grid-cols-3 gap-4">
           {[0, 1, 2].map((i) => (
             <div key={i} className="space-y-1.5">
-              <div className="h-3 w-12 bg-[#2C2C2E] rounded-full" />
-              <div className="h-6 w-16 bg-[#2C2C2E] rounded-lg" />
-              <div className="h-1 w-full bg-[#2C2C2E] rounded-full" />
+              <div className="h-3 w-12 bg-elevated rounded-full" />
+              <div className="h-6 w-16 bg-elevated rounded-lg" />
+              <div className="h-1 w-full bg-elevated rounded-full" />
             </div>
           ))}
         </div>
-        <div className="h-20 w-full bg-[#2C2C2E] rounded-2xl" />
+        <div className="h-20 w-full bg-elevated rounded-2xl" />
       </div>
     );
   }
@@ -399,10 +399,10 @@ export function DashboardView({
       {/* Large Page Title (Apple Health Style) with User Avatar */}
       <div className="pt-2 flex items-center justify-between">
         <div>
-          <p className="text-[11px] font-semibold tracking-wider text-[#8E8E93]">
+          <p className="text-[11px] font-semibold tracking-wider text-muted">
             {dateFormatted}
           </p>
-          <h1 className="text-3xl font-bold tracking-tight text-white mt-0.5">Today</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-fg mt-0.5">Today</h1>
         </div>
 
         <button
@@ -411,7 +411,7 @@ export function DashboardView({
           className="relative group p-0.5 rounded-full hover:scale-105 active:scale-95 transition-transform"
           title="View Profile"
         >
-          <div className="w-10 h-10 rounded-full bg-[#1C1C1E] border border-white/20 group-hover:border-[#30D158] overflow-hidden flex items-center justify-center text-white font-bold text-sm shadow-md">
+          <div className="w-10 h-10 rounded-full bg-card border border-fg/20 group-hover:border-[#30D158] overflow-hidden flex items-center justify-center text-fg font-bold text-sm shadow-md">
             {avatarUrl ? (
               <img
                 src={avatarUrl}
@@ -428,16 +428,16 @@ export function DashboardView({
 
       {/* TARGET RECALCULATION NOTIFICATION (When authoritative calorie target changes) */}
       {targetUpdateNotice && (
-        <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex items-start justify-between gap-3 shadow-sm animate-in fade-in duration-300">
+        <div className="p-3.5 rounded-2xl bg-fg/[0.04] border border-fg/[0.08] flex items-start justify-between gap-3 shadow-sm animate-in fade-in duration-300">
           <div className="space-y-1">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-white">
-              <Sparkles className="w-3.5 h-3.5 text-[#30D158]" />
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-fg">
+              <Sparkles className="w-3.5 h-3.5 text-green-ink" />
               <span>Calorie target updated</span>
             </div>
-            <p className="text-sm text-white font-bold tracking-tight">
+            <p className="text-sm text-fg font-bold tracking-tight">
               {targetUpdateNotice.prev.toLocaleString()} → {targetUpdateNotice.current.toLocaleString()} kcal/day
             </p>
-            <p className="text-[11px] text-[#8E8E93]">
+            <p className="text-[11px] text-muted">
               Based on your latest goal and profile information.
             </p>
             <button
@@ -446,7 +446,7 @@ export function DashboardView({
                 handleDismissTargetNotice();
                 onNavigateTab('goals');
               }}
-              className="text-[11px] text-[#30D158] hover:underline font-medium pt-0.5 block cursor-pointer"
+              className="text-[11px] text-green-ink hover:underline font-medium pt-0.5 block cursor-pointer"
             >
               Why this changed →
             </button>
@@ -454,7 +454,7 @@ export function DashboardView({
           <button
             type="button"
             onClick={handleDismissTargetNotice}
-            className="text-[#8E8E93] hover:text-white p-1 rounded-lg transition-colors cursor-pointer"
+            className="text-muted hover:text-fg p-1 rounded-lg transition-colors cursor-pointer"
             title="Dismiss notice"
           >
             <X className="w-3.5 h-3.5" />
@@ -465,10 +465,10 @@ export function DashboardView({
       {/* SECTION 1: CALORIES (NET CALORIE BUDGETING MODEL) */}
       <div onClick={() => onNavigateTab('summary')} className="cursor-pointer group">
         <div className="flex items-center justify-between pb-1">
-          <span className="text-xs font-semibold text-[#8E8E93] uppercase tracking-wider">
+          <span className="text-xs font-semibold text-muted uppercase tracking-wider">
             Calories
           </span>
-          <span className="text-xs text-[#8E8E93] group-hover:text-white flex items-center gap-0.5 transition-colors">
+          <span className="text-xs text-muted group-hover:text-fg flex items-center gap-0.5 transition-colors">
             <span>Summary</span>
             <ChevronRight className="w-3.5 h-3.5" />
           </span>
@@ -476,33 +476,33 @@ export function DashboardView({
 
         {/* 1. How much did I eat? (Primary Number) */}
         <div className="flex items-baseline gap-2 mt-1">
-          <span className="text-[40px] sm:text-[44px] font-semibold tracking-tight text-white leading-none">
+          <span className="text-[40px] sm:text-[44px] font-semibold tracking-tight text-fg leading-none">
             {foodCalories.toLocaleString()}
           </span>
-          <span className="text-base text-[#8E8E93] font-normal">
+          <span className="text-base text-muted font-normal">
             kcal eaten
           </span>
         </div>
 
         {/* 2 & 3. What is my net balance? & How much room do I have left? */}
         <div className="flex items-center gap-2 mt-1.5 text-sm font-medium">
-          <span className="text-white font-semibold">
+          <span className="text-fg font-semibold">
             {netCalories.toLocaleString()} kcal net
           </span>
-          <span className="text-[#8E8E93]">·</span>
+          <span className="text-muted">·</span>
           {isOverTarget ? (
-            <span className="text-[#FF9F0A] font-semibold">
+            <span className="text-orange-ink font-semibold">
               {overCalories.toLocaleString()} kcal above target
             </span>
           ) : (
-            <span className="text-[#8E8E93]">
-              <span className="text-white font-semibold">{remainingCalories.toLocaleString()} kcal</span> remaining
+            <span className="text-muted">
+              <span className="text-fg font-semibold">{remainingCalories.toLocaleString()} kcal</span> remaining
             </span>
           )}
         </div>
 
         {/* Subtractive / Overlay Calorie Lane (Total lane represents Daily Target; Blue overlays food offset) */}
-        <div className="w-full bg-[#2C2C2E] h-2 rounded-full overflow-hidden mt-3.5 relative">
+        <div className="w-full bg-elevated h-2 rounded-full overflow-hidden mt-3.5 relative">
           <div
             className="h-full flex rounded-full transition-all duration-500 overflow-hidden"
             style={{
@@ -532,17 +532,17 @@ export function DashboardView({
         </div>
 
         {/* Direct Supporting Equation */}
-        <p className="text-xs text-[#8E8E93] mt-2 font-normal">
+        <p className="text-xs text-muted mt-2 font-normal">
           {foodCalories.toLocaleString()} eaten
           {exerciseCalories > 0 ? ` − ${exerciseCalories.toLocaleString()} activity` : ' − 0 activity'}
           {' = '}
-          <span className="text-white font-medium">{netCalories.toLocaleString()} net</span>
+          <span className="text-fg font-medium">{netCalories.toLocaleString()} net</span>
         </p>
 
         {/* 4. Why is my target this value? (Daily target & maintenance secondary context) */}
-        <div className="flex items-center justify-between text-xs text-[#8E8E93] mt-2 pt-2.5 border-t border-white/[0.05]">
+        <div className="flex items-center justify-between text-xs text-muted mt-2 pt-2.5 border-t border-fg/[0.05]">
           <span>
-            Daily target: <span className="text-white font-medium">{calorieTarget.toLocaleString()} kcal</span>
+            Daily target: <span className="text-fg font-medium">{calorieTarget.toLocaleString()} kcal</span>
           </span>
           <button
             type="button"
@@ -550,7 +550,7 @@ export function DashboardView({
               e.stopPropagation();
               onNavigateTab('goals');
             }}
-            className="text-[11px] text-[#8E8E93] hover:text-white flex items-center gap-0.5 transition-colors cursor-pointer"
+            className="text-[11px] text-muted hover:text-fg flex items-center gap-0.5 transition-colors cursor-pointer"
             title="Why this target?"
           >
             <span>Why this target?</span>
@@ -565,15 +565,15 @@ export function DashboardView({
               e.stopPropagation();
               onOpenAddMeal();
             }}
-            className="w-full py-2.5 px-3.5 rounded-xl bg-gradient-to-r from-[#30D158]/15 to-[#2C2C2E]/60 hover:from-[#30D158]/25 border border-[#30D158]/30 hover:border-[#30D158] transition-all flex items-center justify-between group cursor-pointer"
+            className="w-full py-2.5 px-3.5 rounded-xl bg-gradient-to-r from-[#30D158]/15 to-elevated/60 hover:from-[#30D158]/25 border border-[#30D158]/30 hover:border-[#30D158] transition-all flex items-center justify-between group cursor-pointer"
           >
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 rounded-lg bg-[#30D158] text-black flex items-center justify-center">
                 <Camera className="w-3.5 h-3.5 stroke-[2.5]" />
               </div>
-              <span className="text-xs font-bold text-white">Snap Food Picture</span>
+              <span className="text-xs font-bold text-fg">Snap Food Picture</span>
             </div>
-            <span className="text-[11px] font-semibold text-[#30D158] flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform">
+            <span className="text-[11px] font-semibold text-green-ink flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform">
               <span>AI Count Calories</span>
               <ChevronRight className="w-3 h-3" />
             </span>
@@ -586,10 +586,10 @@ export function DashboardView({
       {/* SECTION 2: MACRONUTRIENTS */}
       <div onClick={() => onNavigateTab('goals')} className="cursor-pointer group">
         <div className="flex items-center justify-between pb-2">
-          <span className="text-xs font-semibold text-[#8E8E93] uppercase tracking-wider">
+          <span className="text-xs font-semibold text-muted uppercase tracking-wider">
             Nutrition Targets
           </span>
-          <span className="text-xs text-[#8E8E93] group-hover:text-white flex items-center gap-0.5 transition-colors">
+          <span className="text-xs text-muted group-hover:text-fg flex items-center gap-0.5 transition-colors">
             <span>Goals</span>
             <ChevronRight className="w-3.5 h-3.5" />
           </span>
@@ -598,12 +598,12 @@ export function DashboardView({
         <div className="grid grid-cols-3 gap-4 pt-1">
           {/* Protein */}
           <div>
-            <p className="text-[11px] text-[#8E8E93] font-medium">Protein</p>
-            <p className="text-xl font-semibold text-white tracking-tight mt-0.5">
+            <p className="text-[11px] text-muted font-medium">Protein</p>
+            <p className="text-xl font-semibold text-fg tracking-tight mt-0.5">
               {proteinConsumed}{' '}
-              <span className="text-xs text-[#8E8E93] font-normal">/ {proteinTarget}g</span>
+              <span className="text-xs text-muted font-normal">/ {proteinTarget}g</span>
             </p>
-            <div className="w-full bg-[#2C2C2E] h-1 rounded-full overflow-hidden mt-1.5">
+            <div className="w-full bg-elevated h-1 rounded-full overflow-hidden mt-1.5">
               <div
                 className="bg-[#30D158] h-full rounded-full"
                 style={{ width: `${Math.min(100, (proteinConsumed / proteinTarget) * 100)}%` }}
@@ -613,12 +613,12 @@ export function DashboardView({
 
           {/* Carbs */}
           <div>
-            <p className="text-[11px] text-[#8E8E93] font-medium">Carbohydrates</p>
-            <p className="text-xl font-semibold text-white tracking-tight mt-0.5">
+            <p className="text-[11px] text-muted font-medium">Carbohydrates</p>
+            <p className="text-xl font-semibold text-fg tracking-tight mt-0.5">
               {carbsConsumed}{' '}
-              <span className="text-xs text-[#8E8E93] font-normal">/ {carbsTarget}g</span>
+              <span className="text-xs text-muted font-normal">/ {carbsTarget}g</span>
             </p>
-            <div className="w-full bg-[#2C2C2E] h-1 rounded-full overflow-hidden mt-1.5">
+            <div className="w-full bg-elevated h-1 rounded-full overflow-hidden mt-1.5">
               <div
                 className="bg-[#8E8E93] h-full rounded-full"
                 style={{ width: `${Math.min(100, (carbsConsumed / carbsTarget) * 100)}%` }}
@@ -628,12 +628,12 @@ export function DashboardView({
 
           {/* Fat */}
           <div>
-            <p className="text-[11px] text-[#8E8E93] font-medium">Fat</p>
-            <p className="text-xl font-semibold text-white tracking-tight mt-0.5">
+            <p className="text-[11px] text-muted font-medium">Fat</p>
+            <p className="text-xl font-semibold text-fg tracking-tight mt-0.5">
               {fatConsumed}{' '}
-              <span className="text-xs text-[#8E8E93] font-normal">/ {fatTarget}g</span>
+              <span className="text-xs text-muted font-normal">/ {fatTarget}g</span>
             </p>
-            <div className="w-full bg-[#2C2C2E] h-1 rounded-full overflow-hidden mt-1.5">
+            <div className="w-full bg-elevated h-1 rounded-full overflow-hidden mt-1.5">
               <div
                 className="bg-[#8E8E93] h-full rounded-full"
                 style={{ width: `${Math.min(100, (fatConsumed / fatTarget) * 100)}%` }}
@@ -648,10 +648,10 @@ export function DashboardView({
       {/* SECTION 3: ACTIVITY SUMMARY */}
       <div onClick={() => onNavigateTab('exercise')} className="cursor-pointer group">
         <div className="flex items-center justify-between pb-1">
-          <span className="text-xs font-semibold text-[#8E8E93] uppercase tracking-wider">
+          <span className="text-xs font-semibold text-muted uppercase tracking-wider">
             Activity
           </span>
-          <span className="text-xs text-[#8E8E93] group-hover:text-white flex items-center gap-0.5 transition-colors">
+          <span className="text-xs text-muted group-hover:text-fg flex items-center gap-0.5 transition-colors">
             <span>Details</span>
             <ChevronRight className="w-3.5 h-3.5" />
           </span>
@@ -659,12 +659,12 @@ export function DashboardView({
 
         <div className="flex items-baseline justify-between mt-1">
           <div>
-            <span className="text-2xl font-semibold text-white tracking-tight">
+            <span className="text-2xl font-semibold text-fg tracking-tight">
               {exerciseCalories.toLocaleString()}{' '}
-              <span className="text-sm text-[#8E8E93] font-normal">kcal burned</span>
+              <span className="text-sm text-muted font-normal">kcal burned</span>
             </span>
           </div>
-          <span className="text-sm font-medium text-[#8E8E93]">{exerciseMinutes} min active</span>
+          <span className="text-sm font-medium text-muted">{exerciseMinutes} min active</span>
         </div>
       </div>
 
@@ -767,10 +767,10 @@ export function DashboardView({
                     onClick={() => onNavigateTab('exercise')}
                     className={`rounded-2xl p-4 border transition-all cursor-pointer space-y-3.5 group ${
                       isFinished
-                        ? 'bg-[#1C1C1E] border-[#30D158]/40 shadow-sm'
+                        ? 'bg-card border-[#30D158]/40 shadow-sm'
                         : isPartial
-                        ? 'bg-[#1C1C1E] border-[#0A84FF]/40 shadow-sm'
-                        : 'bg-[#1C1C1E] border-white/[0.08] hover:border-[#30D158]/40'
+                        ? 'bg-card border-[#0A84FF]/40 shadow-sm'
+                        : 'bg-card border-fg/[0.08] hover:border-[#30D158]/40'
                     }`}
                   >
                     {/* Top Bar: Routine Header & Status Badge */}
@@ -779,10 +779,10 @@ export function DashboardView({
                         <div
                           className={`w-6 h-6 rounded-lg flex items-center justify-center ${
                             isFinished
-                              ? 'bg-[#30D158]/20 text-[#30D158]'
+                              ? 'bg-[#30D158]/20 text-green-ink'
                               : isPartial
-                              ? 'bg-[#0A84FF]/20 text-[#0A84FF]'
-                              : 'bg-[#30D158]/15 text-[#30D158]'
+                              ? 'bg-[#0A84FF]/20 text-blue-ink'
+                              : 'bg-[#30D158]/15 text-green-ink'
                           }`}
                         >
                           {isFinished ? (
@@ -791,7 +791,7 @@ export function DashboardView({
                             <Dumbbell className="w-3.5 h-3.5" />
                           )}
                         </div>
-                        <span className="text-xs font-bold uppercase tracking-wider text-white">
+                        <span className="text-xs font-bold uppercase tracking-wider text-fg">
                           Today's Workout
                         </span>
                         {isFinished && sessionStatus.log && (
@@ -806,7 +806,7 @@ export function DashboardView({
                           </span>
                         )}
                       </div>
-                      <span className="text-xs text-[#30D158] font-medium flex items-center gap-0.5 group-hover:underline">
+                      <span className="text-xs text-green-ink font-medium flex items-center gap-0.5 group-hover:underline">
                         <span>{hasLogged ? 'View Details' : 'Start Workout'}</span>
                         <ChevronRight className="w-3.5 h-3.5" />
                       </span>
@@ -814,7 +814,7 @@ export function DashboardView({
 
                     {/* Main Routine Row with Hero Visual Thumbnail */}
                     <div className="flex items-center gap-3.5">
-                      <div className="w-16 h-16 rounded-2xl overflow-hidden bg-black/60 border border-white/[0.1] shrink-0 relative shadow-md group-hover:border-[#30D158]/40 transition-colors">
+                      <div className="w-16 h-16 rounded-2xl overflow-hidden bg-app/60 border border-fg/[0.1] shrink-0 relative shadow-md group-hover:border-[#30D158]/40 transition-colors">
                         {routine.exercises?.[0] ? (
                           <ExerciseThumbnail
                             exercise={routine.exercises[0]}
@@ -822,19 +822,19 @@ export function DashboardView({
                             className="w-full h-full"
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-[#2C2C2E] text-[#8E8E93]">
+                          <div className="w-full h-full flex items-center justify-center bg-elevated text-muted">
                             <Dumbbell className="w-6 h-6" />
                           </div>
                         )}
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-bold text-white group-hover:text-[#30D158] transition-colors truncate">
+                        <h4 className="text-sm font-bold text-fg group-hover:text-green-ink transition-colors truncate">
                           {isFinished
                             ? `✓ ${cleanActivityTitle(routine.title).title}`
                             : cleanActivityTitle(routine.title).title}
                         </h4>
-                        <p className="text-[11px] text-[#8E8E93] mt-0.5">
+                        <p className="text-[11px] text-muted mt-0.5">
                           {hasLogged && sessionStatus.log
                             ? `${sessionStatus.log.duration_minutes || 45} min · ${sessionStatus.log.calories_burned} kcal burned`
                             : `${routine.exercises?.length || 0} movements · ${routine.focus || 'Training'}`}
@@ -846,8 +846,8 @@ export function DashboardView({
                                 key={day}
                                 className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${
                                   isRoutineScheduledForDay(routine, day) && day.toLowerCase() === todayDayName.toLowerCase()
-                                    ? 'bg-[#30D158]/20 text-[#30D158] border border-[#30D158]/30 font-semibold'
-                                    : 'bg-white/[0.05] text-[#8E8E93]'
+                                    ? 'bg-[#30D158]/20 text-green-ink border border-[#30D158]/30 font-semibold'
+                                    : 'bg-fg/[0.05] text-muted'
                                 }`}
                               >
                                 {day}
@@ -864,7 +864,7 @@ export function DashboardView({
                         {routine.exercises.map((ex, idx) => (
                           <div
                             key={ex.id || idx}
-                            className="w-10 h-10 rounded-xl overflow-hidden bg-black/40 border border-white/[0.08] shrink-0 relative group-hover:border-[#30D158]/30 transition-colors"
+                            className="w-10 h-10 rounded-xl overflow-hidden bg-app/40 border border-fg/[0.08] shrink-0 relative group-hover:border-[#30D158]/30 transition-colors"
                             title={ex.name}
                           >
                             <ExerciseThumbnail exercise={ex} aspectRatio="1/1" className="w-full h-full" />
@@ -893,35 +893,35 @@ export function DashboardView({
         }
 
         return (
-          <div className="rounded-2xl p-4 bg-[#1C1C1E] border border-white/[0.08] space-y-3.5">
+          <div className="rounded-2xl p-4 bg-card border border-fg/[0.08] space-y-3.5">
             {/* Header: Recovery Day */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-[#0A84FF]/15 text-[#0A84FF] flex items-center justify-center">
+                <div className="w-6 h-6 rounded-lg bg-[#0A84FF]/15 text-blue-ink flex items-center justify-center">
                   <Moon className="w-3.5 h-3.5" />
                 </div>
-                <span className="text-xs font-bold uppercase tracking-wider text-white">
+                <span className="text-xs font-bold uppercase tracking-wider text-fg">
                   Today's Workout
                 </span>
               </div>
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/[0.06] text-[#8E8E93]">
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-fg/[0.06] text-muted">
                 Recovery day
               </span>
             </div>
 
             <div>
-              <h4 className="text-sm font-semibold text-white">No workout scheduled today</h4>
-              <p className="text-[11px] text-[#8E8E93] mt-0.5">
+              <h4 className="text-sm font-semibold text-fg">No workout scheduled today</h4>
+              <p className="text-[11px] text-muted mt-0.5">
                 Today is a recovery/rest day. Focus on balanced nutrition, hydration, and muscle repair.
               </p>
             </div>
 
             {/* UP NEXT ROUTINE PREVIEW (Handles multiple routines on the next scheduled day) */}
             {nextScheduled ? (
-              <div className="pt-2 border-t border-white/[0.06] space-y-2">
-                <div className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider text-[#8E8E93]">
+              <div className="pt-2 border-t border-fg/[0.06] space-y-2">
+                <div className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider text-muted">
                   <span>Up Next</span>
-                  <span className="text-[#30D158]">{nextScheduled.day}</span>
+                  <span className="text-green-ink">{nextScheduled.day}</span>
                 </div>
 
                 <div className="space-y-2">
@@ -929,10 +929,10 @@ export function DashboardView({
                     <div
                       key={nextRoutine.id}
                       onClick={() => onNavigateTab('exercise')}
-                      className="flex items-center justify-between p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-white/[0.15] transition-all cursor-pointer group"
+                      className="flex items-center justify-between p-3 rounded-xl bg-fg/[0.03] border border-fg/[0.06] hover:border-fg/[0.15] transition-all cursor-pointer group"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-12 h-12 rounded-xl overflow-hidden bg-black/50 border border-white/[0.08] shrink-0">
+                        <div className="w-12 h-12 rounded-xl overflow-hidden bg-app/50 border border-fg/[0.08] shrink-0">
                           {nextRoutine.exercises?.[0] ? (
                             <ExerciseThumbnail
                               exercise={nextRoutine.exercises[0]}
@@ -940,22 +940,22 @@ export function DashboardView({
                               className="w-full h-full"
                             />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-[#8E8E93]">
+                            <div className="w-full h-full flex items-center justify-center text-muted">
                               <Dumbbell className="w-5 h-5" />
                             </div>
                           )}
                         </div>
                         <div className="min-w-0">
-                          <h5 className="text-xs font-bold text-white group-hover:text-[#30D158] transition-colors truncate">
+                          <h5 className="text-xs font-bold text-fg group-hover:text-green-ink transition-colors truncate">
                             {cleanActivityTitle(nextRoutine.title).title}
                           </h5>
-                          <p className="text-[11px] text-[#8E8E93] mt-0.5">
+                          <p className="text-[11px] text-muted mt-0.5">
                             {nextRoutine.exercises?.length || 0} movements · {nextRoutine.focus || 'Training'}
                           </p>
                         </div>
                       </div>
 
-                      <span className="text-xs text-[#8E8E93] group-hover:text-white flex items-center gap-0.5 shrink-0 ml-2 font-medium transition-colors">
+                      <span className="text-xs text-muted group-hover:text-fg flex items-center gap-0.5 shrink-0 ml-2 font-medium transition-colors">
                         <span>View workout</span>
                         <ChevronRight className="w-3.5 h-3.5" />
                       </span>
@@ -964,12 +964,12 @@ export function DashboardView({
                 </div>
               </div>
             ) : routines.length > 0 ? (
-              <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between">
-                <span className="text-[11px] text-[#8E8E93]">Explore your training routines</span>
+              <div className="pt-2 border-t border-fg/[0.06] flex items-center justify-between">
+                <span className="text-[11px] text-muted">Explore your training routines</span>
                 <button
                   type="button"
                   onClick={() => onNavigateTab('exercise')}
-                  className="text-xs text-[#30D158] hover:underline flex items-center gap-0.5 font-medium cursor-pointer"
+                  className="text-xs text-green-ink hover:underline flex items-center gap-0.5 font-medium cursor-pointer"
                 >
                   <span>See routines</span>
                   <ChevronRight className="w-3 h-3" />
@@ -983,21 +983,21 @@ export function DashboardView({
       <div className="ios-divider" />
 
       {/* SECTION 4: NUVIA QUICK INSIGHT & NATURAL LOGGER */}
-      <div className="bg-[#1C1C1E] rounded-2xl p-4 border border-white/[0.06] space-y-3">
+      <div className="bg-card rounded-2xl p-4 border border-fg/[0.06] space-y-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-white">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-fg">
             <span className="w-1.5 h-1.5 rounded-full bg-[#30D158]" />
             <span>Nuvia</span>
           </div>
           <button
             onClick={() => onNavigateTab('coach')}
-            className="text-[11px] text-[#8E8E93] hover:text-white transition-colors"
+            className="text-[11px] text-muted hover:text-fg transition-colors"
           >
             Insights &amp; Chat →
           </button>
         </div>
 
-        <p className="text-xs text-[#D1D1D6] leading-relaxed">
+        <p className="text-xs text-fg-soft leading-relaxed">
           {nuviaReply ||
             (proteinGap > 20
               ? `You're ${proteinGap}g short of your protein target. For your next meal: grilled chicken, fish, tofu, or Greek yogurt (≈40g protein) will keep you on track.`
@@ -1013,10 +1013,10 @@ export function DashboardView({
                 type="button"
                 onClick={() => handleExecuteNaturalLanguage(s.text)}
                 disabled={isInterpreting}
-                className="shrink-0 text-[11px] px-2.5 py-1 rounded-full bg-[#2C2C2E] hover:bg-[#3A3A3C] text-[#E5E5EA] border border-white/[0.08] transition-all flex items-center gap-1.5 active:scale-95"
+                className="shrink-0 text-[11px] px-2.5 py-1 rounded-full bg-elevated hover:bg-elevated-2 text-fg-soft border border-fg/[0.08] transition-all flex items-center gap-1.5 active:scale-95"
               >
                 {s.badge && (
-                  <span className="text-[9px] px-1 py-0.2 rounded bg-[#30D158]/20 text-[#30D158] font-bold">
+                  <span className="text-[9px] px-1 py-0.2 rounded bg-[#30D158]/20 text-green-ink font-bold">
                     {s.badge}
                   </span>
                 )}
@@ -1028,9 +1028,9 @@ export function DashboardView({
 
         {/* Pending Workout Review Card */}
         {pendingWorkoutReview && (
-          <div className="p-3.5 rounded-xl bg-[#121214] border border-[#30D158]/40 space-y-2">
+          <div className="p-3.5 rounded-xl bg-surface border border-[#30D158]/40 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-[#30D158] uppercase tracking-wider flex items-center gap-1.5">
+              <span className="text-xs font-bold text-green-ink uppercase tracking-wider flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>Today's Workout</span>
               </span>
@@ -1040,8 +1040,8 @@ export function DashboardView({
                 </span>
               )}
             </div>
-            <p className="text-sm font-semibold text-white">{pendingWorkoutReview.routine_title}</p>
-            <p className="text-xs text-[#8E8E93]">
+            <p className="text-sm font-semibold text-fg">{pendingWorkoutReview.routine_title}</p>
+            <p className="text-xs text-muted">
               {pendingWorkoutReview.duration_minutes} mins · ~{pendingWorkoutReview.estimated_calories_burned} kcal
               {pendingWorkoutReview.notes ? ` · ${pendingWorkoutReview.notes}` : ''}
             </p>
@@ -1056,7 +1056,7 @@ export function DashboardView({
               <button
                 type="button"
                 onClick={() => setPendingWorkoutReview(null)}
-                className="px-3 py-2 rounded-xl bg-[#2C2C2E] text-[#8E8E93] hover:text-white text-xs font-medium"
+                className="px-3 py-2 rounded-xl bg-elevated text-muted hover:text-fg text-xs font-medium"
               >
                 Cancel
               </button>
@@ -1083,15 +1083,15 @@ export function DashboardView({
             onChange={(e) => setQuickInput(e.target.value)}
             placeholder={placeholderText}
             disabled={isInterpreting}
-            className="flex-1 bg-[#2C2C2E] text-xs text-white placeholder-[#8E8E93] px-3 py-2 rounded-xl border border-transparent focus:border-[#30D158] focus:outline-none disabled:opacity-60"
+            className="flex-1 bg-elevated text-xs text-fg placeholder-muted px-3 py-2 rounded-xl border border-transparent focus:border-[#30D158] focus:outline-none disabled:opacity-60"
           />
           <button
             type="submit"
             disabled={!quickInput.trim() || isInterpreting}
-            className="p-2 rounded-xl bg-[#2C2C2E] hover:bg-[#3A3A3C] disabled:opacity-30 text-white transition-colors flex items-center justify-center min-w-[32px]"
+            className="p-2 rounded-xl bg-elevated hover:bg-elevated-2 disabled:opacity-30 text-fg transition-colors flex items-center justify-center min-w-[32px]"
           >
             {isInterpreting ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin text-[#30D158]" />
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-green-ink" />
             ) : (
               <Send className="w-3.5 h-3.5" />
             )}
@@ -1105,42 +1105,42 @@ export function DashboardView({
         {recentExercises.length > 0 && (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-[#8E8E93] uppercase tracking-wider flex items-center gap-1.5">
-                <Flame className="w-3.5 h-3.5 text-[#FF453A]" />
+              <span className="text-xs font-semibold text-muted uppercase tracking-wider flex items-center gap-1.5">
+                <Flame className="w-3.5 h-3.5 text-red-ink" />
                 <span>Today's Completed Workouts</span>
               </span>
               <button
                 onClick={() => onNavigateTab('exercise')}
-                className="text-xs text-[#30D158] hover:underline font-medium"
+                className="text-xs text-green-ink hover:underline font-medium"
               >
                 View All
               </button>
             </div>
 
-            <div className="ios-card divide-y divide-white/[0.06] overflow-hidden border border-[#30D158]/20">
+            <div className="ios-card divide-y divide-fg/[0.06] overflow-hidden border border-[#30D158]/20">
               {recentExercises.map((e) => (
                 <div
                   key={e.id}
                   onClick={() => onNavigateTab('exercise')}
-                  className="p-3.5 flex items-center justify-between hover:bg-white/[0.02] transition-colors cursor-pointer"
+                  className="p-3.5 flex items-center justify-between hover:bg-fg/[0.02] transition-colors cursor-pointer"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-[#30D158]/15 text-[#30D158] flex items-center justify-center shrink-0">
+                    <div className="w-9 h-9 rounded-xl bg-[#30D158]/15 text-green-ink flex items-center justify-center shrink-0">
                       <Dumbbell className="w-4 h-4" />
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-white">{e.exercise_type}</p>
-                      <p className="text-xs text-[#8E8E93] mt-0.5">
+                      <p className="text-sm font-bold text-fg">{e.exercise_type}</p>
+                      <p className="text-xs text-muted mt-0.5">
                         {e.duration_minutes} min active · {e.description || 'Completed workout'}
                       </p>
                     </div>
                   </div>
                   <div className="text-right shrink-0">
-                    <span className="text-sm font-extrabold text-[#30D158] flex items-center gap-0.5">
+                    <span className="text-sm font-extrabold text-green-ink flex items-center gap-0.5">
                       +{e.calories_burned}{' '}
-                      <span className="text-xs font-medium text-[#8E8E93]">kcal</span>
+                      <span className="text-xs font-medium text-muted">kcal</span>
                     </span>
-                    <span className="text-[10px] text-[#8E8E93] font-medium block">burned</span>
+                    <span className="text-[10px] text-muted font-medium block">burned</span>
                   </div>
                 </div>
               ))}
@@ -1151,34 +1151,34 @@ export function DashboardView({
         {/* Today's Meals */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-[#8E8E93] uppercase tracking-wider">
+            <span className="text-xs font-semibold text-muted uppercase tracking-wider">
               Today's Meals
             </span>
             <button
               onClick={() => onNavigateTab('meals')}
-              className="text-xs text-[#30D158] hover:underline font-medium"
+              className="text-xs text-green-ink hover:underline font-medium"
             >
               View All
             </button>
           </div>
 
           {recentMeals.length === 0 ? (
-            <p className="text-xs text-[#8E8E93] py-2">No meals logged yet today.</p>
+            <p className="text-xs text-muted py-2">No meals logged yet today.</p>
           ) : (
-            <div className="ios-card divide-y divide-white/[0.06] overflow-hidden">
+            <div className="ios-card divide-y divide-fg/[0.06] overflow-hidden">
               {recentMeals.slice(0, 3).map((m) => (
                 <div
                   key={m.id}
-                  className="p-3.5 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
+                  className="p-3.5 flex items-center justify-between hover:bg-fg/[0.02] transition-colors"
                 >
                   <div>
-                    <p className="text-sm font-medium text-white">{m.description}</p>
-                    <p className="text-xs text-[#8E8E93] capitalize mt-0.5">
+                    <p className="text-sm font-medium text-fg">{m.description}</p>
+                    <p className="text-xs text-muted capitalize mt-0.5">
                       {m.meal_type} · {m.protein_g}g protein
                     </p>
                   </div>
-                  <span className="text-sm font-semibold text-white">
-                    {m.calories} <span className="text-xs text-[#8E8E93] font-normal">kcal</span>
+                  <span className="text-sm font-semibold text-fg">
+                    {m.calories} <span className="text-xs text-muted font-normal">kcal</span>
                   </span>
                 </div>
               ))}

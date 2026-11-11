@@ -198,20 +198,20 @@ export function MealDetailsModal({
 
   const sourceIcon =
     meal.source === 'photo' ? (
-      <Camera className="w-3 h-3 text-[#30D158]" />
+      <Camera className="w-3 h-3 text-green-ink" />
     ) : meal.source === 'text' ? (
-      <Sparkles className="w-3 h-3 text-[#0A84FF]" />
+      <Sparkles className="w-3 h-3 text-blue-ink" />
     ) : (
-      <Edit3 className="w-3 h-3 text-[#8E8E93]" />
+      <Edit3 className="w-3 h-3 text-muted" />
     );
 
   const mealTypeColor =
     meal.meal_type === 'breakfast'
-      ? 'bg-[#FF9500]/20 text-[#FF9500] border-[#FF9500]/30'
+      ? 'bg-[#FF9500]/20 text-orange-ink border-[#FF9500]/30'
       : meal.meal_type === 'lunch'
-      ? 'bg-[#30D158]/20 text-[#30D158] border-[#30D158]/30'
+      ? 'bg-[#30D158]/20 text-green-ink border-[#30D158]/30'
       : meal.meal_type === 'dinner'
-      ? 'bg-[#0A84FF]/20 text-[#0A84FF] border-[#0A84FF]/30'
+      ? 'bg-[#0A84FF]/20 text-blue-ink border-[#0A84FF]/30'
       : 'bg-[#BF5AF2]/20 text-[#BF5AF2] border-[#BF5AF2]/30';
 
   const handleDelete = async () => {
@@ -257,7 +257,7 @@ export function MealDetailsModal({
               ? 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)'
               : 'transform 0.24s cubic-bezier(0.2, 0.9, 0.3, 1)',
           }}
-          className="pointer-events-auto relative w-full max-w-md bg-[#161618] border-t border-x border-b-0 border-white/10 rounded-t-[28px] rounded-b-none max-h-[calc(100dvh-var(--bottom-nav-height,56px)-env(safe-area-inset-bottom,0px)-1rem)] flex flex-col overflow-hidden shadow-2xl z-10 select-none sm:select-auto will-change-transform"
+          className="pointer-events-auto relative w-full max-w-md bg-surface border-t border-x border-b-0 border-fg/10 rounded-t-[28px] rounded-b-none max-h-[calc(100dvh-var(--bottom-nav-height,56px)-env(safe-area-inset-bottom,0px)-1rem)] flex flex-col overflow-hidden shadow-2xl z-10 select-none sm:select-auto will-change-transform"
         >
         {/* Grab Handle */}
         <div
@@ -265,9 +265,9 @@ export function MealDetailsModal({
           onTouchMove={(e) => handleTouchMove(e, true)}
           onTouchEnd={handleTouchEnd}
           onMouseDown={handleMouseDown}
-          className="flex flex-col items-center justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing w-full touch-none select-none hover:bg-white/[0.02] transition-colors"
+          className="flex flex-col items-center justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing w-full touch-none select-none hover:bg-fg/[0.02] transition-colors"
         >
-          <div className="w-12 h-1.5 rounded-full bg-white/30 hover:bg-white/50 transition-colors" />
+          <div className="w-12 h-1.5 rounded-full bg-fg/30 hover:bg-fg/50 transition-colors" />
         </div>
 
         {/* Modal Top Header */}
@@ -276,7 +276,7 @@ export function MealDetailsModal({
           onTouchMove={(e) => handleTouchMove(e, true)}
           onTouchEnd={handleTouchEnd}
           onMouseDown={handleMouseDown}
-          className="flex items-center justify-between px-5 py-2.5 border-b border-white/5 cursor-grab active:cursor-grabbing touch-none select-none"
+          className="flex items-center justify-between px-5 py-2.5 border-b border-fg/5 cursor-grab active:cursor-grabbing touch-none select-none"
         >
           <div className="flex items-center gap-2">
             <span
@@ -284,7 +284,7 @@ export function MealDetailsModal({
             >
               {meal.meal_type}
             </span>
-            <div className="flex items-center gap-1 text-[11px] text-[#8E8E93]">
+            <div className="flex items-center gap-1 text-[11px] text-muted">
               <Clock className="w-3 h-3" />
               <span>{formattedTime}</span>
             </div>
@@ -296,7 +296,7 @@ export function MealDetailsModal({
                 type="button"
                 onClick={handleDelete}
                 disabled={deleting}
-                className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-[#8E8E93] hover:text-[#FF453A] transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-full bg-fg/5 hover:bg-fg/10 flex items-center justify-center text-muted hover:text-red-ink transition-colors cursor-pointer"
                 title="Delete meal"
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -304,7 +304,7 @@ export function MealDetailsModal({
             )}
             <button
               onClick={triggerClose}
-              className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/15 flex items-center justify-center text-zinc-300 hover:text-white transition-colors cursor-pointer"
+              className="w-8 h-8 rounded-full bg-fg/10 hover:bg-fg/15 flex items-center justify-center text-zinc-300 hover:text-fg transition-colors cursor-pointer"
               aria-label="Close"
             >
               <X className="w-4 h-4" />
@@ -322,7 +322,7 @@ export function MealDetailsModal({
         >
           {/* Meal Photo or Aesthetic Hero Header */}
           {meal.image_url ? (
-            <div className="relative w-full h-52 rounded-2xl overflow-hidden border border-white/10 shadow-lg group">
+            <div className="relative w-full h-52 rounded-2xl overflow-hidden border border-fg/10 shadow-lg group">
               <img
                 src={meal.image_url}
                 alt={meal.description || 'Meal photo'}
@@ -331,38 +331,38 @@ export function MealDetailsModal({
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
               <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between">
                 <div>
-                  <h3 className="text-base font-bold text-white leading-tight drop-shadow-md">
+                  <h3 className="text-base font-bold text-fg leading-tight drop-shadow-md">
                     {meal.description || 'Logged Meal'}
                   </h3>
                   <div className="flex items-center gap-1.5 mt-1 text-[11px] text-zinc-300">
-                    <Calendar className="w-3 h-3 text-[#30D158]" />
+                    <Calendar className="w-3 h-3 text-green-ink" />
                     <span>{formattedDate}</span>
                   </div>
                 </div>
-                <div className="bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10 flex items-center gap-1.5 text-[11px] text-zinc-200">
+                <div className="bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-fg/10 flex items-center gap-1.5 text-[11px] text-zinc-200">
                   {sourceIcon}
                   <span>{sourceLabel}</span>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="ios-card p-4 space-y-2 border border-white/10 bg-gradient-to-br from-white/[0.05] to-transparent">
+            <div className="ios-card p-4 space-y-2 border border-fg/10 bg-gradient-to-br from-fg/[0.05] to-transparent">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-[#FF9500]">
+                  <div className="w-10 h-10 rounded-xl bg-fg/10 flex items-center justify-center text-orange-ink">
                     <Utensils className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-base font-bold text-white leading-tight">
+                    <h3 className="text-base font-bold text-fg leading-tight">
                       {meal.description || 'Logged Meal'}
                     </h3>
-                    <div className="flex items-center gap-1 text-[11px] text-[#8E8E93] mt-0.5">
-                      <Calendar className="w-3 h-3 text-[#30D158]" />
+                    <div className="flex items-center gap-1 text-[11px] text-muted mt-0.5">
+                      <Calendar className="w-3 h-3 text-green-ink" />
                       <span>{formattedDate}</span>
                     </div>
                   </div>
                 </div>
-                <div className="bg-white/5 px-2.5 py-1 rounded-full border border-white/10 flex items-center gap-1.5 text-[10px] text-zinc-300">
+                <div className="bg-fg/5 px-2.5 py-1 rounded-full border border-fg/10 flex items-center gap-1.5 text-[10px] text-zinc-300">
                   {sourceIcon}
                   <span>{sourceLabel}</span>
                 </div>
@@ -372,52 +372,52 @@ export function MealDetailsModal({
 
           {/* Quick Nutrition Cards */}
           <div className="grid grid-cols-4 gap-2 text-center">
-            <div className="ios-card p-3 border border-white/10">
-              <span className="text-[10px] font-semibold text-[#8E8E93] uppercase tracking-wider block">
+            <div className="ios-card p-3 border border-fg/10">
+              <span className="text-[10px] font-semibold text-muted uppercase tracking-wider block">
                 Calories
               </span>
-              <span className="text-lg font-bold text-white mt-0.5 block">
+              <span className="text-lg font-bold text-fg mt-0.5 block">
                 {calories}
               </span>
-              <span className="text-[9px] text-[#8E8E93]">kcal</span>
+              <span className="text-[9px] text-muted">kcal</span>
             </div>
 
-            <div className="ios-card p-3 border border-white/10">
-              <span className="text-[10px] font-semibold text-[#30D158] uppercase tracking-wider block">
+            <div className="ios-card p-3 border border-fg/10">
+              <span className="text-[10px] font-semibold text-green-ink uppercase tracking-wider block">
                 Protein
               </span>
-              <span className="text-lg font-bold text-[#30D158] mt-0.5 block">
+              <span className="text-lg font-bold text-green-ink mt-0.5 block">
                 {protein}
               </span>
-              <span className="text-[9px] text-[#8E8E93]">g ({proteinPct}%)</span>
+              <span className="text-[9px] text-muted">g ({proteinPct}%)</span>
             </div>
 
-            <div className="ios-card p-3 border border-white/10">
-              <span className="text-[10px] font-semibold text-[#FF9500] uppercase tracking-wider block">
+            <div className="ios-card p-3 border border-fg/10">
+              <span className="text-[10px] font-semibold text-orange-ink uppercase tracking-wider block">
                 Carbs
               </span>
-              <span className="text-lg font-bold text-[#FF9500] mt-0.5 block">
+              <span className="text-lg font-bold text-orange-ink mt-0.5 block">
                 {carbs}
               </span>
-              <span className="text-[9px] text-[#8E8E93]">g ({carbsPct}%)</span>
+              <span className="text-[9px] text-muted">g ({carbsPct}%)</span>
             </div>
 
-            <div className="ios-card p-3 border border-white/10">
-              <span className="text-[10px] font-semibold text-[#FF375F] uppercase tracking-wider block">
+            <div className="ios-card p-3 border border-fg/10">
+              <span className="text-[10px] font-semibold text-pink-ink uppercase tracking-wider block">
                 Fat
               </span>
-              <span className="text-lg font-bold text-[#FF375F] mt-0.5 block">
+              <span className="text-lg font-bold text-pink-ink mt-0.5 block">
                 {fat}
               </span>
-              <span className="text-[9px] text-[#8E8E93]">g ({fatPct}%)</span>
+              <span className="text-[9px] text-muted">g ({fatPct}%)</span>
             </div>
           </div>
 
           {/* Macro Calorie Distribution Progress Bar */}
-          <div className="ios-card p-3.5 space-y-2 border border-white/10">
+          <div className="ios-card p-3.5 space-y-2 border border-fg/10">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-[#8E8E93] flex items-center gap-1.5 font-medium">
-                <PieChart className="w-3.5 h-3.5 text-[#30D158]" />
+              <span className="text-muted flex items-center gap-1.5 font-medium">
+                <PieChart className="w-3.5 h-3.5 text-green-ink" />
                 Macro Calorie Split
               </span>
               <span className="text-[11px] text-zinc-400 font-mono">
@@ -425,7 +425,7 @@ export function MealDetailsModal({
               </span>
             </div>
 
-            <div className="w-full h-2.5 rounded-full overflow-hidden bg-white/10 flex gap-0.5">
+            <div className="w-full h-2.5 rounded-full overflow-hidden bg-fg/10 flex gap-0.5">
               <div
                 style={{ width: `${proteinPct}%` }}
                 className="bg-[#30D158] h-full transition-all duration-300"
@@ -462,29 +462,29 @@ export function MealDetailsModal({
           {/* Food Items & Ingredients Breakdown */}
           <div className="space-y-2.5">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-[#8E8E93] uppercase tracking-wider">
+              <span className="text-xs font-semibold text-muted uppercase tracking-wider">
                 Foods & Portions ({meal.items?.length || 1})
               </span>
               {meal.confidence && (
                 <span className="flex items-center gap-1 text-[10px] text-zinc-400">
-                  <CheckCircle2 className="w-3 h-3 text-[#30D158]" />
-                  AI Confidence: <span className="capitalize font-semibold text-white">{meal.confidence}</span>
+                  <CheckCircle2 className="w-3 h-3 text-green-ink" />
+                  AI Confidence: <span className="capitalize font-semibold text-fg">{meal.confidence}</span>
                 </span>
               )}
             </div>
 
             {meal.items && meal.items.length > 0 ? (
-              <div className="ios-card divide-y divide-white/[0.06] overflow-hidden border border-white/10">
+              <div className="ios-card divide-y divide-fg/[0.06] overflow-hidden border border-fg/10">
                 {meal.items.map((it, idx) => (
                   <div
                     key={it.id || idx}
-                    className="p-3.5 flex items-center justify-between gap-2 hover:bg-white/[0.02] transition-colors"
+                    className="p-3.5 flex items-center justify-between gap-2 hover:bg-fg/[0.02] transition-colors"
                   >
                     <div>
-                      <h4 className="text-xs font-semibold text-white">
+                      <h4 className="text-xs font-semibold text-fg">
                         {it.name}
                       </h4>
-                      <p className="text-[11px] text-[#8E8E93] mt-0.5">
+                      <p className="text-[11px] text-muted mt-0.5">
                         {it.estimated_quantity
                           ? `${it.estimated_quantity} ${it.estimated_unit || ''}`
                           : 'Portion recorded'}
@@ -497,27 +497,27 @@ export function MealDetailsModal({
                     </div>
 
                     <div className="text-right whitespace-nowrap">
-                      <span className="text-xs font-bold text-white">
+                      <span className="text-xs font-bold text-fg">
                         {it.calories || 0}
                       </span>
-                      <span className="text-[10px] text-[#8E8E93] ml-1">kcal</span>
+                      <span className="text-[10px] text-muted ml-1">kcal</span>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="ios-card p-3.5 border border-white/10 flex items-center justify-between">
+              <div className="ios-card p-3.5 border border-fg/10 flex items-center justify-between">
                 <div>
-                  <h4 className="text-xs font-semibold text-white">
+                  <h4 className="text-xs font-semibold text-fg">
                     {meal.description || 'Logged Food Item'}
                   </h4>
-                  <p className="text-[11px] text-[#8E8E93] mt-0.5">
+                  <p className="text-[11px] text-muted mt-0.5">
                     {protein}g protein · {carbs}g carbs · {fat}g fat
                   </p>
                 </div>
                 <div className="text-right">
-                  <span className="text-xs font-bold text-white">{calories}</span>
-                  <span className="text-[10px] text-[#8E8E93] ml-1">kcal</span>
+                  <span className="text-xs font-bold text-fg">{calories}</span>
+                  <span className="text-[10px] text-muted ml-1">kcal</span>
                 </div>
               </div>
             )}
@@ -525,8 +525,8 @@ export function MealDetailsModal({
 
           {/* AI Nutritional Insights / Notes (if available) */}
           {meal.ai_analysis && (
-            <div className="ios-card p-3.5 space-y-1.5 border border-white/10 bg-white/[0.02]">
-              <span className="text-[11px] font-semibold text-[#30D158] flex items-center gap-1.5">
+            <div className="ios-card p-3.5 space-y-1.5 border border-fg/10 bg-fg/[0.02]">
+              <span className="text-[11px] font-semibold text-green-ink flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5" />
                 AI Health & Nutrition Summary
               </span>

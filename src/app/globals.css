@@ -1,5 +1,81 @@
 @import "tailwindcss";
 
+/*
+ * ── Theme system ────────────────────────────────────────────────────────────
+ * The main app uses semantic tokens (bg-app, bg-card, text-fg, text-muted …).
+ * Light values live on :root, dark values on [data-theme="dark"]. The
+ * attribute is set before first paint by the inline script in layout.tsx
+ * from the user's preference (system | light | dark).
+ * Dark values are identical to the original hard-coded dark palette.
+ */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@theme inline {
+  --color-app: var(--theme-app);
+  --color-surface: var(--theme-surface);
+  --color-card: var(--theme-card);
+  --color-elevated: var(--theme-elevated);
+  --color-elevated-2: var(--theme-elevated-2);
+  --color-fg: var(--theme-fg);
+  --color-fg-soft: var(--theme-fg-soft);
+  --color-muted: var(--theme-muted);
+  --color-subtle: var(--theme-subtle);
+  --color-tint-green: var(--theme-tint-green);
+  --color-tint-green-2: var(--theme-tint-green-2);
+  --color-green-ink: var(--theme-green-ink);
+  --color-blue-ink: var(--theme-blue-ink);
+  --color-orange-ink: var(--theme-orange-ink);
+  --color-red-ink: var(--theme-red-ink);
+  --color-pink-ink: var(--theme-pink-ink);
+}
+
+:root {
+  color-scheme: light;
+  --theme-app: #f2f2f7;
+  --theme-surface: #ffffff;
+  --theme-card: #ffffff;
+  --theme-elevated: #e9e9ee;
+  --theme-elevated-2: #dcdce1;
+  --theme-fg: #000000;
+  --theme-fg-soft: #3a3a3c;
+  --theme-muted: #6e6e73;
+  --theme-subtle: #8e8e93;
+  --theme-tint-green: #dcf5e3;
+  --theme-tint-green-2: #ecf9f0;
+  --theme-green-ink: #1f8f3f;
+  --theme-blue-ink: #0066d6;
+  --theme-orange-ink: #c25e00;
+  --theme-red-ink: #d70015;
+  --theme-pink-ink: #d30f45;
+  /* SVG body map */
+  --theme-body-base: #d1d1d6;
+  --theme-body-alt: #c7c7cc;
+  --theme-body-line: #ffffff;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --theme-app: #000000;
+  --theme-surface: #121214;
+  --theme-card: #1c1c1e;
+  --theme-elevated: #2c2c2e;
+  --theme-elevated-2: #3a3a3c;
+  --theme-fg: #ffffff;
+  --theme-fg-soft: #d1d1d6;
+  --theme-muted: #8e8e93;
+  --theme-subtle: #636366;
+  --theme-tint-green: #1c3824;
+  --theme-tint-green-2: #14291a;
+  --theme-green-ink: #30d158;
+  --theme-blue-ink: #0a84ff;
+  --theme-orange-ink: #ff9f0a;
+  --theme-red-ink: #ff453a;
+  --theme-pink-ink: #ff375f;
+  --theme-body-base: #2c2c2e;
+  --theme-body-alt: #242426;
+  --theme-body-line: #161618;
+}
+
 @layer base {
   :root {
     /* Apple Health Dark Mode Palette */
@@ -34,8 +110,8 @@
   }
 
   body {
-    background-color: var(--bg-base);
-    color: var(--text-primary);
+    background-color: var(--theme-app);
+    color: var(--theme-fg);
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -56,24 +132,24 @@
 
 /* Inset Grouped Cell (iOS style) */
 .ios-card {
-  background-color: #1c1c1e;
+  background-color: var(--theme-card);
   border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid color-mix(in srgb, var(--theme-fg) 6%, transparent);
 }
 
 .ios-divider {
-  border-bottom: 0.5px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 0.5px solid color-mix(in srgb, var(--theme-fg) 10%, transparent);
 }
 
 /* Apple Blur Navigation */
 .ios-blur {
-  background: rgba(0, 0, 0, 0.85);
+  background: color-mix(in srgb, var(--theme-app) 85%, transparent);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
 }
 
 .ios-sheet {
-  background: rgba(28, 28, 30, 0.95);
+  background: color-mix(in srgb, var(--theme-card) 95%, transparent);
   backdrop-filter: blur(30px);
   -webkit-backdrop-filter: blur(30px);
 }

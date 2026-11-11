@@ -103,10 +103,10 @@ export function DailySummaryView({ refreshKey }: { refreshKey?: number } = {}) {
       {/* Date Header */}
       <div className="flex items-center justify-between pt-2">
         <div>
-          <p className="text-[11px] font-semibold tracking-wider text-[#8E8E93] uppercase">
+          <p className="text-[11px] font-semibold tracking-wider text-muted uppercase">
             Overview
           </p>
-          <h1 className="text-3xl font-bold tracking-tight text-white mt-0.5">
+          <h1 className="text-3xl font-bold tracking-tight text-fg mt-0.5">
             Summary
           </h1>
         </div>
@@ -121,23 +121,23 @@ export function DailySummaryView({ refreshKey }: { refreshKey?: number } = {}) {
       {/* Primary Metrics (Calories Intake & Burned) */}
       <div className="grid grid-cols-2 gap-3">
         <div className="ios-card p-4 space-y-1">
-          <p className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider">
+          <p className="text-[11px] font-semibold text-muted uppercase tracking-wider">
             Intake
           </p>
-          <p className="text-3xl font-bold text-white tracking-tight">
+          <p className="text-3xl font-bold text-fg tracking-tight">
             {caloriesConsumed}
           </p>
-          <p className="text-xs text-[#8E8E93]">of {calorieTarget} kcal target</p>
+          <p className="text-xs text-muted">of {calorieTarget} kcal target</p>
         </div>
 
         <div className="ios-card p-4 space-y-1">
-          <p className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider">
+          <p className="text-[11px] font-semibold text-muted uppercase tracking-wider">
             Burned
           </p>
-          <p className="text-3xl font-bold text-white tracking-tight">
+          <p className="text-3xl font-bold text-fg tracking-tight">
             {caloriesBurned}
           </p>
-          <p className="text-xs text-[#8E8E93]">{summary?.exercise_minutes || 0} min active</p>
+          <p className="text-xs text-muted">{summary?.exercise_minutes || 0} min active</p>
         </div>
       </div>
 
@@ -157,17 +157,17 @@ export function DailySummaryView({ refreshKey }: { refreshKey?: number } = {}) {
 
       {/* Macronutrient Detail (Apple Health Inset Cell) */}
       <div className="ios-card p-4 space-y-3">
-        <p className="text-xs font-semibold text-[#8E8E93] uppercase tracking-wider">
+        <p className="text-xs font-semibold text-muted uppercase tracking-wider">
           Macronutrients
         </p>
 
         {/* Protein */}
         <div className="space-y-1">
           <div className="flex justify-between text-xs">
-            <span className="text-[#8E8E93]">Protein</span>
-            <span className="font-semibold text-white">{proteinConsumed} / {proteinTarget}g</span>
+            <span className="text-muted">Protein</span>
+            <span className="font-semibold text-fg">{proteinConsumed} / {proteinTarget}g</span>
           </div>
-          <div className="w-full bg-[#2C2C2E] h-1.5 rounded-full overflow-hidden">
+          <div className="w-full bg-elevated h-1.5 rounded-full overflow-hidden">
             <div
               className="bg-[#30D158] h-full rounded-full"
               style={{ width: `${Math.min(100, (proteinConsumed / proteinTarget) * 100)}%` }}
@@ -178,10 +178,10 @@ export function DailySummaryView({ refreshKey }: { refreshKey?: number } = {}) {
         {/* Carbs */}
         <div className="space-y-1">
           <div className="flex justify-between text-xs">
-            <span className="text-[#8E8E93]">Carbohydrates</span>
-            <span className="font-semibold text-white">{carbsConsumed} / {carbsTarget}g</span>
+            <span className="text-muted">Carbohydrates</span>
+            <span className="font-semibold text-fg">{carbsConsumed} / {carbsTarget}g</span>
           </div>
-          <div className="w-full bg-[#2C2C2E] h-1.5 rounded-full overflow-hidden">
+          <div className="w-full bg-elevated h-1.5 rounded-full overflow-hidden">
             <div
               className="bg-[#8E8E93] h-full rounded-full"
               style={{ width: `${Math.min(100, (carbsConsumed / carbsTarget) * 100)}%` }}
@@ -192,10 +192,10 @@ export function DailySummaryView({ refreshKey }: { refreshKey?: number } = {}) {
         {/* Fat */}
         <div className="space-y-1">
           <div className="flex justify-between text-xs">
-            <span className="text-[#8E8E93]">Fat</span>
-            <span className="font-semibold text-white">{fatConsumed} / {fatTarget}g</span>
+            <span className="text-muted">Fat</span>
+            <span className="font-semibold text-fg">{fatConsumed} / {fatTarget}g</span>
           </div>
-          <div className="w-full bg-[#2C2C2E] h-1.5 rounded-full overflow-hidden">
+          <div className="w-full bg-elevated h-1.5 rounded-full overflow-hidden">
             <div
               className="bg-[#8E8E93] h-full rounded-full"
               style={{ width: `${Math.min(100, (fatConsumed / fatTarget) * 100)}%` }}
@@ -205,12 +205,12 @@ export function DailySummaryView({ refreshKey }: { refreshKey?: number } = {}) {
       </div>
 
       {/* Nuvia Daily Summary Note */}
-      <div className="bg-[#1C1C1E] p-4 rounded-2xl border border-white/[0.06] space-y-1">
-        <div className="flex items-center gap-1.5 text-xs font-semibold text-white">
+      <div className="bg-card p-4 rounded-2xl border border-fg/[0.06] space-y-1">
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-fg">
           <span className="w-1.5 h-1.5 rounded-full bg-[#30D158]" />
           <span>Nuvia Day Summary</span>
         </div>
-        <p className="text-xs text-[#D1D1D6] leading-relaxed">
+        <p className="text-xs text-fg-soft leading-relaxed">
           {caloriesConsumed <= calorieTarget && proteinConsumed >= proteinTarget * 0.85
             ? "You maintained your calorie deficit and reached your protein threshold. Consistent execution today."
             : `Logged ${caloriesConsumed} kcal and ${proteinConsumed}g protein. Prioritize hitting protein earlier tomorrow.`}
@@ -219,26 +219,26 @@ export function DailySummaryView({ refreshKey }: { refreshKey?: number } = {}) {
 
       {/* Day Logged Items List */}
       <div className="space-y-2">
-        <p className="text-xs font-semibold text-[#8E8E93] uppercase tracking-wider">
+        <p className="text-xs font-semibold text-muted uppercase tracking-wider">
           Items Logged ({meals.length + exercises.length})
         </p>
-        <div className="ios-card divide-y divide-white/[0.06] overflow-hidden">
+        <div className="ios-card divide-y divide-fg/[0.06] overflow-hidden">
           {meals.map((m) => (
             <div key={m.id} className="p-3.5 flex justify-between items-center text-xs">
               <div>
-                <p className="font-semibold text-white">{m.description}</p>
-                <p className="text-[11px] text-[#8E8E93] capitalize">{m.meal_type} · {m.protein_g}g protein</p>
+                <p className="font-semibold text-fg">{m.description}</p>
+                <p className="text-[11px] text-muted capitalize">{m.meal_type} · {m.protein_g}g protein</p>
               </div>
-              <span className="font-semibold text-white">{m.calories} kcal</span>
+              <span className="font-semibold text-fg">{m.calories} kcal</span>
             </div>
           ))}
           {exercises.map((e) => (
             <div key={e.id} className="p-3.5 flex justify-between items-center text-xs">
               <div>
-                <p className="font-semibold text-white">{e.exercise_type}</p>
-                <p className="text-[11px] text-[#8E8E93]">{e.duration_minutes} min</p>
+                <p className="font-semibold text-fg">{e.exercise_type}</p>
+                <p className="text-[11px] text-muted">{e.duration_minutes} min</p>
               </div>
-              <span className="font-semibold text-[#FF9F0A]">~{e.calories_burned} kcal</span>
+              <span className="font-semibold text-orange-ink">~{e.calories_burned} kcal</span>
             </div>
           ))}
         </div>

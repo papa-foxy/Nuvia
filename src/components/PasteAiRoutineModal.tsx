@@ -236,7 +236,7 @@ export function PasteAiRoutineModal({
           <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-[#30D158] to-[#0A84FF] flex items-center justify-center text-black">
             <Sparkles className="w-3.5 h-3.5" />
           </div>
-          <span className="text-base font-bold text-white">Import Routine from AI</span>
+          <span className="text-base font-bold text-fg">Import Routine from AI</span>
         </div>
       }
       subtitle={
@@ -258,7 +258,7 @@ export function PasteAiRoutineModal({
           <>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-semibold text-[#8E8E93]">
+                <label className="text-xs font-semibold text-muted">
                   Workout Routine Text:
                 </label>
                 <div className="flex items-center gap-3">
@@ -276,7 +276,7 @@ export function PasteAiRoutineModal({
                   <button
                     type="button"
                     onClick={handlePasteSample}
-                    className="text-xs text-[#30D158] hover:underline flex items-center gap-1 font-medium cursor-pointer"
+                    className="text-xs text-green-ink hover:underline flex items-center gap-1 font-medium cursor-pointer"
                   >
                     <Wand2 className="w-3 h-3" />
                     <span>Use example</span>
@@ -289,12 +289,12 @@ export function PasteAiRoutineModal({
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 placeholder="Paste your workout split here...&#10;&#10;Tap 'Use example' above to see the recommended format."
-                className="w-full p-3.5 text-xs font-mono rounded-2xl bg-[#121214] border border-white/[0.08] text-white focus:outline-none focus:border-[#30D158] leading-relaxed resize-none"
+                className="w-full p-3.5 text-xs font-mono rounded-2xl bg-surface border border-fg/[0.08] text-fg focus:outline-none focus:border-[#30D158] leading-relaxed resize-none"
               />
             </div>
 
-            <div className="p-3 rounded-2xl bg-[#121214] border border-white/[0.06] text-[11px] text-[#8E8E93] space-y-1">
-              <p className="font-semibold text-white">✨ What Nuvia AI will do:</p>
+            <div className="p-3 rounded-2xl bg-surface border border-fg/[0.06] text-[11px] text-muted space-y-1">
+              <p className="font-semibold text-fg">✨ What Nuvia AI will do:</p>
               <p>• Extract each routine split, target days, and exercise movements</p>
               <p>• Automatically bind verified exercise library thumbnails & videos</p>
               <p>• Let you review and customize all sets, reps, and days before saving</p>
@@ -308,7 +308,7 @@ export function PasteAiRoutineModal({
             >
               {loading ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-app border-t-transparent rounded-full animate-spin" />
                   <span>Analyzing & Building Routine...</span>
                 </>
               ) : (
@@ -323,7 +323,7 @@ export function PasteAiRoutineModal({
           /* STEP 2: Interactive Review & Verification Screen */
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-[#30D158] uppercase tracking-wider flex items-center gap-1.5">
+              <span className="text-xs font-semibold text-green-ink uppercase tracking-wider flex items-center gap-1.5">
                 <CheckCircle2 className="w-4 h-4" />
                 <span>{parsedPreview.length} Routine Split(s) Detected</span>
               </span>
@@ -333,14 +333,14 @@ export function PasteAiRoutineModal({
                   setParsedPreview(null);
                   setUnmatchedExercises([]);
                 }}
-                className="text-xs text-[#8E8E93] hover:text-white cursor-pointer"
+                className="text-xs text-muted hover:text-fg cursor-pointer"
               >
                 Edit Input Text
               </button>
             </div>
 
             {unmatchedExercises.length > 0 && (
-              <div className="p-3 rounded-xl bg-[#FF9F0A]/10 border border-[#FF9F0A]/20 text-[#FF9F0A] text-xs space-y-1">
+              <div className="p-3 rounded-xl bg-[#FF9F0A]/10 border border-[#FF9F0A]/20 text-orange-ink text-xs space-y-1">
                 <p className="font-semibold">⚠ {unmatchedExercises.length} uncertain exercise match(es):</p>
                 <p className="text-[11px] opacity-80">
                   Use the Edit button on any movement below to select the exact catalog match.
@@ -356,22 +356,22 @@ export function PasteAiRoutineModal({
                 return (
                   <div
                     key={routine.id || rIdx}
-                    className="p-3.5 rounded-2xl bg-[#121214] border border-white/[0.08] space-y-3"
+                    className="p-3.5 rounded-2xl bg-surface border border-fg/[0.08] space-y-3"
                   >
                     {/* Title & Focus */}
                     <div>
-                      <h4 className="text-sm font-bold text-white leading-tight">{routine.title}</h4>
-                      <span className="text-[10px] text-[#30D158] font-semibold">{routine.focus}</span>
+                      <h4 className="text-sm font-bold text-fg leading-tight">{routine.title}</h4>
+                      <span className="text-[10px] text-green-ink font-semibold">{routine.focus}</span>
                     </div>
 
                     {/* Training Day Toggle Pills */}
-                    <div className="space-y-1 pt-1 border-t border-white/[0.04]">
+                    <div className="space-y-1 pt-1 border-t border-fg/[0.04]">
                       <div className="flex items-center justify-between">
-                        <label className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">
+                        <label className="text-[10px] font-bold text-muted uppercase tracking-wider">
                           Assigned Days:
                         </label>
                         {!hasDays && (
-                          <span className="text-[10px] text-[#FF9F0A] font-semibold">Select at least 1 day</span>
+                          <span className="text-[10px] text-orange-ink font-semibold">Select at least 1 day</span>
                         )}
                       </div>
 
@@ -386,7 +386,7 @@ export function PasteAiRoutineModal({
                               className={`px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-all cursor-pointer ${
                                 isSelected
                                   ? 'bg-[#30D158] text-black font-bold shadow'
-                                  : 'bg-white/5 text-[#8E8E93] hover:text-white border border-white/5'
+                                  : 'bg-fg/5 text-muted hover:text-fg border border-fg/5'
                               }`}
                             >
                               {day.slice(0, 3)}
@@ -397,8 +397,8 @@ export function PasteAiRoutineModal({
                     </div>
 
                     {/* Exercises in Routine */}
-                    <div className="space-y-2 pt-1 border-t border-white/[0.04]">
-                      <span className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider block">
+                    <div className="space-y-2 pt-1 border-t border-fg/[0.04]">
+                      <span className="text-[10px] font-bold text-muted uppercase tracking-wider block">
                         Exercises ({routine.exercises.length})
                       </span>
 
@@ -409,7 +409,7 @@ export function PasteAiRoutineModal({
                           return (
                             <div
                               key={ex.id || eIdx}
-                              className="p-2.5 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-between gap-2 text-xs"
+                              className="p-2.5 rounded-xl bg-fg/[0.03] border border-fg/5 flex items-center justify-between gap-2 text-xs"
                             >
                               <div className="flex items-center gap-2 overflow-hidden">
                                 {/* Order steppers */}
@@ -418,7 +418,7 @@ export function PasteAiRoutineModal({
                                     type="button"
                                     disabled={eIdx === 0}
                                     onClick={() => handleMoveExercise(rIdx, eIdx, 'up')}
-                                    className="w-4 h-4 rounded bg-white/5 disabled:opacity-20 flex items-center justify-center text-zinc-300 cursor-pointer"
+                                    className="w-4 h-4 rounded bg-fg/5 disabled:opacity-20 flex items-center justify-center text-zinc-300 cursor-pointer"
                                   >
                                     <ChevronUp className="w-3 h-3" />
                                   </button>
@@ -426,40 +426,40 @@ export function PasteAiRoutineModal({
                                     type="button"
                                     disabled={eIdx === routine.exercises.length - 1}
                                     onClick={() => handleMoveExercise(rIdx, eIdx, 'down')}
-                                    className="w-4 h-4 rounded bg-white/5 disabled:opacity-20 flex items-center justify-center text-zinc-300 cursor-pointer"
+                                    className="w-4 h-4 rounded bg-fg/5 disabled:opacity-20 flex items-center justify-center text-zinc-300 cursor-pointer"
                                   >
                                     <ChevronDown className="w-3 h-3" />
                                   </button>
                                 </div>
 
-                                <div className="w-9 h-9 rounded-lg overflow-hidden bg-black shrink-0 border border-white/10">
+                                <div className="w-9 h-9 rounded-lg overflow-hidden bg-app shrink-0 border border-fg/10">
                                   <ExerciseThumbnail exercise={ex} className="w-full h-full object-cover" />
                                 </div>
 
                                 <div className="truncate">
                                   <div className="flex items-center gap-1.5">
                                     <span className="text-[10px]">{isExact ? '✓' : '⚠️'}</span>
-                                    <p className="font-bold text-white text-xs truncate">{ex.name}</p>
+                                    <p className="font-bold text-fg text-xs truncate">{ex.name}</p>
                                   </div>
-                                  <p className="text-[10px] text-[#8E8E93]">{ex.target_muscle}</p>
+                                  <p className="text-[10px] text-muted">{ex.target_muscle}</p>
                                 </div>
                               </div>
 
                               {/* Sets & Reps quick inline controls */}
                               <div className="flex items-center gap-1.5 shrink-0">
-                                <div className="flex items-center gap-1 bg-black/40 px-1.5 py-0.5 rounded-lg border border-white/5 text-[10px]">
+                                <div className="flex items-center gap-1 bg-app/40 px-1.5 py-0.5 rounded-lg border border-fg/5 text-[10px]">
                                   <button
                                     type="button"
                                     onClick={() => handleUpdateExerciseSets(rIdx, ex.id, -1)}
-                                    className="text-[#8E8E93] hover:text-white cursor-pointer"
+                                    className="text-muted hover:text-fg cursor-pointer"
                                   >
                                     -
                                   </button>
-                                  <span className="font-bold text-white">{ex.sets}s</span>
+                                  <span className="font-bold text-fg">{ex.sets}s</span>
                                   <button
                                     type="button"
                                     onClick={() => handleUpdateExerciseSets(rIdx, ex.id, 1)}
-                                    className="text-[#8E8E93] hover:text-white cursor-pointer"
+                                    className="text-muted hover:text-fg cursor-pointer"
                                   >
                                     +
                                   </button>
@@ -469,7 +469,7 @@ export function PasteAiRoutineModal({
                                   type="text"
                                   value={ex.reps}
                                   onChange={(e) => handleUpdateExerciseReps(rIdx, ex.id, e.target.value)}
-                                  className="w-14 px-1 py-0.5 bg-black/40 text-center text-[10px] font-semibold text-white rounded border border-white/5 focus:outline-none focus:border-[#30D158]"
+                                  className="w-14 px-1 py-0.5 bg-app/40 text-center text-[10px] font-semibold text-fg rounded border border-fg/5 focus:outline-none focus:border-[#30D158]"
                                 />
 
                                 {/* Replace from catalog */}
@@ -478,7 +478,7 @@ export function PasteAiRoutineModal({
                                   onClick={() =>
                                     setEditingExerciseTarget({ routineIndex: rIdx, exerciseId: ex.id })
                                   }
-                                  className="p-1 rounded hover:bg-white/10 text-[#30D158] cursor-pointer"
+                                  className="p-1 rounded hover:bg-fg/10 text-green-ink cursor-pointer"
                                   title="Swap with catalog match"
                                 >
                                   <Pencil className="w-3 h-3" />
@@ -517,7 +517,7 @@ export function PasteAiRoutineModal({
               <button
                 type="button"
                 onClick={() => setParsedPreview(null)}
-                className="py-3.5 px-5 rounded-full bg-[#2C2C2E] hover:bg-[#3A3A3C] text-white text-xs font-medium cursor-pointer"
+                className="py-3.5 px-5 rounded-full bg-elevated hover:bg-elevated-2 text-fg text-xs font-medium cursor-pointer"
               >
                 Back
               </button>
@@ -530,25 +530,25 @@ export function PasteAiRoutineModal({
       {editingExerciseTarget && (
         <div className="fixed inset-0 z-60 bg-black/90 backdrop-blur-md p-4 flex flex-col justify-between animate-fadeIn">
           <div className="max-w-md w-full mx-auto flex-1 flex flex-col space-y-3 overflow-hidden">
-            <div className="flex items-center justify-between pb-2 border-b border-white/10">
-              <h4 className="text-sm font-bold text-white">Select Verified Catalog Movement</h4>
+            <div className="flex items-center justify-between pb-2 border-b border-fg/10">
+              <h4 className="text-sm font-bold text-fg">Select Verified Catalog Movement</h4>
               <button
                 type="button"
                 onClick={() => setEditingExerciseTarget(null)}
-                className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-zinc-400 cursor-pointer"
+                className="w-7 h-7 rounded-full bg-fg/10 flex items-center justify-center text-zinc-400 cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
             </div>
 
             <div className="relative">
-              <Search className="w-4 h-4 text-[#8E8E93] absolute left-3 top-3" />
+              <Search className="w-4 h-4 text-muted absolute left-3 top-3" />
               <input
                 type="text"
                 value={catalogSearch}
                 onChange={(e) => setCatalogSearch(e.target.value)}
                 placeholder="Search catalog exercises..."
-                className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-[#30D158]"
+                className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg text-xs focus:outline-none focus:border-[#30D158]"
               />
             </div>
 
@@ -558,18 +558,18 @@ export function PasteAiRoutineModal({
                   key={catEx.id}
                   type="button"
                   onClick={() => handleReplaceExerciseWithCatalog(catEx)}
-                  className="w-full p-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/5 flex items-center justify-between text-left transition-colors cursor-pointer"
+                  className="w-full p-2.5 rounded-xl bg-fg/[0.03] hover:bg-fg/[0.08] border border-fg/5 flex items-center justify-between text-left transition-colors cursor-pointer"
                 >
                   <div className="flex items-center gap-2.5">
-                    <div className="w-10 h-10 rounded-lg overflow-hidden bg-black shrink-0 border border-white/10">
+                    <div className="w-10 h-10 rounded-lg overflow-hidden bg-app shrink-0 border border-fg/10">
                       <img src={catEx.thumbnail_url} alt={catEx.name} className="w-full h-full object-cover" />
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-white">{catEx.name}</p>
-                      <span className="text-[10px] text-[#8E8E93]">{catEx.target_muscle}</span>
+                      <p className="text-xs font-bold text-fg">{catEx.name}</p>
+                      <span className="text-[10px] text-muted">{catEx.target_muscle}</span>
                     </div>
                   </div>
-                  <Check className="w-4 h-4 text-[#30D158]" />
+                  <Check className="w-4 h-4 text-green-ink" />
                 </button>
               ))}
             </div>

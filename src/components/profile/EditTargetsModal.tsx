@@ -114,30 +114,30 @@ export function EditTargetsModal({
       >
         <div
           onClick={(e) => e.stopPropagation()}
-          className="pointer-events-auto w-full max-w-md bg-[#1C1C1E] border-t border-x border-b-0 border-white/10 rounded-t-[28px] rounded-b-none p-5 space-y-4 max-h-[calc(100dvh-var(--bottom-nav-height,56px)-env(safe-area-inset-bottom,0px)-0.75rem)] overflow-y-auto"
+          className="pointer-events-auto w-full max-w-md bg-card border-t border-x border-b-0 border-fg/10 rounded-t-[28px] rounded-b-none p-5 space-y-4 max-h-[calc(100dvh-var(--bottom-nav-height,56px)-env(safe-area-inset-bottom,0px)-0.75rem)] overflow-y-auto"
         >
-        <div className="flex items-center justify-between pb-2 border-b border-white/10">
+        <div className="flex items-center justify-between pb-2 border-b border-fg/10">
           <div>
-            <h3 className="text-base font-bold text-white">Adjust Daily Targets</h3>
-            <p className="text-[11px] text-[#8E8E93]">Fine-tune your personal nutrition & fitness goals</p>
+            <h3 className="text-base font-bold text-fg">Adjust Daily Targets</h3>
+            <p className="text-[11px] text-muted">Fine-tune your personal nutrition & fitness goals</p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-zinc-400"
+            className="w-8 h-8 rounded-full bg-fg/5 hover:bg-fg/10 flex items-center justify-center text-zinc-400"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Auto-Calculate Quick Action */}
-        <div className="p-3 rounded-2xl bg-gradient-to-r from-[#30D158]/15 via-white/[0.04] to-transparent border border-[#30D158]/30 flex items-center justify-between">
+        <div className="p-3 rounded-2xl bg-gradient-to-r from-[#30D158]/15 via-fg/[0.04] to-transparent border border-[#30D158]/30 flex items-center justify-between">
           <div>
-            <span className="text-xs font-bold text-white flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-[#30D158]" />
+            <span className="text-xs font-bold text-fg flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-green-ink" />
               <span>Auto-Calculate Targets</span>
             </span>
-            <span className="text-[10px] text-[#8E8E93] block mt-0.5">
+            <span className="text-[10px] text-muted block mt-0.5">
               Based on your profile ({profile?.height_cm || 175}cm, {profile?.weight_kg || 73}kg)
             </span>
           </div>
@@ -152,7 +152,7 @@ export function EditTargetsModal({
         </div>
 
         {calculatedNotice && (
-          <div className="p-2 rounded-xl bg-[#30D158]/10 border border-[#30D158]/30 text-[11px] text-[#30D158] font-medium flex items-center gap-2">
+          <div className="p-2 rounded-xl bg-[#30D158]/10 border border-[#30D158]/30 text-[11px] text-green-ink font-medium flex items-center gap-2">
             <Check className="w-3.5 h-3.5 shrink-0" />
             <span>{calculatedNotice}</span>
           </div>
@@ -162,8 +162,8 @@ export function EditTargetsModal({
           {/* Calories & Target Weight */}
           <div className="grid grid-cols-2 gap-2.5">
             <div>
-              <label className="block text-[#8E8E93] mb-1 font-medium flex items-center gap-1">
-                <Flame className="w-3.5 h-3.5 text-[#FF9500]" />
+              <label className="block text-muted mb-1 font-medium flex items-center gap-1">
+                <Flame className="w-3.5 h-3.5 text-orange-ink" />
                 <span>Daily Calories</span>
               </label>
               <div className="relative">
@@ -171,15 +171,15 @@ export function EditTargetsModal({
                   type="number"
                   value={calorieTarget}
                   onChange={(e) => setCalorieTarget(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white font-semibold focus:outline-none focus:border-[#30D158]"
+                  className="w-full px-3 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg font-semibold focus:outline-none focus:border-[#30D158]"
                 />
-                <span className="absolute right-3 top-2.5 text-[10px] text-[#8E8E93]">kcal</span>
+                <span className="absolute right-3 top-2.5 text-[10px] text-muted">kcal</span>
               </div>
             </div>
 
             <div>
-              <label className="block text-[#8E8E93] mb-1 font-medium flex items-center gap-1">
-                <Target className="w-3.5 h-3.5 text-[#30D158]" />
+              <label className="block text-muted mb-1 font-medium flex items-center gap-1">
+                <Target className="w-3.5 h-3.5 text-green-ink" />
                 <span>Target Weight</span>
               </label>
               <div className="relative">
@@ -188,9 +188,9 @@ export function EditTargetsModal({
                   step="0.1"
                   value={targetWeight}
                   onChange={(e) => setTargetWeight(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white font-semibold focus:outline-none focus:border-[#30D158]"
+                  className="w-full px-3 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg font-semibold focus:outline-none focus:border-[#30D158]"
                 />
-                <span className="absolute right-3 top-2.5 text-[10px] text-[#8E8E93]">kg</span>
+                <span className="absolute right-3 top-2.5 text-[10px] text-muted">kg</span>
               </div>
             </div>
           </div>
@@ -198,8 +198,8 @@ export function EditTargetsModal({
           {/* Macros Grid */}
           <div className="grid grid-cols-3 gap-2.5">
             <div>
-              <label className="block text-[#8E8E93] mb-1 font-medium flex items-center gap-1">
-                <Beef className="w-3 h-3 text-[#30D158]" />
+              <label className="block text-muted mb-1 font-medium flex items-center gap-1">
+                <Beef className="w-3 h-3 text-green-ink" />
                 <span>Protein</span>
               </label>
               <div className="relative">
@@ -207,14 +207,14 @@ export function EditTargetsModal({
                   type="number"
                   value={proteinTarget}
                   onChange={(e) => setProteinTarget(e.target.value)}
-                  className="w-full px-2.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white font-semibold focus:outline-none focus:border-[#30D158]"
+                  className="w-full px-2.5 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg font-semibold focus:outline-none focus:border-[#30D158]"
                 />
-                <span className="absolute right-2 top-2.5 text-[10px] text-[#8E8E93]">g</span>
+                <span className="absolute right-2 top-2.5 text-[10px] text-muted">g</span>
               </div>
             </div>
 
             <div>
-              <label className="block text-[#8E8E93] mb-1 font-medium flex items-center gap-1">
+              <label className="block text-muted mb-1 font-medium flex items-center gap-1">
                 <Wheat className="w-3 h-3 text-amber-400" />
                 <span>Carbs</span>
               </label>
@@ -223,15 +223,15 @@ export function EditTargetsModal({
                   type="number"
                   value={carbTarget}
                   onChange={(e) => setCarbTarget(e.target.value)}
-                  className="w-full px-2.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white font-semibold focus:outline-none focus:border-[#30D158]"
+                  className="w-full px-2.5 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg font-semibold focus:outline-none focus:border-[#30D158]"
                 />
-                <span className="absolute right-2 top-2.5 text-[10px] text-[#8E8E93]">g</span>
+                <span className="absolute right-2 top-2.5 text-[10px] text-muted">g</span>
               </div>
             </div>
 
             <div>
-              <label className="block text-[#8E8E93] mb-1 font-medium flex items-center gap-1">
-                <Droplets className="w-3 h-3 text-[#0A84FF]" />
+              <label className="block text-muted mb-1 font-medium flex items-center gap-1">
+                <Droplets className="w-3 h-3 text-blue-ink" />
                 <span>Fats</span>
               </label>
               <div className="relative">
@@ -239,16 +239,16 @@ export function EditTargetsModal({
                   type="number"
                   value={fatTarget}
                   onChange={(e) => setFatTarget(e.target.value)}
-                  className="w-full px-2.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white font-semibold focus:outline-none focus:border-[#30D158]"
+                  className="w-full px-2.5 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg font-semibold focus:outline-none focus:border-[#30D158]"
                 />
-                <span className="absolute right-2 top-2.5 text-[10px] text-[#8E8E93]">g</span>
+                <span className="absolute right-2 top-2.5 text-[10px] text-muted">g</span>
               </div>
             </div>
           </div>
 
           {/* Exercise Minutes */}
           <div>
-            <label className="block text-[#8E8E93] mb-1 font-medium flex items-center gap-1">
+            <label className="block text-muted mb-1 font-medium flex items-center gap-1">
               <Zap className="w-3.5 h-3.5 text-emerald-400" />
               <span>Daily Exercise Target</span>
             </label>
@@ -257,9 +257,9 @@ export function EditTargetsModal({
                 type="number"
                 value={exerciseMinutes}
                 onChange={(e) => setExerciseMinutes(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white font-semibold focus:outline-none focus:border-[#30D158]"
+                className="w-full px-3 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg font-semibold focus:outline-none focus:border-[#30D158]"
               />
-              <span className="absolute right-3 top-2.5 text-[10px] text-[#8E8E93]">minutes</span>
+              <span className="absolute right-3 top-2.5 text-[10px] text-muted">minutes</span>
             </div>
           </div>
 
@@ -268,7 +268,7 @@ export function EditTargetsModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-3 rounded-xl bg-white/10 hover:bg-white/15 text-white font-semibold transition-colors"
+              className="flex-1 py-3 rounded-xl bg-fg/10 hover:bg-fg/15 text-fg font-semibold transition-colors"
             >
               Cancel
             </button>

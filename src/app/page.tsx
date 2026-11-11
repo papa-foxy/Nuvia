@@ -56,7 +56,7 @@ export default function HomePage() {
 
   if (isLoading) {
     return (
-      <div className="relative min-h-screen bg-black flex flex-col items-center justify-center text-white overflow-hidden">
+      <div className="relative min-h-screen bg-app flex flex-col items-center justify-center text-fg overflow-hidden">
         {/* Ambient glowing wave background */}
         <div
           className="fixed inset-0 pointer-events-none z-0 bg-cover bg-center bg-no-repeat"
@@ -236,11 +236,11 @@ export default function HomePage() {
 
   return (
     <div
-      className="fixed inset-0 w-full bg-black text-white flex flex-col md:items-center md:justify-center p-0 md:py-6 overflow-hidden"
+      className="fixed inset-0 w-full bg-app text-fg flex flex-col md:items-center md:justify-center p-0 md:py-6 overflow-hidden"
     >
       {/* Main Mobile App Container */}
       <div
-        className="w-full max-w-md bg-black md:border md:border-[#2C2C2E] shadow-2xl flex flex-col relative overflow-hidden md:rounded-[36px] md:h-[92vh] md:max-h-[92vh]"
+        className="w-full max-w-md bg-app md:border md:border-elevated shadow-2xl flex flex-col relative overflow-hidden md:rounded-[36px] md:h-[92vh] md:max-h-[92vh]"
         style={{
           flex: 1,
           height: '100%',
