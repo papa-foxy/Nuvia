@@ -236,7 +236,7 @@ export default function HomePage() {
 
   return (
     <div
-      className="fixed inset-0 w-full bg-app text-fg flex flex-col md:items-center md:justify-center p-0 md:py-6 overflow-hidden"
+      className="app-shell fixed inset-0 w-full bg-app text-fg flex flex-col md:items-center md:justify-center p-0 md:py-6 overflow-hidden"
     >
       {/* Main Mobile App Container */}
       <div

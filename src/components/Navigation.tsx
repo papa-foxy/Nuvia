@@ -84,7 +84,7 @@ export function BottomNav({
   return (
     <>
       <nav
-        className="fixed md:absolute bottom-0 left-0 right-0 z-50 w-full h-[calc(var(--bottom-nav-height,56px)+env(safe-area-inset-bottom,0px))] pb-[calc(4px+env(safe-area-inset-bottom,0px))] bg-app border-t border-fg/[0.08] px-4 pt-1.5 flex items-center justify-between"
+        className="absolute bottom-0 left-0 right-0 z-50 w-full h-[calc(var(--bottom-nav-height,56px)+env(safe-area-inset-bottom,0px))] pb-[calc(4px+env(safe-area-inset-bottom,0px))] bg-app border-t border-fg/[0.08] px-4 pt-1.5 flex items-center justify-between"
       >
         {/* Destination 1: Today */}
         <button

@@ -49,11 +49,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="h-full bg-app" data-theme="dark" suppressHydrationWarning>
+    <html lang="en" className="bg-app" data-theme="dark" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
-      <body className="h-full bg-app text-fg antialiased selection:bg-[#30D158] selection:text-black">
+      <body className="bg-app text-fg antialiased selection:bg-[#30D158] selection:text-black">
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

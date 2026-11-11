@@ -195,3 +195,24 @@
   50%  { transform: translateX(0%);    opacity: 1; }
   100% { transform: translateX(100%);  opacity: 0; }
 }
+
+/*
+ * iOS installed-PWA "chin gap" fix.
+ * With viewport-fit=cover + black-translucent status bar, iOS shifts the page
+ * up behind the status bar but `height: 100%` does not grow to compensate,
+ * leaving a blank strip at the bottom. `100vh` is the true screen height in
+ * standalone mode. Scoped to standalone so Safari tabs (where 100vh is taller
+ * than the visible area) keep using 100%.
+ */
+@media (display-mode: standalone) {
+  html,
+  body {
+    height: 100vh;
+    min-height: 100vh;
+  }
+
+  .app-shell {
+    bottom: auto;
+    height: 100vh;
+  }
+}
