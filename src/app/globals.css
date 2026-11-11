@@ -30,7 +30,7 @@
     overscroll-behavior: none;
     overflow: hidden;
     height: 100%;
-    min-height: -webkit-fill-available;
+    min-height: 100%;
   }
 
   body {
@@ -44,7 +44,7 @@
     overscroll-behavior: none;
     overflow: hidden;
     height: 100%;
-    min-height: -webkit-fill-available;
+    min-height: 100%;
     /* Prevent Chrome Android pull-to-refresh */
     overscroll-behavior-y: none;
   }

@@ -236,11 +236,7 @@ export default function HomePage() {
 
   return (
     <div
-      className="w-full bg-black text-white flex flex-col md:items-center md:justify-center p-0 md:py-6 relative overflow-hidden"
-      style={{
-        height: '100dvh',
-        minHeight: '-webkit-fill-available',
-      }}
+      className="fixed inset-0 w-full bg-black text-white flex flex-col md:items-center md:justify-center p-0 md:py-6 overflow-hidden"
     >
       {/* Main Mobile App Container */}
       <div
