@@ -252,6 +252,18 @@
 }
 
 /*
+ * One coordinate system for the whole app.
+ * A transform makes .app-shell the containing block for every position:fixed
+ * descendant (sheets, backdrops, toasts). They are then laid out against the
+ * same box as the bottom nav instead of the browser viewport, which iOS
+ * standalone mode sizes differently (it left a gap between sheets and the nav
+ * when scrolling).
+ */
+.app-shell {
+  transform: translateZ(0);
+}
+
+/*
  * iOS installed-PWA "chin gap" fix.
  * With viewport-fit=cover + black-translucent status bar, iOS shifts the page
  * up behind the status bar but `height: 100%` does not grow to compensate,

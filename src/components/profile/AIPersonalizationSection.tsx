@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Sparkles, Brain, Check, X, RotateCcw, Plus, Trash2, Info } from 'lucide-react';
+import { Sparkles, Brain, Check, RotateCcw, Plus, Trash2, Info } from 'lucide-react';
 import { Profile } from '@/types/database';
+import { NuviaBottomSheet } from '../NuviaBottomSheet';
 
 interface AIPersonalizationSectionProps {
   userId?: string;
@@ -161,107 +162,104 @@ export function AIPersonalizationSection({ userId, profile }: AIPersonalizationS
       {/* ============================================================ */}
       {/* AI MEMORY & PREFERENCES MANAGEMENT MODAL                     */}
       {/* ============================================================ */}
-      {isMemoryModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
-          <div className="w-full max-w-md bg-card border-t sm:border border-fg/10 rounded-t-3xl sm:rounded-3xl p-5 space-y-4 max-h-[90vh] overflow-y-auto">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between pb-2 border-b border-fg/10">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-accent/15 text-green-ink flex items-center justify-center">
-                  <Brain className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-fg">AI Personalization Memory</h3>
-                  <p className="text-[11px] text-muted">Review and control what Nuvia learns about you</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsMemoryModalOpen(false)}
-                className="w-8 h-8 rounded-full bg-fg/5 hover:bg-fg/10 flex items-center justify-center text-zinc-400"
-              >
-                <X className="w-4 h-4" />
-              </button>
+      <NuviaBottomSheet
+        isOpen={isMemoryModalOpen}
+        onClose={() => setIsMemoryModalOpen(false)}
+        variant="standard"
+        ariaLabel="AI personalization memory"
+        contentClassName="space-y-4"
+        title={
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-[10px] bg-accent/15 text-green-ink flex items-center justify-center shrink-0">
+              <Brain className="w-4 h-4" />
             </div>
-
-            {resetNotice && (
-              <div className="p-2.5 rounded-xl bg-accent/15 border border-accent/30 text-green-ink text-xs font-semibold">
-                AI learned memory has been reset to default.
-              </div>
-            )}
-
-            {/* List of active preferences */}
-            <div className="space-y-2">
-              <span className="text-[11px] font-bold text-muted uppercase tracking-wider block">
-                Active Personalization Rules
-              </span>
-
-              <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
-                {customPreferences.map((pref) => (
-                  <div
-                    key={pref.id}
-                    className="p-3 rounded-xl bg-fg/5 border border-fg/10 flex items-center justify-between gap-3 text-xs"
-                  >
-                    <span className="text-zinc-200 leading-snug">{pref.text}</span>
-                    <button
-                      type="button"
-                      onClick={() => handleDeletePreference(pref.id)}
-                      title="Remove preference"
-                      className="w-7 h-7 rounded-lg hover:bg-red-500/20 text-zinc-400 hover:text-red-400 flex items-center justify-center shrink-0 transition-colors"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Add Custom User Instruction */}
-            <form onSubmit={handleAddPreference} className="space-y-2 pt-2 border-t border-fg/10">
-              <label className="block text-[11px] font-bold text-muted uppercase tracking-wider">
-                Add Explicit Rule / Override
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={newPrefText}
-                  onChange={(e) => setNewPrefText(e.target.value)}
-                  placeholder="e.g. Prefer Malaysian cuisine, no dairy after 8pm"
-                  className="flex-1 px-3 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg text-xs placeholder:text-zinc-500 focus:outline-none focus:border-accent"
-                />
-                <button
-                  type="submit"
-                  disabled={!newPrefText.trim()}
-                  className="px-3.5 py-2.5 rounded-xl bg-accent hover:bg-accent-hover disabled:opacity-50 text-on-accent text-xs font-bold transition-colors flex items-center gap-1 shadow"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Add</span>
-                </button>
-              </div>
-            </form>
-
-            {/* Actions: Reset and Close */}
-            <div className="pt-2 flex items-center justify-between border-t border-fg/10 text-xs">
-              <button
-                type="button"
-                onClick={handleResetPreferences}
-                className="text-red-400 hover:text-red-300 font-medium flex items-center gap-1.5 transition-colors"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Reset AI Memory</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setIsMemoryModalOpen(false)}
-                className="px-4 py-2 rounded-xl bg-fg/10 hover:bg-fg/15 text-fg font-semibold transition-colors"
-              >
-                Done
-              </button>
+            <div>
+              <h3 className="text-base font-bold text-fg leading-snug">AI Personalization Memory</h3>
+              <p className="text-[11px] text-muted">Review and control what Nuvia learns about you</p>
             </div>
           </div>
+        }
+      >
+        {resetNotice && (
+          <div className="p-2.5 rounded-[var(--radius-control)] bg-accent/15 border border-accent/30 text-green-ink text-xs font-semibold">
+            AI learned memory has been reset to default.
+          </div>
+        )}
+
+        {/* Active rules */}
+        <div className="space-y-2">
+          <span className="text-[11px] font-bold text-muted uppercase tracking-wider block">
+            Active Personalization Rules
+          </span>
+          {customPreferences.length === 0 ? (
+            <p className="text-xs text-muted py-2">No rules yet. Add one below.</p>
+          ) : (
+            <div className="space-y-2">
+              {customPreferences.map((pref) => (
+                <div
+                  key={pref.id}
+                  className="p-3 rounded-[var(--radius-control)] bg-elevated/50 border border-line flex items-center justify-between gap-3 text-xs"
+                >
+                  <span className="text-fg-soft leading-snug">{pref.text}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleDeletePreference(pref.id)}
+                    title="Remove preference"
+                    aria-label={'Remove ' + pref.text}
+                    className="w-8 h-8 rounded-lg hover:bg-danger/15 text-muted hover:text-red-ink flex items-center justify-center shrink-0 transition-colors cursor-pointer"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      )}
+
+        {/* Add a rule */}
+        <form onSubmit={handleAddPreference} className="space-y-2 pt-4 border-t border-line">
+          <label htmlFor="new-ai-rule" className="block text-[11px] font-bold text-muted uppercase tracking-wider">
+            Add Explicit Rule / Override
+          </label>
+          <div className="flex gap-2">
+            <input
+              id="new-ai-rule"
+              type="text"
+              value={newPrefText}
+              onChange={(e) => setNewPrefText(e.target.value)}
+              placeholder="e.g. Prefer Malaysian cuisine, no dairy after 8pm"
+              className="flex-1 min-w-0 h-11 px-3 rounded-[var(--radius-control)] bg-elevated/40 border border-line text-fg text-sm placeholder:text-subtle focus:outline-none focus:border-accent"
+            />
+            <button
+              type="submit"
+              disabled={!newPrefText.trim()}
+              className="h-11 px-4 rounded-[var(--radius-control)] bg-accent hover:bg-accent-hover disabled:opacity-50 text-on-accent text-sm font-extrabold transition-colors flex items-center gap-1 cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add</span>
+            </button>
+          </div>
+        </form>
+
+        {/* Reset / Done */}
+        <div className="pt-4 flex items-center justify-between border-t border-line text-xs">
+          <button
+            type="button"
+            onClick={handleResetPreferences}
+            className="text-red-ink hover:opacity-80 font-semibold flex items-center gap-1.5 transition-opacity cursor-pointer py-2"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>Reset AI Memory</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsMemoryModalOpen(false)}
+            className="h-10 px-5 rounded-[var(--radius-control)] bg-elevated hover:bg-elevated-2 text-fg text-sm font-bold transition-colors cursor-pointer"
+          >
+            Done
+          </button>
+        </div>
+      </NuviaBottomSheet>
     </div>
   );
 }

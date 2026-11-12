@@ -126,3 +126,38 @@ behaviour. No dependencies added. No backend changes.
 - Only one sheet can be open: opening a sheet closes the current one
   instantly, so they never stack.
 
+- Fixed a gap between sheets and the bottom nav in the installed iOS app:
+  `.app-shell` now has `transform: translateZ(0)`, which makes it the
+  containing block for all fixed-position sheets, backdrops and toasts, so
+  they line up with the nav (both use the 100vh app shell).
+- Redesigned the "Move to another day" panel: two day cards (current day
+  marked), a full-width date field, and one confirm button naming the target
+  day ("Move to Thu, Nov 12"; disabled with a reason for invalid dates).
+- Profile's "Manage Memory" (AI personalization) and "Privacy & Data
+  Security" pop-ups now use the shared NuviaBottomSheet, with theme colours
+  instead of fixed greys so they are readable in light mode.
+- Still hand-built (not yet on the shared sheet): Add Meal, Add Activity,
+  Meal Result, Day Details, Streak Calendar, Exercise Replace, Routine Edit,
+  Manual Routine, Exercise Video and the Goals edit sheets. They already
+  use the shared height limit and app-shell positioning.
+
+## adidas Running via Apple Health (12 November)
+
+adidas closed its partner API on 30 June 2025, so runs reach Nuvia through
+Apple Health and an iPhone Shortcut automation.
+
+- `POST /api/health-sync/workouts` — accepts workouts from the Shortcut,
+  authenticated with a personal key (`Authorization: Bearer <key>`). Parses
+  dates, durations and distances leniently (src/lib/health-workout-parse.ts),
+  estimates calories from body weight when Health sends none, logs each
+  workout on the day it started, and skips duplicates (start time + type).
+  `?dryRun=1` reports what would be imported without saving.
+- `GET /api/health-sync/token` — returns the signed-in user's key and URL.
+  Keys are HMAC-signed user ids (src/lib/health-sync-token.ts): nothing is
+  stored, and a key can only add workouts to its own account. Signing secret:
+  `HEALTH_SYNC_SECRET`, or derived from `SUPABASE_SERVICE_ROLE_KEY`.
+- Profile → "Connect adidas Running": key, import URL, test URL and
+  step-by-step Shortcut setup.
+- Tested: parser (17 cases), endpoint auth/validation and dry-run parsing.
+  Not tested: a real insert and the key flow with a signed-in session (needs
+  the deployed app and a real account).

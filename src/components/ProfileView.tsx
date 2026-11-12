@@ -8,6 +8,7 @@ import { ProfileHeader } from './profile/ProfileHeader';
 import { AboutYouSection } from './profile/AboutYouSection';
 import { AIPersonalizationSection } from './profile/AIPersonalizationSection';
 import { ProfileSettingsSection } from './profile/ProfileSettingsSection';
+import { HealthSyncConnect } from './profile/HealthSyncConnect';
 
 interface ProfileViewProps {
   onReplayOnboarding: () => void;
@@ -80,6 +81,9 @@ export function ProfileView({
           </button>
         ))}
       </nav>
+
+      {/* Connections: adidas Running via Apple Health */}
+      <HealthSyncConnect />
 
       {/* 6. ABOUT YOU (Stored profile parameters with inline editor) */}
       <AboutYouSection

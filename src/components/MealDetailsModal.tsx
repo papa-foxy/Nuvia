@@ -198,64 +198,108 @@ export function MealDetailsModal({
         </>
       }
     >
-          {/* Move to another day */}
-          {onMove && isMoveOpen && (
-            <section
-              aria-label="Move meal to another day"
-              className="rounded-[var(--radius-control)] border border-line bg-elevated/50 p-3.5 space-y-3"
-            >
-              <div>
-                <p className="text-sm font-bold text-fg">Move to another day</p>
-                <p className="text-[11px] text-muted">
-                  Currently on {shortDate(mealDateStr)}. The time of day stays the same.
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {[
-                  { label: 'Yesterday', value: yesterdayStr },
-                  { label: 'Today', value: todayStr },
-                ]
-                  .filter((o) => o.value !== mealDateStr)
-                  .map((o) => (
-                    <button
-                      key={o.value}
-                      type="button"
-                      disabled={moving}
-                      onClick={() => handleMove(o.value)}
-                      className="h-10 px-4 rounded-[var(--radius-control)] bg-accent text-on-accent text-xs font-extrabold hover:bg-accent-hover disabled:opacity-60 cursor-pointer"
-                    >
-                      Move to {o.label.toLowerCase()}
-                    </button>
-                  ))}
-              </div>
-              <div className="flex items-center gap-2">
-                <label className="sr-only" htmlFor="move-meal-date">
-                  Choose a date
-                </label>
-                <input
-                  id="move-meal-date"
-                  type="date"
-                  value={moveDate}
-                  max={todayStr}
-                  onChange={(e) => setMoveDate(e.target.value)}
-                  className="flex-1 h-10 px-3 rounded-[var(--radius-control)] bg-card border border-line text-sm font-semibold text-fg [color-scheme:inherit] focus:outline-none focus:border-accent"
-                />
+          {/* Move to another day: choose a day, then confirm */}
+          {onMove && isMoveOpen && (() => {
+            const options = [
+              { label: 'Yesterday', value: yesterdayStr },
+              { label: 'Today', value: todayStr },
+            ];
+            const isValidTarget = !!moveDate && moveDate !== mealDateStr && moveDate <= todayStr;
+            return (
+              <section
+                aria-label="Move meal to another day"
+                className="rounded-[var(--radius-card)] border border-line bg-card p-4 space-y-4"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-full bg-accent/15 text-green-ink flex items-center justify-center shrink-0">
+                      <CalendarClock className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-extrabold text-fg">Move to another day</p>
+                      <p className="mt-0.5 text-xs text-muted">
+                        Now on {shortDate(mealDateStr)} · keeps {formattedTime}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsMoveOpen(false)}
+                    className="text-xs font-semibold text-muted hover:text-fg cursor-pointer -my-1 py-1"
+                  >
+                    Cancel
+                  </button>
+                </div>
+
+                <div role="radiogroup" aria-label="Quick dates" className="grid grid-cols-2 gap-2">
+                  {options.map((o) => {
+                    const isCurrent = o.value === mealDateStr;
+                    const isSelected = !isCurrent && moveDate === o.value;
+                    return (
+                      <button
+                        key={o.value}
+                        type="button"
+                        role="radio"
+                        aria-checked={isSelected}
+                        disabled={isCurrent || moving}
+                        onClick={() => setMoveDate(o.value)}
+                        className={`relative h-16 px-3 rounded-[var(--radius-control)] border text-left transition-colors cursor-pointer disabled:cursor-default ${
+                          isSelected
+                            ? 'border-accent bg-accent/10'
+                            : isCurrent
+                              ? 'border-line bg-elevated/40 opacity-60'
+                              : 'border-line bg-elevated/40 hover:border-fg/30'
+                        }`}
+                      >
+                        <span className="block text-sm font-extrabold text-fg">{o.label}</span>
+                        <span className="block mt-0.5 text-[11px] font-semibold text-muted">
+                          {isCurrent ? 'Current day' : shortDate(o.value)}
+                        </span>
+                        {isSelected && (
+                          <CheckCircle2 className="absolute top-2.5 right-2.5 w-4 h-4 text-green-ink" aria-hidden />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div>
+                  <label htmlFor="move-meal-date" className="block text-[11px] font-bold uppercase tracking-[0.08em] text-muted">
+                    Or pick a date
+                  </label>
+                  <input
+                    id="move-meal-date"
+                    type="date"
+                    value={moveDate}
+                    max={todayStr}
+                    onChange={(e) => setMoveDate(e.target.value)}
+                    className="mt-1.5 w-full h-11 px-3 rounded-[var(--radius-control)] bg-elevated/40 border border-line text-sm font-semibold text-fg [color-scheme:inherit] focus:outline-none focus:border-accent"
+                  />
+                </div>
+
                 <button
                   type="button"
-                  disabled={moving || !moveDate || moveDate === mealDateStr || moveDate > todayStr}
+                  disabled={moving || !isValidTarget}
                   onClick={() => handleMove(moveDate)}
-                  className="h-10 px-4 rounded-[var(--radius-control)] bg-fg text-app text-xs font-extrabold disabled:opacity-40 cursor-pointer"
+                  className="w-full h-12 rounded-[var(--radius-control)] bg-accent text-on-accent text-sm font-extrabold hover:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
                 >
-                  {moving ? 'Moving…' : 'Move to date'}
+                  {moving
+                    ? 'Moving…'
+                    : isValidTarget
+                      ? `Move to ${shortDate(moveDate)}`
+                      : moveDate > todayStr
+                        ? 'Future dates aren’t allowed'
+                        : 'Choose a different day'}
                 </button>
-              </div>
-              {moveError && (
-                <p role="alert" className="text-xs font-semibold text-red-ink">
-                  {moveError}
-                </p>
-              )}
-            </section>
-          )}
+
+                {moveError && (
+                  <p role="alert" className="text-xs font-semibold text-red-ink">
+                    {moveError}
+                  </p>
+                )}
+              </section>
+            );
+          })()}
 
           {/* Meal Photo or Aesthetic Hero Header */}
           {meal.image_url ? (
