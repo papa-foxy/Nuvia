@@ -208,12 +208,12 @@ export function AiCoachView() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Ask about your calories, dinner ideas..."
-            className="flex-1 bg-card border border-fg/[0.08] text-xs text-fg placeholder-muted px-3.5 py-3 rounded-2xl focus:border-[#30D158] focus:outline-none"
+            className="flex-1 bg-card border border-fg/[0.08] text-xs text-fg placeholder-muted px-3.5 py-3 rounded-2xl focus:border-accent focus:outline-none"
           />
           <button
             type="submit"
             disabled={!query.trim() || answering}
-            className="p-3 rounded-2xl bg-[#30D158] hover:bg-[#28B84D] disabled:opacity-30 text-black font-bold transition-all"
+            className="p-3 rounded-2xl bg-accent hover:bg-accent-hover disabled:opacity-30 text-on-accent font-bold transition-all"
           >
             <Send className="w-4 h-4" />
           </button>

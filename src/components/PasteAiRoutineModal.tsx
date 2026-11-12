@@ -233,7 +233,7 @@ export function PasteAiRoutineModal({
       variant="full"
       title={
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-[#30D158] to-[#0A84FF] flex items-center justify-center text-black">
+          <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-accent to-info flex items-center justify-center text-on-accent">
             <Sparkles className="w-3.5 h-3.5" />
           </div>
           <span className="text-base font-bold text-fg">Import Routine from AI</span>
@@ -289,7 +289,7 @@ export function PasteAiRoutineModal({
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 placeholder="Paste your workout split here...&#10;&#10;Tap 'Use example' above to see the recommended format."
-                className="w-full p-3.5 text-xs font-mono rounded-2xl bg-surface border border-fg/[0.08] text-fg focus:outline-none focus:border-[#30D158] leading-relaxed resize-none"
+                className="w-full p-3.5 text-xs font-mono rounded-2xl bg-surface border border-fg/[0.08] text-fg focus:outline-none focus:border-accent leading-relaxed resize-none"
               />
             </div>
 
@@ -304,7 +304,7 @@ export function PasteAiRoutineModal({
               type="button"
               disabled={loading || !text.trim()}
               onClick={handleParse}
-              className="w-full py-3.5 rounded-full bg-[#30D158] hover:bg-[#28B84D] disabled:opacity-50 text-black font-semibold text-sm transition-colors flex items-center justify-center gap-2 shadow-lg shadow-[#30D158]/20 cursor-pointer"
+              className="w-full py-3.5 rounded-full bg-accent hover:bg-accent-hover disabled:opacity-50 text-on-accent font-semibold text-sm transition-colors flex items-center justify-center gap-2 shadow-lg shadow-accent/20 cursor-pointer"
             >
               {loading ? (
                 <>
@@ -340,7 +340,7 @@ export function PasteAiRoutineModal({
             </div>
 
             {unmatchedExercises.length > 0 && (
-              <div className="p-3 rounded-xl bg-[#FF9F0A]/10 border border-[#FF9F0A]/20 text-orange-ink text-xs space-y-1">
+              <div className="p-3 rounded-xl bg-warn/10 border border-warn/20 text-orange-ink text-xs space-y-1">
                 <p className="font-semibold">⚠ {unmatchedExercises.length} uncertain exercise match(es):</p>
                 <p className="text-[11px] opacity-80">
                   Use the Edit button on any movement below to select the exact catalog match.
@@ -385,7 +385,7 @@ export function PasteAiRoutineModal({
                               onClick={() => handleToggleDay(rIdx, day)}
                               className={`px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-all cursor-pointer ${
                                 isSelected
-                                  ? 'bg-[#30D158] text-black font-bold shadow'
+                                  ? 'bg-accent text-on-accent font-bold shadow'
                                   : 'bg-fg/5 text-muted hover:text-fg border border-fg/5'
                               }`}
                             >
@@ -469,7 +469,7 @@ export function PasteAiRoutineModal({
                                   type="text"
                                   value={ex.reps}
                                   onChange={(e) => handleUpdateExerciseReps(rIdx, ex.id, e.target.value)}
-                                  className="w-14 px-1 py-0.5 bg-app/40 text-center text-[10px] font-semibold text-fg rounded border border-fg/5 focus:outline-none focus:border-[#30D158]"
+                                  className="w-14 px-1 py-0.5 bg-app/40 text-center text-[10px] font-semibold text-fg rounded border border-fg/5 focus:outline-none focus:border-accent"
                                 />
 
                                 {/* Replace from catalog */}
@@ -508,7 +508,7 @@ export function PasteAiRoutineModal({
               <button
                 type="button"
                 onClick={handleConfirmSave}
-                className="flex-1 py-3.5 rounded-full bg-[#30D158] hover:bg-[#28B84D] text-black font-extrabold text-xs transition-colors flex items-center justify-center gap-2 shadow-lg shadow-[#30D158]/20 cursor-pointer"
+                className="flex-1 py-3.5 rounded-full bg-accent hover:bg-accent-hover text-on-accent font-extrabold text-xs transition-colors flex items-center justify-center gap-2 shadow-lg shadow-accent/20 cursor-pointer"
               >
                 <Check className="w-4 h-4 stroke-[2.5]" />
                 <span>Confirm Plan & Save to My Routines</span>
@@ -548,7 +548,7 @@ export function PasteAiRoutineModal({
                 value={catalogSearch}
                 onChange={(e) => setCatalogSearch(e.target.value)}
                 placeholder="Search catalog exercises..."
-                className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg text-xs focus:outline-none focus:border-[#30D158]"
+                className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg text-xs focus:outline-none focus:border-accent"
               />
             </div>
 

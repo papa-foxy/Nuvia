@@ -44,7 +44,7 @@ export function ExerciseVideoModal({
             />
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#30D158]/15 text-green-ink border border-[#30D158]/20">
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-accent/15 text-green-ink border border-accent/20">
                   {exercise.target_muscle}
                 </span>
                 <span className="text-xs text-muted font-medium">
@@ -153,7 +153,7 @@ export function ExerciseVideoModal({
                   onCompleteExercise(exercise);
                   onClose();
                 }}
-                className="flex-1 py-3 px-4 rounded-full bg-[#30D158] hover:bg-[#28B84D] text-black font-semibold text-xs transition-colors flex items-center justify-center gap-2"
+                className="flex-1 py-3 px-4 rounded-full bg-accent hover:bg-accent-hover text-on-accent font-semibold text-xs transition-colors flex items-center justify-center gap-2"
               >
                 <CheckCircle2 className="w-4 h-4" />
                 <span>Mark Completed &amp; Log</span>

@@ -20,6 +20,9 @@ import { NuviaFitnessContext } from '@/types/fitness-context';
 import { NuviaNextActionCard } from './adaptive/NuviaNextActionCard';
 import { IntentProposalCard } from './adaptive/IntentProposalCard';
 import { AiService } from '@/lib/ai-service';
+import { ScreenHeader } from './ScreenHeader';
+import { SectionHeader } from './ui';
+import { useTrainingOverview, WeekOverviewCard, HomeStatsGrid } from './home/TrainingOverview';
 import {
   NaturalLanguageLoggingContext,
   NaturalLanguageParseResult,
@@ -76,6 +79,7 @@ export function DashboardView({
   const prevRefreshKey = useRef<number | undefined>(refreshKey);
 
   const userId = user?.id;
+  const overview = useTrainingOverview(userId, refreshKey);
 
   const applyData = useCallback(
     (s: DailySummary | null, m: Meal[], e: ExerciseLog[], r: WorkoutRoutine[]) => {
@@ -384,47 +388,33 @@ export function DashboardView({
     );
   }
 
-  const avatarUrl = profile?.avatar_url || user?.avatar_url;
-  const displayName = profile?.name || user?.full_name || user?.email?.split('@')[0] || 'User';
+  const displayName = profile?.name || user?.full_name || '';
+  const firstName = displayName.trim().split(/\s+/)[0] || '';
+  const hour = today.getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
 
   return (
     <div className="flex-1 flex flex-col pb-20 px-5 pt-4 w-full max-w-md mx-auto space-y-6">
       {/* Subtle background-refresh indicator */}
       {isFetching && (
         <div className="fixed top-0 left-0 right-0 z-50 h-0.5">
-          <div className="h-full bg-[#30D158] animate-[shimmer_1.5s_ease-in-out_infinite]" style={{ width: '60%', marginLeft: 'auto', marginRight: 'auto' }} />
+          <div className="h-full bg-accent animate-[shimmer_1.5s_ease-in-out_infinite]" style={{ width: '60%', marginLeft: 'auto', marginRight: 'auto' }} />
         </div>
       )}
 
-      {/* Large Page Title (Apple Health Style) with User Avatar */}
-      <div className="pt-2 flex items-center justify-between">
-        <div>
-          <p className="text-[11px] font-semibold tracking-wider text-muted">
-            {dateFormatted}
-          </p>
-          <h1 className="text-3xl font-bold tracking-tight text-fg mt-0.5">Today</h1>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => onNavigateTab('profile')}
-          className="relative group p-0.5 rounded-full hover:scale-105 active:scale-95 transition-transform"
-          title="View Profile"
-        >
-          <div className="w-10 h-10 rounded-full bg-card border border-fg/20 group-hover:border-[#30D158] overflow-hidden flex items-center justify-center text-fg font-bold text-sm shadow-md">
-            {avatarUrl ? (
-              <img
-                src={avatarUrl}
-                alt={displayName}
-                referrerPolicy="no-referrer"
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <span>{displayName.charAt(0).toUpperCase()}</span>
-            )}
-          </div>
-        </button>
+      {/* Header: date, greeting, avatar (Profile lives behind the avatar) */}
+      <div className="-mx-5">
+        <ScreenHeader
+          eyebrow={today.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}
+          title={`${greeting}${firstName ? `, ${firstName}` : ''}`}
+          streak={overview.streak?.currentStreak ?? null}
+          onOpenProfile={() => onNavigateTab('profile')}
+        />
       </div>
+
+      {/* This week (WHOOP-style overview + Oura-style guidance sentence) */}
+      <WeekOverviewCard logs={overview.logs} routines={routines} onOpenProgress={() => onNavigateTab('progress')} />
+
 
       {/* TARGET RECALCULATION NOTIFICATION (When authoritative calorie target changes) */}
       {targetUpdateNotice && (
@@ -461,212 +451,6 @@ export function DashboardView({
           </button>
         </div>
       )}
-
-      {/* SECTION 1: CALORIES (NET CALORIE BUDGETING MODEL) */}
-      <div onClick={() => onNavigateTab('summary')} className="cursor-pointer group">
-        <div className="flex items-center justify-between pb-1">
-          <span className="text-xs font-semibold text-muted uppercase tracking-wider">
-            Calories
-          </span>
-          <span className="text-xs text-muted group-hover:text-fg flex items-center gap-0.5 transition-colors">
-            <span>Summary</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-          </span>
-        </div>
-
-        {/* 1. How much did I eat? (Primary Number) */}
-        <div className="flex items-baseline gap-2 mt-1">
-          <span className="text-[40px] sm:text-[44px] font-semibold tracking-tight text-fg leading-none">
-            {foodCalories.toLocaleString()}
-          </span>
-          <span className="text-base text-muted font-normal">
-            kcal eaten
-          </span>
-        </div>
-
-        {/* 2 & 3. What is my net balance? & How much room do I have left? */}
-        <div className="flex items-center gap-2 mt-1.5 text-sm font-medium">
-          <span className="text-fg font-semibold">
-            {netCalories.toLocaleString()} kcal net
-          </span>
-          <span className="text-muted">·</span>
-          {isOverTarget ? (
-            <span className="text-orange-ink font-semibold">
-              {overCalories.toLocaleString()} kcal above target
-            </span>
-          ) : (
-            <span className="text-muted">
-              <span className="text-fg font-semibold">{remainingCalories.toLocaleString()} kcal</span> remaining
-            </span>
-          )}
-        </div>
-
-        {/* Subtractive / Overlay Calorie Lane (Total lane represents Daily Target; Blue overlays food offset) */}
-        <div className="w-full bg-elevated h-2 rounded-full overflow-hidden mt-3.5 relative">
-          <div
-            className="h-full flex rounded-full transition-all duration-500 overflow-hidden"
-            style={{
-              width: `${Math.min(100, Math.max(0, (foodCalories / calorieTarget) * 100))}%`,
-            }}
-          >
-            {/* Net calories consumed (Solid Nuvia Green) */}
-            <div
-              className="bg-[#30D158] h-full transition-all duration-500"
-              style={{
-                width: foodCalories > 0
-                  ? `${Math.min(100, Math.max(0, (netCalories / foodCalories) * 100))}%`
-                  : '0%',
-              }}
-            />
-            {/* Activity credit offset (Subtle Blue subtraction overlay) */}
-            {exerciseCalories > 0 && foodCalories > 0 && (
-              <div
-                className="bg-[#0A84FF] h-full transition-all duration-500 opacity-90"
-                style={{
-                  width: `${Math.min(100, Math.max(0, (Math.min(exerciseCalories, foodCalories) / foodCalories) * 100))}%`,
-                }}
-                title={`-${exerciseCalories} kcal activity credit offset`}
-              />
-            )}
-          </div>
-        </div>
-
-        {/* Direct Supporting Equation */}
-        <p className="text-xs text-muted mt-2 font-normal">
-          {foodCalories.toLocaleString()} eaten
-          {exerciseCalories > 0 ? ` − ${exerciseCalories.toLocaleString()} activity` : ' − 0 activity'}
-          {' = '}
-          <span className="text-fg font-medium">{netCalories.toLocaleString()} net</span>
-        </p>
-
-        {/* 4. Why is my target this value? (Daily target & maintenance secondary context) */}
-        <div className="flex items-center justify-between text-xs text-muted mt-2 pt-2.5 border-t border-fg/[0.05]">
-          <span>
-            Daily target: <span className="text-fg font-medium">{calorieTarget.toLocaleString()} kcal</span>
-          </span>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onNavigateTab('goals');
-            }}
-            className="text-[11px] text-muted hover:text-fg flex items-center gap-0.5 transition-colors cursor-pointer"
-            title="Why this target?"
-          >
-            <span>Why this target?</span>
-            <ChevronRight className="w-3 h-3" />
-          </button>
-        </div>
-
-        <div className="pt-3">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onOpenAddMeal();
-            }}
-            className="w-full py-2.5 px-3.5 rounded-xl bg-gradient-to-r from-[#30D158]/15 to-elevated/60 hover:from-[#30D158]/25 border border-[#30D158]/30 hover:border-[#30D158] transition-all flex items-center justify-between group cursor-pointer"
-          >
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-lg bg-[#30D158] text-black flex items-center justify-center">
-                <Camera className="w-3.5 h-3.5 stroke-[2.5]" />
-              </div>
-              <span className="text-xs font-bold text-fg">Snap Food Picture</span>
-            </div>
-            <span className="text-[11px] font-semibold text-green-ink flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform">
-              <span>AI Count Calories</span>
-              <ChevronRight className="w-3 h-3" />
-            </span>
-          </button>
-        </div>
-      </div>
-
-      <div className="ios-divider" />
-
-      {/* SECTION 2: MACRONUTRIENTS */}
-      <div onClick={() => onNavigateTab('goals')} className="cursor-pointer group">
-        <div className="flex items-center justify-between pb-2">
-          <span className="text-xs font-semibold text-muted uppercase tracking-wider">
-            Nutrition Targets
-          </span>
-          <span className="text-xs text-muted group-hover:text-fg flex items-center gap-0.5 transition-colors">
-            <span>Goals</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-          </span>
-        </div>
-
-        <div className="grid grid-cols-3 gap-4 pt-1">
-          {/* Protein */}
-          <div>
-            <p className="text-[11px] text-muted font-medium">Protein</p>
-            <p className="text-xl font-semibold text-fg tracking-tight mt-0.5">
-              {proteinConsumed}{' '}
-              <span className="text-xs text-muted font-normal">/ {proteinTarget}g</span>
-            </p>
-            <div className="w-full bg-elevated h-1 rounded-full overflow-hidden mt-1.5">
-              <div
-                className="bg-[#30D158] h-full rounded-full"
-                style={{ width: `${Math.min(100, (proteinConsumed / proteinTarget) * 100)}%` }}
-              />
-            </div>
-          </div>
-
-          {/* Carbs */}
-          <div>
-            <p className="text-[11px] text-muted font-medium">Carbohydrates</p>
-            <p className="text-xl font-semibold text-fg tracking-tight mt-0.5">
-              {carbsConsumed}{' '}
-              <span className="text-xs text-muted font-normal">/ {carbsTarget}g</span>
-            </p>
-            <div className="w-full bg-elevated h-1 rounded-full overflow-hidden mt-1.5">
-              <div
-                className="bg-[#8E8E93] h-full rounded-full"
-                style={{ width: `${Math.min(100, (carbsConsumed / carbsTarget) * 100)}%` }}
-              />
-            </div>
-          </div>
-
-          {/* Fat */}
-          <div>
-            <p className="text-[11px] text-muted font-medium">Fat</p>
-            <p className="text-xl font-semibold text-fg tracking-tight mt-0.5">
-              {fatConsumed}{' '}
-              <span className="text-xs text-muted font-normal">/ {fatTarget}g</span>
-            </p>
-            <div className="w-full bg-elevated h-1 rounded-full overflow-hidden mt-1.5">
-              <div
-                className="bg-[#8E8E93] h-full rounded-full"
-                style={{ width: `${Math.min(100, (fatConsumed / fatTarget) * 100)}%` }}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="ios-divider" />
-
-      {/* SECTION 3: ACTIVITY SUMMARY */}
-      <div onClick={() => onNavigateTab('exercise')} className="cursor-pointer group">
-        <div className="flex items-center justify-between pb-1">
-          <span className="text-xs font-semibold text-muted uppercase tracking-wider">
-            Activity
-          </span>
-          <span className="text-xs text-muted group-hover:text-fg flex items-center gap-0.5 transition-colors">
-            <span>Details</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-          </span>
-        </div>
-
-        <div className="flex items-baseline justify-between mt-1">
-          <div>
-            <span className="text-2xl font-semibold text-fg tracking-tight">
-              {exerciseCalories.toLocaleString()}{' '}
-              <span className="text-sm text-muted font-normal">kcal burned</span>
-            </span>
-          </div>
-          <span className="text-sm font-medium text-muted">{exerciseMinutes} min active</span>
-        </div>
-      </div>
 
       {/* SECTION 3B: ADAPTIVE TRAINING ENGINE NEXT ACTION */}
       {fitnessContext?.adaptive?.next_action && (
@@ -767,10 +551,10 @@ export function DashboardView({
                     onClick={() => onNavigateTab('exercise')}
                     className={`rounded-2xl p-4 border transition-all cursor-pointer space-y-3.5 group ${
                       isFinished
-                        ? 'bg-card border-[#30D158]/40 shadow-sm'
+                        ? 'bg-card border-accent/40 shadow-sm'
                         : isPartial
-                        ? 'bg-card border-[#0A84FF]/40 shadow-sm'
-                        : 'bg-card border-fg/[0.08] hover:border-[#30D158]/40'
+                        ? 'bg-card border-info/40 shadow-sm'
+                        : 'bg-card border-fg/[0.08] hover:border-accent/40'
                     }`}
                   >
                     {/* Top Bar: Routine Header & Status Badge */}
@@ -779,10 +563,10 @@ export function DashboardView({
                         <div
                           className={`w-6 h-6 rounded-lg flex items-center justify-center ${
                             isFinished
-                              ? 'bg-[#30D158]/20 text-green-ink'
+                              ? 'bg-accent/20 text-green-ink'
                               : isPartial
-                              ? 'bg-[#0A84FF]/20 text-blue-ink'
-                              : 'bg-[#30D158]/15 text-green-ink'
+                              ? 'bg-info/20 text-blue-ink'
+                              : 'bg-accent/15 text-green-ink'
                           }`}
                         >
                           {isFinished ? (
@@ -795,13 +579,13 @@ export function DashboardView({
                           Today's Workout
                         </span>
                         {isFinished && sessionStatus.log && (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#30D158] text-black flex items-center gap-1">
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-accent text-on-accent flex items-center gap-1">
                             <CheckCircle2 className="w-3 h-3" />
                             <span>Completed ({sessionStatus.log.calories_burned} kcal)</span>
                           </span>
                         )}
                         {isPartial && sessionStatus.log && (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#0A84FF] text-white flex items-center gap-1">
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-info text-white flex items-center gap-1">
                             <span>Partially completed ({sessionStatus.executedCount}/{sessionStatus.totalExercises})</span>
                           </span>
                         )}
@@ -814,7 +598,7 @@ export function DashboardView({
 
                     {/* Main Routine Row with Hero Visual Thumbnail */}
                     <div className="flex items-center gap-3.5">
-                      <div className="w-16 h-16 rounded-2xl overflow-hidden bg-app/60 border border-fg/[0.1] shrink-0 relative shadow-md group-hover:border-[#30D158]/40 transition-colors">
+                      <div className="w-16 h-16 rounded-2xl overflow-hidden bg-app/60 border border-fg/[0.1] shrink-0 relative shadow-md group-hover:border-accent/40 transition-colors">
                         {routine.exercises?.[0] ? (
                           <ExerciseThumbnail
                             exercise={routine.exercises[0]}
@@ -846,7 +630,7 @@ export function DashboardView({
                                 key={day}
                                 className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${
                                   isRoutineScheduledForDay(routine, day) && day.toLowerCase() === todayDayName.toLowerCase()
-                                    ? 'bg-[#30D158]/20 text-green-ink border border-[#30D158]/30 font-semibold'
+                                    ? 'bg-accent/20 text-green-ink border border-accent/30 font-semibold'
                                     : 'bg-fg/[0.05] text-muted'
                                 }`}
                               >
@@ -864,7 +648,7 @@ export function DashboardView({
                         {routine.exercises.map((ex, idx) => (
                           <div
                             key={ex.id || idx}
-                            className="w-10 h-10 rounded-xl overflow-hidden bg-app/40 border border-fg/[0.08] shrink-0 relative group-hover:border-[#30D158]/30 transition-colors"
+                            className="w-10 h-10 rounded-xl overflow-hidden bg-app/40 border border-fg/[0.08] shrink-0 relative group-hover:border-accent/30 transition-colors"
                             title={ex.name}
                           >
                             <ExerciseThumbnail exercise={ex} aspectRatio="1/1" className="w-full h-full" />
@@ -897,7 +681,7 @@ export function DashboardView({
             {/* Header: Recovery Day */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-[#0A84FF]/15 text-blue-ink flex items-center justify-center">
+                <div className="w-6 h-6 rounded-lg bg-info/15 text-blue-ink flex items-center justify-center">
                   <Moon className="w-3.5 h-3.5" />
                 </div>
                 <span className="text-xs font-bold uppercase tracking-wider text-fg">
@@ -982,11 +766,242 @@ export function DashboardView({
 
       <div className="ios-divider" />
 
+      {/* Today's nutrition */}
+      <div className="pt-2 flex items-center justify-between">
+        <h2 className="text-lg font-extrabold tracking-tight text-fg">Nutrition today</h2>
+        <button
+          type="button"
+          onClick={() => onNavigateTab('meals')}
+          className="text-xs font-semibold text-muted hover:text-fg transition-colors cursor-pointer py-2"
+        >
+          All meals →
+        </button>
+      </div>
+
+      {/* SECTION 1: CALORIES (NET CALORIE BUDGETING MODEL) */}
+      <div onClick={() => onNavigateTab('summary')} className="cursor-pointer group">
+        <div className="flex items-center justify-between pb-1">
+          <span className="text-xs font-semibold text-muted uppercase tracking-wider">
+            Calories
+          </span>
+          <span className="text-xs text-muted group-hover:text-fg flex items-center gap-0.5 transition-colors">
+            <span>Summary</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </span>
+        </div>
+
+        {/* 1. How much did I eat? (Primary Number) */}
+        <div className="flex items-baseline gap-2 mt-1">
+          <span className="text-[40px] sm:text-[44px] font-semibold tracking-tight text-fg leading-none">
+            {foodCalories.toLocaleString()}
+          </span>
+          <span className="text-base text-muted font-normal">
+            kcal eaten
+          </span>
+        </div>
+
+        {/* 2 & 3. What is my net balance? & How much room do I have left? */}
+        <div className="flex items-center gap-2 mt-1.5 text-sm font-medium">
+          <span className="text-fg font-semibold">
+            {netCalories.toLocaleString()} kcal net
+          </span>
+          <span className="text-muted">·</span>
+          {isOverTarget ? (
+            <span className="text-orange-ink font-semibold">
+              {overCalories.toLocaleString()} kcal above target
+            </span>
+          ) : (
+            <span className="text-muted">
+              <span className="text-fg font-semibold">{remainingCalories.toLocaleString()} kcal</span> remaining
+            </span>
+          )}
+        </div>
+
+        {/* Subtractive / Overlay Calorie Lane (Total lane represents Daily Target; Blue overlays food offset) */}
+        <div className="w-full bg-elevated h-2 rounded-full overflow-hidden mt-3.5 relative">
+          <div
+            className="h-full flex rounded-full transition-all duration-500 overflow-hidden"
+            style={{
+              width: `${Math.min(100, Math.max(0, (foodCalories / calorieTarget) * 100))}%`,
+            }}
+          >
+            {/* Net calories consumed (Solid Nuvia Green) */}
+            <div
+              className="bg-accent h-full transition-all duration-500"
+              style={{
+                width: foodCalories > 0
+                  ? `${Math.min(100, Math.max(0, (netCalories / foodCalories) * 100))}%`
+                  : '0%',
+              }}
+            />
+            {/* Activity credit offset (Subtle Blue subtraction overlay) */}
+            {exerciseCalories > 0 && foodCalories > 0 && (
+              <div
+                className="bg-info h-full transition-all duration-500 opacity-90"
+                style={{
+                  width: `${Math.min(100, Math.max(0, (Math.min(exerciseCalories, foodCalories) / foodCalories) * 100))}%`,
+                }}
+                title={`-${exerciseCalories} kcal activity credit offset`}
+              />
+            )}
+          </div>
+        </div>
+
+        {/* Direct Supporting Equation */}
+        <p className="text-xs text-muted mt-2 font-normal">
+          {foodCalories.toLocaleString()} eaten
+          {exerciseCalories > 0 ? ` − ${exerciseCalories.toLocaleString()} activity` : ' − 0 activity'}
+          {' = '}
+          <span className="text-fg font-medium">{netCalories.toLocaleString()} net</span>
+        </p>
+
+        {/* 4. Why is my target this value? (Daily target & maintenance secondary context) */}
+        <div className="flex items-center justify-between text-xs text-muted mt-2 pt-2.5 border-t border-fg/[0.05]">
+          <span>
+            Daily target: <span className="text-fg font-medium">{calorieTarget.toLocaleString()} kcal</span>
+          </span>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onNavigateTab('goals');
+            }}
+            className="text-[11px] text-muted hover:text-fg flex items-center gap-0.5 transition-colors cursor-pointer"
+            title="Why this target?"
+          >
+            <span>Why this target?</span>
+            <ChevronRight className="w-3 h-3" />
+          </button>
+        </div>
+
+        <div className="pt-3">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenAddMeal();
+            }}
+            className="w-full py-2.5 px-3.5 rounded-xl bg-gradient-to-r from-accent/15 to-elevated/60 hover:from-accent/25 border border-accent/30 hover:border-accent transition-all flex items-center justify-between group cursor-pointer"
+          >
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-lg bg-accent text-on-accent flex items-center justify-center">
+                <Camera className="w-3.5 h-3.5 stroke-[2.5]" />
+              </div>
+              <span className="text-xs font-bold text-fg">Snap Food Picture</span>
+            </div>
+            <span className="text-[11px] font-semibold text-green-ink flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform">
+              <span>AI Count Calories</span>
+              <ChevronRight className="w-3 h-3" />
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <div className="ios-divider" />
+
+      {/* SECTION 2: MACRONUTRIENTS */}
+      <div onClick={() => onNavigateTab('goals')} className="cursor-pointer group">
+        <div className="flex items-center justify-between pb-2">
+          <span className="text-xs font-semibold text-muted uppercase tracking-wider">
+            Nutrition Targets
+          </span>
+          <span className="text-xs text-muted group-hover:text-fg flex items-center gap-0.5 transition-colors">
+            <span>Goals</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </span>
+        </div>
+
+        <div className="grid grid-cols-3 gap-4 pt-1">
+          {/* Protein */}
+          <div>
+            <p className="text-[11px] text-muted font-medium">Protein</p>
+            <p className="text-xl font-semibold text-fg tracking-tight mt-0.5">
+              {proteinConsumed}{' '}
+              <span className="text-xs text-muted font-normal">/ {proteinTarget}g</span>
+            </p>
+            <div className="w-full bg-elevated h-1 rounded-full overflow-hidden mt-1.5">
+              <div
+                className="bg-accent h-full rounded-full"
+                style={{ width: `${Math.min(100, (proteinConsumed / proteinTarget) * 100)}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Carbs */}
+          <div>
+            <p className="text-[11px] text-muted font-medium">Carbohydrates</p>
+            <p className="text-xl font-semibold text-fg tracking-tight mt-0.5">
+              {carbsConsumed}{' '}
+              <span className="text-xs text-muted font-normal">/ {carbsTarget}g</span>
+            </p>
+            <div className="w-full bg-elevated h-1 rounded-full overflow-hidden mt-1.5">
+              <div
+                className="bg-[#8E8E93] h-full rounded-full"
+                style={{ width: `${Math.min(100, (carbsConsumed / carbsTarget) * 100)}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Fat */}
+          <div>
+            <p className="text-[11px] text-muted font-medium">Fat</p>
+            <p className="text-xl font-semibold text-fg tracking-tight mt-0.5">
+              {fatConsumed}{' '}
+              <span className="text-xs text-muted font-normal">/ {fatTarget}g</span>
+            </p>
+            <div className="w-full bg-elevated h-1 rounded-full overflow-hidden mt-1.5">
+              <div
+                className="bg-[#8E8E93] h-full rounded-full"
+                style={{ width: `${Math.min(100, (fatConsumed / fatTarget) * 100)}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="ios-divider" />
+
+      {/* SECTION 3: ACTIVITY SUMMARY */}
+      <div onClick={() => onNavigateTab('exercise')} className="cursor-pointer group">
+        <div className="flex items-center justify-between pb-1">
+          <span className="text-xs font-semibold text-muted uppercase tracking-wider">
+            Activity
+          </span>
+          <span className="text-xs text-muted group-hover:text-fg flex items-center gap-0.5 transition-colors">
+            <span>Details</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </span>
+        </div>
+
+        <div className="flex items-baseline justify-between mt-1">
+          <div>
+            <span className="text-2xl font-semibold text-fg tracking-tight">
+              {exerciseCalories.toLocaleString()}{' '}
+              <span className="text-sm text-muted font-normal">kcal burned</span>
+            </span>
+          </div>
+          <span className="text-sm font-medium text-muted">{exerciseMinutes} min active</span>
+        </div>
+      </div>
+
+      {/* Fitness statistics */}
+      <section className="space-y-3" aria-label="Your stats">
+        <SectionHeader title="Your stats" action="Progress" onAction={() => onNavigateTab('progress')} />
+        <HomeStatsGrid
+          logs={overview.logs}
+          streak={overview.streak}
+          weightKg={profile?.weight_kg ?? null}
+          targetWeightKg={goals?.target_weight_kg ?? profile?.target_weight_kg ?? null}
+          onOpenProgress={() => onNavigateTab('progress')}
+          onOpenProfile={() => onNavigateTab('profile')}
+        />
+      </section>
+
       {/* SECTION 4: NUVIA QUICK INSIGHT & NATURAL LOGGER */}
       <div className="bg-card rounded-2xl p-4 border border-fg/[0.06] space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-fg">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#30D158]" />
+            <span className="w-1.5 h-1.5 rounded-full bg-accent" />
             <span>Nuvia</span>
           </div>
           <button
@@ -1016,7 +1031,7 @@ export function DashboardView({
                 className="shrink-0 text-[11px] px-2.5 py-1 rounded-full bg-elevated hover:bg-elevated-2 text-fg-soft border border-fg/[0.08] transition-all flex items-center gap-1.5 active:scale-95"
               >
                 {s.badge && (
-                  <span className="text-[9px] px-1 py-0.2 rounded bg-[#30D158]/20 text-green-ink font-bold">
+                  <span className="text-[9px] px-1 py-0.2 rounded bg-accent/20 text-green-ink font-bold">
                     {s.badge}
                   </span>
                 )}
@@ -1028,7 +1043,7 @@ export function DashboardView({
 
         {/* Pending Workout Review Card */}
         {pendingWorkoutReview && (
-          <div className="p-3.5 rounded-xl bg-surface border border-[#30D158]/40 space-y-2">
+          <div className="p-3.5 rounded-xl bg-surface border border-accent/40 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-green-ink uppercase tracking-wider flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5" />
@@ -1049,7 +1064,7 @@ export function DashboardView({
               <button
                 type="button"
                 onClick={() => handleConfirmWorkoutReview(pendingWorkoutReview)}
-                className="flex-1 py-2 rounded-xl bg-[#30D158] hover:bg-[#28B84D] text-black font-bold text-xs transition-colors"
+                className="flex-1 py-2 rounded-xl bg-accent hover:bg-accent-hover text-on-accent font-bold text-xs transition-colors"
               >
                 Confirm &amp; Log Workout
               </button>
@@ -1083,7 +1098,7 @@ export function DashboardView({
             onChange={(e) => setQuickInput(e.target.value)}
             placeholder={placeholderText}
             disabled={isInterpreting}
-            className="flex-1 bg-elevated text-xs text-fg placeholder-muted px-3 py-2 rounded-xl border border-transparent focus:border-[#30D158] focus:outline-none disabled:opacity-60"
+            className="flex-1 bg-elevated text-xs text-fg placeholder-muted px-3 py-2 rounded-xl border border-transparent focus:border-accent focus:outline-none disabled:opacity-60"
           />
           <button
             type="submit"
@@ -1117,7 +1132,7 @@ export function DashboardView({
               </button>
             </div>
 
-            <div className="ios-card divide-y divide-fg/[0.06] overflow-hidden border border-[#30D158]/20">
+            <div className="ios-card divide-y divide-fg/[0.06] overflow-hidden border border-accent/20">
               {recentExercises.map((e) => (
                 <div
                   key={e.id}
@@ -1125,7 +1140,7 @@ export function DashboardView({
                   className="p-3.5 flex items-center justify-between hover:bg-fg/[0.02] transition-colors cursor-pointer"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-[#30D158]/15 text-green-ink flex items-center justify-center shrink-0">
+                    <div className="w-9 h-9 rounded-xl bg-accent/15 text-green-ink flex items-center justify-center shrink-0">
                       <Dumbbell className="w-4 h-4" />
                     </div>
                     <div>

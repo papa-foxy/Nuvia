@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Calendar, Utensils, Activity, Sparkles, User, Plus, Camera, X } from 'lucide-react';
+import { House, Dumbbell, Utensils, TrendingUp, Activity, User, Plus, Camera, type LucideIcon } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { NuviaBottomSheet } from './NuviaBottomSheet';
 
-export type TabType = 'home' | 'meals' | 'exercise' | 'coach' | 'profile' | 'summary' | 'goals';
+export type TabType = 'home' | 'meals' | 'exercise' | 'progress' | 'coach' | 'profile' | 'summary' | 'goals';
 
 interface NavigationProps {
   activeTab: TabType;
@@ -50,7 +50,7 @@ export function TopBar({
 
         <button
           onClick={() => setActiveTab('profile')}
-          className="w-8 h-8 rounded-full bg-card border border-fg/[0.15] flex items-center justify-center text-xs font-semibold text-fg hover:border-[#30D158]/50 transition-all overflow-hidden shadow-sm"
+          className="w-8 h-8 rounded-full bg-card border border-fg/[0.15] flex items-center justify-center text-xs font-semibold text-fg hover:border-accent/50 transition-all overflow-hidden shadow-sm"
           title="Profile"
         >
           {avatarUrl ? (
@@ -71,96 +71,84 @@ export function TopBar({
   );
 }
 
+function NavItem({
+  label,
+  icon: Icon,
+  active,
+  onClick,
+}: {
+  label: string;
+  icon: LucideIcon;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-current={active ? 'page' : undefined}
+      className={`relative flex flex-col items-center justify-center gap-1 h-12 min-w-[56px] transition-colors cursor-pointer ${
+        active ? 'text-fg' : 'text-subtle hover:text-fg'
+      }`}
+    >
+      <Icon className={`w-[22px] h-[22px] ${active ? 'stroke-[2.25]' : 'stroke-[1.75]'}`} />
+      <span className={`text-[10.5px] tracking-tight ${active ? 'font-bold' : 'font-semibold'}`}>{label}</span>
+      {active && <span className="absolute -top-1.5 h-[3px] w-6 rounded-full bg-accent" aria-hidden />}
+    </button>
+  );
+}
+
 export function BottomNav({
   activeTab,
   setActiveTab,
   onOpenAddMeal,
   onOpenAddExercise,
 }: NavigationProps) {
-  const { user, profile } = useAuth();
-  const avatarUrl = profile?.avatar_url || user?.avatar_url;
   const [showLogSheet, setShowLogSheet] = useState(false);
 
   return (
     <>
       <nav
-        className="absolute bottom-0 left-0 right-0 z-50 w-full h-[calc(var(--bottom-nav-height,56px)+env(safe-area-inset-bottom,0px))] pb-[calc(4px+env(safe-area-inset-bottom,0px))] bg-app border-t border-fg/[0.08] px-4 pt-1.5 flex items-center justify-between"
+        aria-label="Primary"
+        className="absolute bottom-0 left-0 right-0 z-50 w-full h-[calc(var(--bottom-nav-height,56px)+env(safe-area-inset-bottom,0px))] pb-[calc(4px+env(safe-area-inset-bottom,0px))] bg-app/95 backdrop-blur-xl border-t border-line px-3 pt-1.5 grid grid-cols-5 items-center"
       >
-        {/* Destination 1: Today */}
-        <button
-          onClick={() => setActiveTab('home')}
-          className={`flex flex-col items-center gap-0.5 py-0.5 px-2.5 transition-colors ${
-            activeTab === 'home' ? 'text-fg' : 'text-muted hover:text-fg'
-          }`}
-        >
-          <Calendar className="w-5 h-5" />
-          <span className="text-[10px] font-semibold tracking-tight">Today</span>
-        </button>
+        <NavItem label="Home" icon={House} active={activeTab === 'home'} onClick={() => setActiveTab('home')} />
+        <NavItem
+          label="Workout"
+          icon={Dumbbell}
+          active={activeTab === 'exercise'}
+          onClick={() => setActiveTab('exercise')}
+        />
 
-        {/* Destination 2: Meals */}
-        <button
-          onClick={() => setActiveTab('meals')}
-          className={`flex flex-col items-center gap-0.5 py-0.5 px-2.5 transition-colors ${
-            activeTab === 'meals' ? 'text-fg' : 'text-muted hover:text-fg'
-          }`}
-        >
-          <Utensils className="w-5 h-5" />
-          <span className="text-[10px] font-semibold tracking-tight">Meals</span>
-        </button>
-
-        {/* Action Center: (+) Rotates to (×) when Log Entry sheet is open */}
-        <div className="relative -top-2 z-10">
+        {/* Action Center: (+) rotates to (×) while the Log Entry sheet is open */}
+        <div className="relative -top-2 z-10 flex justify-center">
           <button
             type="button"
             onClick={() => setShowLogSheet((prev) => !prev)}
-            className={`w-14 h-14 rounded-full flex items-center justify-center border-2 border-white ring-4 ring-app active:scale-95 transition-all duration-300 cursor-pointer shadow-lg ${
+            className={`w-14 h-14 rounded-full flex items-center justify-center ring-4 ring-app active:scale-95 transition-all duration-300 cursor-pointer shadow-lg shadow-black/20 ${
               showLogSheet
-                ? 'bg-elevated text-fg rotate-45 border-fg/80'
-                : 'bg-[#30D158] text-black rotate-0 hover:bg-[#28B84D]'
+                ? 'bg-elevated text-fg rotate-45'
+                : 'bg-accent text-on-accent rotate-0 hover:bg-accent-hover'
             }`}
-            title={showLogSheet ? 'Close Log Menu' : 'Log Meal or Activity'}
+            aria-label={showLogSheet ? 'Close log menu' : 'Log meal or activity'}
             aria-expanded={showLogSheet}
           >
-            <Plus className="w-7 h-7 stroke-[3] transition-transform duration-300" />
+            <Plus className="w-7 h-7 stroke-[2.75] transition-transform duration-300" />
           </button>
         </div>
 
-        {/* Destination 3: Activity */}
-        <button
-          onClick={() => setActiveTab('exercise')}
-          className={`flex flex-col items-center gap-0.5 py-0.5 px-2.5 transition-colors ${
-            activeTab === 'exercise' ? 'text-fg' : 'text-muted hover:text-fg'
-          }`}
-        >
-          <Activity className="w-5 h-5" />
-          <span className="text-[10px] font-semibold tracking-tight">Activity</span>
-        </button>
-
-        {/* Destination 4: Profile */}
-        <button
-          onClick={() => setActiveTab('profile')}
-          className={`flex flex-col items-center gap-0.5 py-0.5 px-2.5 transition-colors ${
-            activeTab === 'profile' ? 'text-fg' : 'text-muted hover:text-fg'
-          }`}
-        >
-          {avatarUrl ? (
-            <div
-              className={`w-5 h-5 rounded-full overflow-hidden border transition-all ${
-                activeTab === 'profile' ? 'border-white ring-1 ring-white' : 'border-fg/20'
-              }`}
-            >
-              <img
-                src={avatarUrl}
-                alt="Profile"
-                referrerPolicy="no-referrer"
-                className="w-full h-full object-cover"
-              />
-            </div>
-          ) : (
-            <User className="w-5 h-5" />
-          )}
-          <span className="text-[10px] font-semibold tracking-tight">Profile</span>
-        </button>
+        <NavItem
+          label="Nutrition"
+          icon={Utensils}
+          active={activeTab === 'meals' || activeTab === 'summary'}
+          onClick={() => setActiveTab('meals')}
+        />
+        <NavItem
+          label="Progress"
+          icon={TrendingUp}
+          active={activeTab === 'progress'}
+          onClick={() => setActiveTab('progress')}
+        />
       </nav>
 
       {/* Unified Compact Log Action Sheet */}
@@ -178,15 +166,15 @@ export function BottomNav({
               setShowLogSheet(false);
               onOpenAddMeal?.();
             }}
-            className="w-full p-3.5 rounded-2xl bg-gradient-to-r from-[#30D158]/20 to-elevated hover:from-[#30D158]/30 border border-[#30D158]/40 text-left transition-all flex items-center gap-3.5 group cursor-pointer active:scale-[0.99]"
+            className="w-full p-3.5 rounded-2xl bg-gradient-to-r from-accent/20 to-elevated hover:from-accent/30 border border-accent/40 text-left transition-all flex items-center gap-3.5 group cursor-pointer active:scale-[0.99]"
           >
-            <div className="w-10 h-10 rounded-xl bg-[#30D158] text-black flex items-center justify-center shrink-0 shadow-md">
+            <div className="w-10 h-10 rounded-xl bg-accent text-on-accent flex items-center justify-center shrink-0 shadow-md">
               <Camera className="w-5 h-5 stroke-[2.5]" />
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-1.5">
                 <p className="text-sm font-bold text-fg">Log Meal</p>
-                <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-[#30D158] text-black">
+                <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-accent text-on-accent">
                   AI Camera
                 </span>
               </div>
@@ -202,7 +190,7 @@ export function BottomNav({
             }}
             className="w-full p-3.5 rounded-2xl bg-elevated hover:bg-elevated-2 text-left transition-colors flex items-center gap-3.5 group cursor-pointer active:scale-[0.99]"
           >
-            <div className="w-10 h-10 rounded-xl bg-[#0A84FF]/15 text-blue-ink flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-info/15 text-blue-ink flex items-center justify-center">
               <Activity className="w-5 h-5" />
             </div>
             <div className="flex-1">

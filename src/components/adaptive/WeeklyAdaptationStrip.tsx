@@ -42,7 +42,7 @@ export function WeeklyAdaptationStrip({
       case 'completed':
         return <CheckCircle2 className="w-3.5 h-3.5 text-green-ink" />;
       case 'partial':
-        return <div className="w-2.5 h-2.5 rounded-full bg-[#FF9F0A]" />;
+        return <div className="w-2.5 h-2.5 rounded-full bg-warn" />;
       case 'missed':
         return <XCircle className="w-3.5 h-3.5 text-red-ink" />;
       case 'adapted':
@@ -70,8 +70,8 @@ export function WeeklyAdaptationStrip({
                 className={`flex-1 flex flex-col items-center py-2 px-1 rounded-2xl transition-all cursor-pointer ${
                   day.isToday
                     ? isSelected
-                      ? 'bg-[#30D158]/25 border border-[#30D158]'
-                      : 'bg-[#30D158]/15 border border-[#30D158]/40'
+                      ? 'bg-accent/25 border border-accent'
+                      : 'bg-accent/15 border border-accent/40'
                     : isSelected
                     ? 'bg-fg/15 border border-fg/25'
                     : 'hover:bg-fg/[0.04]'
@@ -109,13 +109,13 @@ export function WeeklyAdaptationStrip({
             <span
               className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                 activeDay.statusBadge === 'completed'
-                  ? 'bg-[#30D158]/15 text-green-ink border border-[#30D158]/30'
+                  ? 'bg-accent/15 text-green-ink border border-accent/30'
                   : activeDay.statusBadge === 'partial'
-                  ? 'bg-[#FF9F0A]/15 text-orange-ink border border-[#FF9F0A]/30'
+                  ? 'bg-warn/15 text-orange-ink border border-warn/30'
                   : activeDay.statusBadge === 'adapted'
-                  ? 'bg-[#0A84FF]/15 text-blue-ink border border-[#0A84FF]/30'
+                  ? 'bg-info/15 text-blue-ink border border-info/30'
                   : activeDay.statusBadge === 'missed'
-                  ? 'bg-[#FF453A]/15 text-red-ink border border-[#FF453A]/30'
+                  ? 'bg-danger/15 text-red-ink border border-danger/30'
                   : 'bg-fg/10 text-fg'
               }`}
             >

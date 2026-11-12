@@ -146,7 +146,7 @@ export function StreakCalendarModal({
         {/* Modal Top Header */}
         <div className="flex items-center justify-between px-5 py-3 border-b border-fg/5">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#FF9500] to-[#FF3B30] flex items-center justify-center shadow-lg shadow-orange-500/20">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-warn to-danger flex items-center justify-center shadow-lg shadow-orange-500/20">
               <Flame className="w-4 h-4 text-fg fill-white" />
             </div>
             <div>
@@ -165,10 +165,10 @@ export function StreakCalendarModal({
         {/* Scrollable Modal Content */}
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
           {/* Hero Banner Card */}
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#FF9500]/20 via-[#FF3B30]/10 to-transparent border border-[#FF9500]/20 p-4">
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-warn/20 via-danger/10 to-transparent border border-warn/20 p-4">
             <div className="flex items-start justify-between">
               <div>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-[#FF9500]/20 text-orange-ink border border-[#FF9500]/30 uppercase">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-warn/20 text-orange-ink border border-warn/30 uppercase">
                   <Sparkles className="w-3 h-3" />
                   Streak Engine
                 </span>
@@ -186,7 +186,7 @@ export function StreakCalendarModal({
               </div>
 
               {/* Flame Badge Ring */}
-              <div className="relative flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#FF9500] to-[#FF3B30] shadow-lg shadow-orange-500/30">
+              <div className="relative flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-warn to-danger shadow-lg shadow-orange-500/30">
                 <Flame className="w-8 h-8 text-fg fill-white animate-pulse" />
               </div>
             </div>
@@ -202,7 +202,7 @@ export function StreakCalendarModal({
                     onClose();
                     onLogActivity();
                   }}
-                  className="px-3 py-1.5 rounded-lg bg-[#FF9500] text-black font-semibold text-xs flex items-center gap-1 hover:bg-[#FF9500]/90 transition-transform active:scale-95 shadow-md shadow-orange-500/20"
+                  className="px-3 py-1.5 rounded-lg bg-warn text-black font-semibold text-xs flex items-center gap-1 hover:bg-warn/90 transition-transform active:scale-95 shadow-md shadow-orange-500/20"
                 >
                   <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                   Log Today
@@ -328,7 +328,7 @@ export function StreakCalendarModal({
                           : isSelected
                           ? 'ring-2 ring-white bg-fg/15 text-fg font-bold'
                           : d.isActive
-                          ? 'bg-gradient-to-b from-[#FF9500]/25 to-[#FF3B30]/20 text-fg font-semibold hover:bg-orange-500/30'
+                          ? 'bg-gradient-to-b from-warn/25 to-danger/20 text-fg font-semibold hover:bg-orange-500/30'
                           : d.isToday
                           ? 'border border-fg/30 text-fg font-semibold'
                           : 'text-zinc-400 hover:bg-fg/5'
@@ -336,7 +336,7 @@ export function StreakCalendarModal({
                     >
                       <span className="leading-none text-[11px]">{d.dayNumber}</span>
                       {d.isActive && (
-                        <div className="w-1.5 h-1.5 rounded-full bg-[#FF9500] mt-1 shadow-sm shadow-orange-500/50" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-warn mt-1 shadow-sm shadow-orange-500/50" />
                       )}
                       {d.isToday && !d.isActive && (
                         <div className="w-1 h-1 rounded-full bg-fg/60 mt-1" />
@@ -350,7 +350,7 @@ export function StreakCalendarModal({
               <div className="pt-2 border-t border-fg/5 flex items-center justify-between text-[11px] text-zinc-400">
                 <div className="flex items-center gap-3">
                   <span className="flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-[#FF9500]" />
+                    <span className="w-2 h-2 rounded-full bg-warn" />
                     Logged Active
                   </span>
                   <span className="flex items-center gap-1">
@@ -386,7 +386,7 @@ export function StreakCalendarModal({
                     <div
                       className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${
                         b.unlocked
-                          ? 'bg-gradient-to-tr from-[#FF9500] to-[#FF3B30] shadow-md shadow-orange-500/20'
+                          ? 'bg-gradient-to-tr from-warn to-danger shadow-md shadow-orange-500/20'
                           : 'bg-fg/5 border border-fg/10'
                       }`}
                     >
@@ -400,7 +400,7 @@ export function StreakCalendarModal({
                           {b.title}
                         </h4>
                         {b.unlocked ? (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-green-ink bg-[#30D158]/10 px-2 py-0.5 rounded-full">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-green-ink bg-accent/10 px-2 py-0.5 rounded-full">
                             <CheckCircle2 className="w-3 h-3" />
                             Unlocked
                           </span>
@@ -418,7 +418,7 @@ export function StreakCalendarModal({
                       {!b.unlocked && (
                         <div className="w-full bg-fg/10 h-1.5 rounded-full mt-2 overflow-hidden">
                           <div
-                            className="bg-gradient-to-r from-[#FF9500] to-[#FF3B30] h-full rounded-full transition-all"
+                            className="bg-gradient-to-r from-warn to-danger h-full rounded-full transition-all"
                             style={{ width: `${pct}%` }}
                           />
                         </div>

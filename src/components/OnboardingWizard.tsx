@@ -358,12 +358,12 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
       case 'lose_weight':
         return { label: '-450 kcal Deficit', tag: 'Fat Loss', color: 'text-amber-400 bg-amber-400/15 border-amber-400/30' };
       case 'build_muscle':
-        return { label: '+200 kcal Surplus', tag: 'Muscle Growth', color: 'text-[#30D158] bg-[#30D158]/15 border-[#30D158]/30' };
+        return { label: '+200 kcal Surplus', tag: 'Muscle Growth', color: 'text-green-ink bg-accent/15 border-accent/30' };
       case 'gain_weight':
         return { label: '+400 kcal Surplus', tag: 'Weight Gain', color: 'text-sky-400 bg-sky-400/15 border-sky-400/30' };
       case 'maintain_weight':
       default:
-        return { label: 'Energy Balance', tag: 'Maintenance', color: 'text-white bg-white/10 border-white/20' };
+        return { label: 'Energy Balance', tag: 'Maintenance', color: 'text-fg bg-fg/10 border-fg/20' };
     }
   };
 
@@ -384,7 +384,8 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
 
   return (
     <div
-      className="relative w-full max-w-md mx-auto bg-black text-white flex flex-col overflow-hidden"
+      data-theme="dark"
+      className="relative w-full max-w-md mx-auto bg-app text-fg flex flex-col overflow-hidden"
       style={{
         height: '100dvh',
         minHeight: '-webkit-fill-available',
@@ -403,20 +404,20 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
 
       {/* ── TOP NAVIGATION & STEP PROGRESS ─────────────────────────────────── */}
       <div
-        className="shrink-0 px-5 pb-3 border-b border-white/[0.08] bg-black/75 backdrop-blur-xl z-10"
+        className="shrink-0 px-5 pb-3 border-b border-fg/[0.08] bg-black/75 backdrop-blur-xl z-10"
         style={{ paddingTop: 'max(16px, env(safe-area-inset-top, 16px))' }}
       >
         <div className="flex items-center justify-between">
           {step > 1 ? (
             <button
               onClick={() => setStep((s) => s - 1)}
-              className="p-1.5 -ml-1 text-[#8E8E93] hover:text-white transition-colors rounded-xl bg-white/[0.05]"
+              className="p-1.5 -ml-1 text-muted hover:text-fg transition-colors rounded-xl bg-fg/[0.05]"
               aria-label="Back"
             >
               <ArrowLeft className="w-4 h-4" />
             </button>
           ) : onCancel ? (
-            <button onClick={onCancel} className="text-xs text-[#8E8E93] hover:text-white transition-colors">
+            <button onClick={onCancel} className="text-xs text-muted hover:text-fg transition-colors">
               Cancel
             </button>
           ) : (
@@ -429,16 +430,16 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                 key={i}
                 className={`h-1.5 rounded-full transition-all ${
                   i + 1 === step
-                    ? 'w-6 bg-[#30D158]'
+                    ? 'w-6 bg-accent'
                     : i + 1 < step
-                    ? 'w-2 bg-[#30D158]/50'
-                    : 'w-2 bg-white/10'
+                    ? 'w-2 bg-accent/50'
+                    : 'w-2 bg-fg/10'
                 }`}
               />
             ))}
           </div>
 
-          <span className="text-[11px] font-mono font-semibold text-[#8E8E93]">
+          <span className="text-[11px] font-mono font-semibold text-muted">
             {step}/{totalSteps}
           </span>
         </div>
@@ -455,19 +456,19 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
         {step === 1 && (
           <div className="space-y-4 py-1 animate-fadeIn">
           <div>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-[#30D158]/15 text-[#30D158] border border-[#30D158]/30 uppercase">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-accent/15 text-green-ink border border-accent/30 uppercase">
               <Sparkles className="w-3 h-3" />
               Biometrics
             </span>
-            <h2 className="text-2xl font-bold tracking-tight text-white mt-2">About You</h2>
-            <p className="text-xs text-[#8E8E93] mt-1">
+            <h2 className="text-2xl font-bold tracking-tight text-fg mt-2">About You</h2>
+            <p className="text-xs text-muted mt-1">
               Authoritative physical data used to calculate metabolic resting burn (BMR).
             </p>
           </div>
 
           <div className="space-y-3.5">
             <div>
-              <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-1.5">
+              <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-1.5">
                 Biological Sex
               </label>
               <div className="grid grid-cols-2 gap-2.5">
@@ -477,7 +478,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                     type="button"
                     onClick={() => setSex(opt)}
                     className={`py-2.5 rounded-xl text-xs font-semibold capitalize transition-all ${
-                      sex === opt ? 'bg-white text-black font-bold shadow-md' : 'bg-[#1C1C1E] text-[#8E8E93] hover:text-white border border-white/[0.04]'
+                      sex === opt ? 'bg-fg text-app font-bold shadow-md' : 'bg-card text-muted hover:text-fg border border-fg/[0.04]'
                     }`}
                   >
                     {opt}
@@ -488,7 +489,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-1.5">
+                <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-1.5">
                   Height
                 </label>
                 <div className="relative">
@@ -496,14 +497,14 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                     type="number"
                     value={heightCm}
                     onChange={(e) => setHeightCm(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#1C1C1E] border border-white/[0.08] text-sm text-white font-semibold focus:outline-none focus:border-[#30D158]"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-card border border-fg/[0.08] text-sm text-fg font-semibold focus:outline-none focus:border-accent"
                   />
-                  <span className="absolute right-3.5 top-2.5 text-xs text-[#8E8E93] pointer-events-none">cm</span>
+                  <span className="absolute right-3.5 top-2.5 text-xs text-muted pointer-events-none">cm</span>
                 </div>
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-1.5">
+                <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-1.5">
                   Weight
                 </label>
                 <div className="relative">
@@ -512,22 +513,22 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                     step="0.1"
                     value={weightKg}
                     onChange={(e) => setWeightKg(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#1C1C1E] border border-white/[0.08] text-sm text-white font-semibold focus:outline-none focus:border-[#30D158]"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-card border border-fg/[0.08] text-sm text-fg font-semibold focus:outline-none focus:border-accent"
                   />
-                  <span className="absolute right-3.5 top-2.5 text-xs text-[#8E8E93] pointer-events-none">kg</span>
+                  <span className="absolute right-3.5 top-2.5 text-xs text-muted pointer-events-none">kg</span>
                 </div>
               </div>
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-1.5">
+              <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-1.5">
                 Date of Birth
               </label>
               <input
                 type="date"
                 value={dob}
                 onChange={(e) => setDob(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#1C1C1E] border border-white/[0.08] text-sm text-white font-semibold focus:outline-none focus:border-[#30D158]"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-card border border-fg/[0.08] text-sm text-fg font-semibold focus:outline-none focus:border-accent"
               />
             </div>
           </div>
@@ -540,19 +541,19 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
       {step === 2 && (
         <div className="space-y-4 py-1 animate-fadeIn">
           <div>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-[#30D158]/15 text-[#30D158] border border-[#30D158]/30 uppercase">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-accent/15 text-green-ink border border-accent/30 uppercase">
               <Target className="w-3 h-3" />
               Metabolism &amp; Target
             </span>
-            <h2 className="text-2xl font-bold tracking-tight text-white mt-2">Goals &amp; Energy</h2>
-            <p className="text-xs text-[#8E8E93] mt-1">
+            <h2 className="text-2xl font-bold tracking-tight text-fg mt-2">Goals &amp; Energy</h2>
+            <p className="text-xs text-muted mt-1">
               Determines daily maintenance energy expenditure (TDEE) and caloric balance.
             </p>
           </div>
 
           <div className="space-y-3.5">
             <div>
-              <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-2">
+              <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-2">
                 Primary Goal
               </label>
 
@@ -562,29 +563,29 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                 onClick={() => setGoal('recomposition')}
                 className={`w-full mb-2 p-3 rounded-2xl text-left transition-all flex items-center justify-between border cursor-pointer active:scale-[0.98] ${
                   goal === 'recomposition'
-                    ? 'bg-white text-black font-bold shadow-md border-white'
-                    : 'bg-[#1C1C1E] text-[#8E8E93] hover:text-white border-white/[0.04]'
+                    ? 'bg-fg text-app font-bold shadow-md border-fg'
+                    : 'bg-card text-muted hover:text-fg border-fg/[0.04]'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
                   <div
                     className={`w-7 h-7 rounded-xl flex items-center justify-center ${
-                      goal === 'recomposition' ? 'bg-black text-white' : 'bg-white/5 text-[#30D158]'
+                      goal === 'recomposition' ? 'bg-app text-fg' : 'bg-fg/5 text-green-ink'
                     }`}
                   >
                     <Zap className="w-3.5 h-3.5 fill-current" />
                   </div>
                   <div>
-                    <p className={`text-xs font-bold ${goal === 'recomposition' ? 'text-black' : 'text-white'}`}>
+                    <p className={`text-xs font-bold ${goal === 'recomposition' ? 'text-black' : 'text-fg'}`}>
                       Lose Fat &amp; Build Muscle
                     </p>
-                    <p className={`text-[10px] ${goal === 'recomposition' ? 'text-zinc-700 font-medium' : 'text-[#8E8E93]'}`}>
+                    <p className={`text-[10px] ${goal === 'recomposition' ? 'text-zinc-700 font-medium' : 'text-muted'}`}>
                       Body Recomposition (simultaneous fat loss &amp; muscle gain)
                     </p>
                   </div>
                 </div>
                 {goal === 'recomposition' && (
-                  <div className="w-5 h-5 rounded-full bg-black text-white flex items-center justify-center">
+                  <div className="w-5 h-5 rounded-full bg-app text-fg flex items-center justify-center">
                     <Check className="w-3 h-3 stroke-[3]" />
                   </div>
                 )}
@@ -602,7 +603,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                     type="button"
                     onClick={() => setGoal(g.id)}
                     className={`p-2.5 rounded-xl text-xs font-semibold transition-all ${
-                      goal === g.id ? 'bg-white text-black font-bold shadow-md' : 'bg-[#1C1C1E] text-[#8E8E93] hover:text-white border border-white/[0.04]'
+                      goal === g.id ? 'bg-fg text-app font-bold shadow-md' : 'bg-card text-muted hover:text-fg border border-fg/[0.04]'
                     }`}
                   >
                     {g.label}
@@ -612,7 +613,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-1.5">
+              <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-1.5">
                 Target Weight
               </label>
               <div className="relative">
@@ -621,14 +622,14 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                   step="0.1"
                   value={targetWeightKg}
                   onChange={(e) => setTargetWeightKg(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#1C1C1E] border border-white/[0.08] text-sm text-white font-semibold focus:outline-none focus:border-[#30D158]"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-card border border-fg/[0.08] text-sm text-fg font-semibold focus:outline-none focus:border-accent"
                 />
-                <span className="absolute right-3.5 top-2.5 text-xs text-[#8E8E93] pointer-events-none">kg</span>
+                <span className="absolute right-3.5 top-2.5 text-xs text-muted pointer-events-none">kg</span>
               </div>
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-2">
+              <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-2">
                 Activity Level
               </label>
               <div className="grid grid-cols-2 gap-2">
@@ -643,7 +644,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                     type="button"
                     onClick={() => setActivityLevel(act.id)}
                     className={`p-2.5 rounded-xl text-xs font-semibold transition-all ${
-                      activityLevel === act.id ? 'bg-white text-black font-bold shadow-md' : 'bg-[#1C1C1E] text-[#8E8E93] hover:text-white border border-white/[0.04]'
+                      activityLevel === act.id ? 'bg-fg text-app font-bold shadow-md' : 'bg-card text-muted hover:text-fg border border-fg/[0.04]'
                     }`}
                   >
                     {act.label}
@@ -661,19 +662,19 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
       {step === 3 && (
         <div className="space-y-4 py-1 animate-fadeIn">
           <div>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-amber-500/15 text-[#FF9F0A] border border-[#FF9F0A]/30 uppercase">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-amber-500/15 text-orange-ink border border-warn/30 uppercase">
               <User className="w-3 h-3" />
               Understand Your Body
             </span>
-            <h2 className="text-2xl font-bold tracking-tight text-white mt-1.5">Where You Are Starting</h2>
-            <p className="text-xs text-[#8E8E93] mt-0.5 leading-snug">
+            <h2 className="text-2xl font-bold tracking-tight text-fg mt-1.5">Where You Are Starting</h2>
+            <p className="text-xs text-muted mt-0.5 leading-snug">
               A qualitative self-description to tailor training strategy. (Never used to guess fake body fat numbers).
             </p>
           </div>
 
           <div className="space-y-3">
             <div>
-              <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-2">
+              <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-2">
                 How would you describe your current physique?
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
@@ -686,23 +687,23 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                       onClick={() => setCurrentPhysique(opt.id)}
                       className={`relative p-2.5 rounded-2xl text-center transition-all cursor-pointer border flex flex-col items-center justify-between active:scale-[0.98] ${
                         isSelected
-                          ? 'bg-white/[0.08] border-[#30D158] ring-1 ring-[#30D158]/40 shadow-sm scale-[1.02]'
-                          : 'bg-[#1C1C1E] border-white/[0.05] hover:border-white/20'
+                          ? 'bg-fg/[0.08] border-accent ring-1 ring-accent/40 shadow-sm scale-[1.02]'
+                          : 'bg-card border-fg/[0.05] hover:border-fg/20'
                       }`}
                     >
                       {isSelected && (
-                        <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-[#30D158] flex items-center justify-center text-black shadow-sm">
+                        <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-accent flex items-center justify-center text-on-accent shadow-sm">
                           <Check className="w-2.5 h-2.5 stroke-[3]" />
                         </div>
                       )}
                       <div className="w-16 h-28 flex items-center justify-center py-1">
                         <PhysiqueIllustration sex={sex} type={opt.id} selected={isSelected} />
                       </div>
-                      <div className="w-full mt-1 pt-1.5 border-t border-white/[0.04]">
-                        <p className={`text-xs font-bold leading-tight ${isSelected ? 'text-[#30D158]' : 'text-white'}`}>
+                      <div className="w-full mt-1 pt-1.5 border-t border-fg/[0.04]">
+                        <p className={`text-xs font-bold leading-tight ${isSelected ? 'text-green-ink' : 'text-fg'}`}>
                           {opt.label}
                         </p>
-                        <p className="text-[9px] text-[#8E8E93] mt-0.5 truncate">
+                        <p className="text-[9px] text-muted mt-0.5 truncate">
                           {opt.desc}
                         </p>
                       </div>
@@ -713,16 +714,16 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
             </div>
 
             {/* Why we ask disclaimer */}
-            <div className="rounded-xl bg-white/[0.02] border border-white/[0.05] p-2.5 flex items-start gap-2">
-              <Info className="w-3.5 h-3.5 text-[#8E8E93] shrink-0 mt-0.5" />
-              <div className="text-[10px] text-[#8E8E93] leading-relaxed">
+            <div className="rounded-xl bg-fg/[0.02] border border-fg/[0.05] p-2.5 flex items-start gap-2">
+              <Info className="w-3.5 h-3.5 text-muted shrink-0 mt-0.5" />
+              <div className="text-[10px] text-muted leading-relaxed">
                 <span className="font-semibold text-zinc-300">Why we ask: </span>
                 This helps Nuvia understand the starting shape and structure to personalize your training strategy. It does not estimate your exact body-fat percentage.
               </div>
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-1.5">
+              <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-1.5">
                 What would you most like to improve?
               </label>
               <div className="flex flex-wrap gap-1.5">
@@ -735,17 +736,17 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                       onClick={() => toggleArrayItem(priorityAreas, area, setPriorityAreas)}
                       className={`px-3 py-1.5 rounded-xl text-[11px] font-medium transition-all flex items-center gap-1 cursor-pointer border ${
                         isSelected
-                          ? 'bg-[#30D158]/20 border-[#30D158] text-white font-semibold'
-                          : 'bg-[#1C1C1E] border-white/[0.06] text-[#8E8E93] hover:text-white'
+                          ? 'bg-accent/20 border-accent text-fg font-semibold'
+                          : 'bg-card border-fg/[0.06] text-muted hover:text-fg'
                       }`}
                     >
-                      {isSelected && <Check className="w-3 h-3 text-[#30D158]" />}
+                      {isSelected && <Check className="w-3 h-3 text-green-ink" />}
                       <span>{area}</span>
                     </button>
                   );
                 })}
               </div>
-              <p className="text-[10px] text-[#8E8E93] mt-1.5 italic">
+              <p className="text-[10px] text-muted mt-1.5 italic">
                 * Note: Overall body recomposition drives progress; spot reduction is anatomically not possible.
               </p>
             </div>
@@ -763,15 +764,15 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
               <Compass className="w-3 h-3" />
               Your Vision
             </span>
-            <h2 className="text-2xl font-bold tracking-tight text-white mt-1.5">Desired Physique</h2>
-            <p className="text-xs text-[#8E8E93] mt-0.5">
+            <h2 className="text-2xl font-bold tracking-tight text-fg mt-1.5">Desired Physique</h2>
+            <p className="text-xs text-muted mt-0.5">
               Shapes workout selection, volume bias, and aesthetic coaching.
             </p>
           </div>
 
           <div className="space-y-3">
             <div>
-              <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-2">
+              <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-2">
                 What would you like your physique to look like?
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
@@ -784,23 +785,23 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                       onClick={() => setDesiredPhysique(opt.id)}
                       className={`relative p-2.5 rounded-2xl text-center transition-all cursor-pointer border flex flex-col items-center justify-between active:scale-[0.98] ${
                         isSelected
-                          ? 'bg-white/[0.08] border-[#30D158] ring-1 ring-[#30D158]/40 shadow-sm scale-[1.02]'
-                          : 'bg-[#1C1C1E] border-white/[0.05] hover:border-white/20'
+                          ? 'bg-fg/[0.08] border-accent ring-1 ring-accent/40 shadow-sm scale-[1.02]'
+                          : 'bg-card border-fg/[0.05] hover:border-fg/20'
                       }`}
                     >
                       {isSelected && (
-                        <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-[#30D158] flex items-center justify-center text-black shadow-sm">
+                        <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-accent flex items-center justify-center text-on-accent shadow-sm">
                           <Check className="w-2.5 h-2.5 stroke-[3]" />
                         </div>
                       )}
                       <div className="w-16 h-28 flex items-center justify-center py-1">
                         <PhysiqueIllustration sex={sex} type={opt.id} selected={isSelected} />
                       </div>
-                      <div className="w-full mt-1 pt-1.5 border-t border-white/[0.04]">
-                        <p className={`text-xs font-bold leading-tight ${isSelected ? 'text-[#30D158]' : 'text-white'}`}>
+                      <div className="w-full mt-1 pt-1.5 border-t border-fg/[0.04]">
+                        <p className={`text-xs font-bold leading-tight ${isSelected ? 'text-green-ink' : 'text-fg'}`}>
                           {opt.label}
                         </p>
-                        <p className="text-[9px] text-[#8E8E93] mt-0.5 truncate">
+                        <p className="text-[9px] text-muted mt-0.5 truncate">
                           {opt.desc}
                         </p>
                       </div>
@@ -811,51 +812,51 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
             </div>
 
             {/* Live Interactive Transformation Preview Card */}
-            <div className="p-3.5 rounded-2xl bg-gradient-to-br from-[#1C1C1E] to-[#141416] border border-white/[0.08] shadow-lg">
+            <div className="p-3.5 rounded-2xl bg-gradient-to-br from-card to-[#141416] border border-fg/[0.08] shadow-lg">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#8E8E93]">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-muted">
                   Your Direction
                 </span>
-                <span className="text-[10px] font-medium text-[#30D158] bg-[#30D158]/10 px-2 py-0.5 rounded-full border border-[#30D158]/20">
+                <span className="text-[10px] font-medium text-green-ink bg-accent/10 px-2 py-0.5 rounded-full border border-accent/20">
                   Personalized Path
                 </span>
               </div>
 
               <div className="flex items-center justify-around py-1">
                 <div className="flex flex-col items-center">
-                  <span className="text-[10px] uppercase font-semibold text-[#8E8E93] mb-1">Current</span>
-                  <div className="w-16 h-24 rounded-xl bg-black/40 border border-white/10 p-1 flex items-center justify-center">
+                  <span className="text-[10px] uppercase font-semibold text-muted mb-1">Current</span>
+                  <div className="w-16 h-24 rounded-xl bg-app/40 border border-fg/10 p-1 flex items-center justify-center">
                     <PhysiqueIllustration sex={sex} type={currentPhysique} className="w-full h-full" />
                   </div>
-                  <span className="text-[11px] font-semibold text-white mt-1 text-center">
+                  <span className="text-[11px] font-semibold text-fg mt-1 text-center">
                     {currentPhysiqueOptions.find((c) => c.id === currentPhysique)?.label}
                   </span>
                 </div>
 
-                <div className="flex flex-col items-center px-1 text-[#30D158]">
+                <div className="flex flex-col items-center px-1 text-green-ink">
                   <ArrowRight className="w-4 h-4" />
-                  <span className="text-[9px] font-medium text-[#8E8E93] mt-0.5">Focus</span>
+                  <span className="text-[9px] font-medium text-muted mt-0.5">Focus</span>
                 </div>
 
                 <div className="flex flex-col items-center">
-                  <span className="text-[10px] uppercase font-semibold text-[#30D158] mb-1">Desired</span>
-                  <div className="w-16 h-24 rounded-xl bg-[#30D158]/10 border border-[#30D158]/30 p-1 flex items-center justify-center">
+                  <span className="text-[10px] uppercase font-semibold text-green-ink mb-1">Desired</span>
+                  <div className="w-16 h-24 rounded-xl bg-accent/10 border border-accent/30 p-1 flex items-center justify-center">
                     <PhysiqueIllustration sex={sex} type={desiredPhysique} className="w-full h-full" selected />
                   </div>
-                  <span className="text-[11px] font-semibold text-[#30D158] mt-1 text-center">
+                  <span className="text-[11px] font-semibold text-green-ink mt-1 text-center">
                     {desiredPhysiqueOptions.find((d) => d.id === desiredPhysique)?.label}
                   </span>
                 </div>
               </div>
 
-              <p className="text-[10px] text-[#8E8E93] text-center mt-2 border-t border-white/[0.04] pt-2">
+              <p className="text-[10px] text-muted text-center mt-2 border-t border-fg/[0.04] pt-2">
                 Nuvia will use this direction to personalize your training strategy and nutrition balance.
               </p>
             </div>
 
             {/* Custom Description */}
             <div>
-              <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-1">
+              <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-1">
                 Describe your ideal look in your own words (optional)
               </label>
               <input
@@ -863,14 +864,14 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                 value={desiredPhysiqueCustom}
                 onChange={(e) => setDesiredPhysiqueCustom(e.target.value)}
                 placeholder="e.g. Lean athletic with visible shoulders and less belly fat"
-                className="w-full px-3 py-2 rounded-xl bg-[#1C1C1E] border border-white/[0.08] text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-[#30D158]"
+                className="w-full px-3 py-2 rounded-xl bg-card border border-fg/[0.08] text-xs text-fg placeholder:text-zinc-600 focus:outline-none focus:border-accent"
               />
             </div>
 
             {/* Why we ask disclaimer */}
-            <div className="rounded-xl bg-white/[0.02] border border-white/[0.05] p-2.5 flex items-start gap-2">
-              <Info className="w-3.5 h-3.5 text-[#8E8E93] shrink-0 mt-0.5" />
-              <div className="text-[10px] text-[#8E8E93] leading-relaxed">
+            <div className="rounded-xl bg-fg/[0.02] border border-fg/[0.05] p-2.5 flex items-start gap-2">
+              <Info className="w-3.5 h-3.5 text-muted shrink-0 mt-0.5" />
+              <div className="text-[10px] text-muted leading-relaxed">
                 <span className="font-semibold text-zinc-300">Why we ask: </span>
                 This guides exercise selection, repetition ranges, and volume bias so you progress toward your ideal build.
               </div>
@@ -878,7 +879,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-1">
                   Target BF% reference
                 </label>
                 <div className="relative">
@@ -887,36 +888,36 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                     value={targetBfRef}
                     onChange={(e) => setTargetBfRef(e.target.value)}
                     placeholder="15"
-                    className="w-full px-3 py-2 rounded-xl bg-[#1C1C1E] border border-white/[0.08] text-xs text-white focus:outline-none focus:border-[#30D158]"
+                    className="w-full px-3 py-2 rounded-xl bg-card border border-fg/[0.08] text-xs text-fg focus:outline-none focus:border-accent"
                   />
-                  <span className="absolute right-3 top-2 text-xs text-[#8E8E93] pointer-events-none">%</span>
+                  <span className="absolute right-3 top-2 text-xs text-muted pointer-events-none">%</span>
                 </div>
-                <p className="text-[9px] text-[#8E8E93] mt-0.5">Visual target only</p>
+                <p className="text-[9px] text-muted mt-0.5">Visual target only</p>
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-1">
                   Reference photo
                 </label>
                 {physiquePhotoPreview ? (
-                  <div className="relative rounded-xl overflow-hidden border border-white/10 h-14 bg-black flex items-center justify-between px-3">
+                  <div className="relative rounded-xl overflow-hidden border border-fg/10 h-14 bg-app flex items-center justify-between px-3">
                     <img src={physiquePhotoPreview} alt="Preview" className="h-10 w-10 object-cover rounded-lg" />
                     <button
                       type="button"
                       onClick={() => setPhysiquePhotoPreview(null)}
-                      className="text-[#8E8E93] hover:text-white p-1"
+                      className="text-muted hover:text-fg p-1"
                     >
                       <X className="w-4 h-4" />
                     </button>
                   </div>
                 ) : (
-                  <label className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-[#1C1C1E] border border-dashed border-white/20 text-xs text-[#8E8E93] hover:text-white cursor-pointer h-10">
-                    <Camera className="w-3.5 h-3.5 text-[#30D158]" />
+                  <label className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-card border border-dashed border-fg/20 text-xs text-muted hover:text-fg cursor-pointer h-10">
+                    <Camera className="w-3.5 h-3.5 text-green-ink" />
                     <span className="text-[11px]">Add photo</span>
                     <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
                   </label>
                 )}
-                <p className="text-[9px] text-[#8E8E93] mt-0.5">Optional &amp; client-side only</p>
+                <p className="text-[9px] text-muted mt-0.5">Optional &amp; client-side only</p>
               </div>
             </div>
           </div>
@@ -933,24 +934,24 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
               <Dumbbell className="w-3 h-3" />
               Hard Constraints
             </span>
-            <h2 className="text-2xl font-bold tracking-tight text-white mt-1.5">Equipment &amp; Split</h2>
-            <p className="text-xs text-[#8E8E93] mt-0.5">
+            <h2 className="text-2xl font-bold tracking-tight text-fg mt-1.5">Equipment &amp; Split</h2>
+            <p className="text-xs text-muted mt-0.5">
               AI strictly obeys what you actually have. No unavailable gym machines will be prescribed.
             </p>
           </div>
 
           <div className="space-y-3">
             <div>
-              <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-1.5">
+              <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-1.5">
                 Training Experience &amp; Consistency
               </label>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <p className="text-[10px] text-[#8E8E93] mb-1">Experience:</p>
+                  <p className="text-[10px] text-muted mb-1">Experience:</p>
                   <select
                     value={experienceLevel}
                     onChange={(e) => setExperienceLevel(e.target.value as any)}
-                    className="w-full px-2.5 py-2 rounded-xl bg-[#1C1C1E] border border-white/[0.08] text-xs text-white focus:outline-none focus:border-[#30D158]"
+                    className="w-full px-2.5 py-2 rounded-xl bg-card border border-fg/[0.08] text-xs text-fg focus:outline-none focus:border-accent"
                   >
                     {experienceOptions.map((o) => (
                       <option key={o.id} value={o.id}>{o.label}</option>
@@ -958,11 +959,11 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                   </select>
                 </div>
                 <div>
-                  <p className="text-[10px] text-[#8E8E93] mb-1">Consistency:</p>
+                  <p className="text-[10px] text-muted mb-1">Consistency:</p>
                   <select
                     value={consistencyLevel}
                     onChange={(e) => setConsistencyLevel(e.target.value as any)}
-                    className="w-full px-2.5 py-2 rounded-xl bg-[#1C1C1E] border border-white/[0.08] text-xs text-white focus:outline-none focus:border-[#30D158]"
+                    className="w-full px-2.5 py-2 rounded-xl bg-card border border-fg/[0.08] text-xs text-fg focus:outline-none focus:border-accent"
                   >
                     {consistencyOptions.map((o) => (
                       <option key={o.id} value={o.id}>{o.label}</option>
@@ -973,7 +974,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-1.5">
+              <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-1.5">
                 Where do you train &amp; what equipment do you have?
               </label>
               <div className="grid grid-cols-4 gap-1.5 mb-2">
@@ -984,8 +985,8 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                     onClick={() => setEnvironment(loc)}
                     className={`py-1.5 rounded-xl text-[11px] font-semibold capitalize transition-all ${
                       environment === loc
-                        ? 'bg-white text-black'
-                        : 'bg-[#1C1C1E] text-[#8E8E93] hover:text-white border border-white/[0.04]'
+                        ? 'bg-fg text-app'
+                        : 'bg-card text-muted hover:text-fg border border-fg/[0.04]'
                     }`}
                   >
                     {loc}
@@ -1003,11 +1004,11 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                       onClick={() => toggleArrayItem(equipment, eq, setEquipment)}
                       className={`px-2.5 py-1.5 rounded-xl text-[10px] font-medium transition-all flex items-center gap-1 cursor-pointer border ${
                         isSelected
-                          ? 'bg-[#30D158]/20 border-[#30D158] text-white font-bold'
-                          : 'bg-[#1C1C1E] border-white/[0.06] text-[#8E8E93] hover:text-white'
+                          ? 'bg-accent/20 border-accent text-fg font-bold'
+                          : 'bg-card border-fg/[0.06] text-muted hover:text-fg'
                       }`}
                     >
-                      {isSelected && <Check className="w-3 h-3 text-[#30D158]" />}
+                      {isSelected && <Check className="w-3 h-3 text-green-ink" />}
                       <span>{eq}</span>
                     </button>
                   );
@@ -1017,13 +1018,13 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-1">
                   Preferred Split
                 </label>
                 <select
                   value={preferredSplit}
                   onChange={(e) => setPreferredSplit(e.target.value)}
-                  className="w-full px-2.5 py-2 rounded-xl bg-[#1C1C1E] border border-white/[0.08] text-xs text-white focus:outline-none focus:border-[#30D158]"
+                  className="w-full px-2.5 py-2 rounded-xl bg-card border border-fg/[0.08] text-xs text-fg focus:outline-none focus:border-accent"
                 >
                   {splitOptions.map((s) => (
                     <option key={s.id} value={s.id}>{s.label}</option>
@@ -1032,13 +1033,13 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-1">
                   Session Duration
                 </label>
                 <select
                   value={durationMinutes}
                   onChange={(e) => setDurationMinutes(Number(e.target.value))}
-                  className="w-full px-2.5 py-2 rounded-xl bg-[#1C1C1E] border border-white/[0.08] text-xs text-white focus:outline-none focus:border-[#30D158]"
+                  className="w-full px-2.5 py-2 rounded-xl bg-card border border-fg/[0.08] text-xs text-fg focus:outline-none focus:border-accent"
                 >
                   <option value={30}>20–30 min</option>
                   <option value={45}>30–45 min</option>
@@ -1057,19 +1058,19 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
       {step === 6 && (
         <div className="space-y-4 py-1 animate-fadeIn">
           <div>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-emerald-500/15 text-[#30D158] border border-[#30D158]/30 uppercase">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-emerald-500/15 text-green-ink border border-accent/30 uppercase">
               <Clock className="w-3 h-3" />
               Lifestyle &amp; Habit
             </span>
-            <h2 className="text-2xl font-bold tracking-tight text-white mt-1.5">Habits &amp; Obstacles</h2>
-            <p className="text-xs text-[#8E8E93] mt-0.5">
+            <h2 className="text-2xl font-bold tracking-tight text-fg mt-1.5">Habits &amp; Obstacles</h2>
+            <p className="text-xs text-muted mt-0.5">
               Personalizing adherence so your plan fits into real life without burnout.
             </p>
           </div>
 
           <div className="space-y-3">
             <div>
-              <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-1">
+              <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-1">
                 Regular Cardio / Physical Activity
               </label>
               <div className="grid grid-cols-3 gap-1.5 mb-1.5">
@@ -1080,8 +1081,8 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                     onClick={() => setCardioHabit(c)}
                     className={`py-1.5 rounded-xl text-[11px] font-medium transition-all ${
                       cardioHabit === c
-                        ? 'bg-white text-black font-semibold'
-                        : 'bg-[#1C1C1E] text-[#8E8E93] hover:text-white border border-white/[0.04]'
+                        ? 'bg-fg text-app font-semibold'
+                        : 'bg-card text-muted hover:text-fg border border-fg/[0.04]'
                     }`}
                   >
                     {c}
@@ -1093,19 +1094,19 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                 value={cardioDescription}
                 onChange={(e) => setCardioDescription(e.target.value)}
                 placeholder="e.g. 4.5 km brisk walk every Saturday"
-                className="w-full px-3 py-1.5 rounded-xl bg-[#1C1C1E] border border-white/[0.08] text-xs text-white focus:outline-none focus:border-[#30D158]"
+                className="w-full px-3 py-1.5 rounded-xl bg-card border border-fg/[0.08] text-xs text-fg focus:outline-none focus:border-accent"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-1">
                   Training Intensity
                 </label>
                 <select
                   value={targetRir}
                   onChange={(e) => setTargetRir(e.target.value)}
-                  className="w-full px-2.5 py-2 rounded-xl bg-[#1C1C1E] border border-white/[0.08] text-xs text-white focus:outline-none focus:border-[#30D158]"
+                  className="w-full px-2.5 py-2 rounded-xl bg-card border border-fg/[0.08] text-xs text-fg focus:outline-none focus:border-accent"
                 >
                   <option value="1-3">Challenging (1-3 RIR)</option>
                   <option value="0-1">Hard (0-1 RIR)</option>
@@ -1114,13 +1115,13 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-1">
                   Best Time of Day
                 </label>
                 <select
                   value={trainingTimeOfDay}
                   onChange={(e) => setTrainingTimeOfDay(e.target.value as any)}
-                  className="w-full px-2.5 py-2 rounded-xl bg-[#1C1C1E] border border-white/[0.08] text-xs text-white focus:outline-none focus:border-[#30D158]"
+                  className="w-full px-2.5 py-2 rounded-xl bg-card border border-fg/[0.08] text-xs text-fg focus:outline-none focus:border-accent"
                 >
                   <option value="morning">Morning</option>
                   <option value="afternoon">Afternoon</option>
@@ -1131,7 +1132,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-1.5">
+              <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-1.5">
                 What usually makes it hard to stay consistent?
               </label>
               <div className="flex flex-wrap gap-1.5">
@@ -1145,10 +1146,10 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                       className={`px-2.5 py-1.5 rounded-xl text-[10px] font-medium transition-all flex items-center gap-1 cursor-pointer border ${
                         isSelected
                           ? 'bg-amber-500/20 border-amber-500 text-amber-200 font-semibold'
-                          : 'bg-[#1C1C1E] border-white/[0.06] text-[#8E8E93] hover:text-white'
+                          : 'bg-card border-fg/[0.06] text-muted hover:text-fg'
                       }`}
                     >
-                      {isSelected && <Check className="w-3 h-3 text-[#FF9F0A]" />}
+                      {isSelected && <Check className="w-3 h-3 text-orange-ink" />}
                       <span>{obs}</span>
                     </button>
                   );
@@ -1166,7 +1167,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
         <div className="space-y-3.5 py-1 animate-fadeIn">
           <div>
             <div className="flex items-center justify-between">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-[#30D158]/15 text-[#30D158] border border-[#30D158]/30 uppercase">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-accent/15 text-green-ink border border-accent/30 uppercase">
                 <ShieldCheck className="w-3 h-3" />
                 Verified Personal Plan
               </span>
@@ -1179,66 +1180,66 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                 );
               })()}
             </div>
-            <h2 className="text-2xl font-bold tracking-tight text-white mt-1">Your Nuvia Blueprint</h2>
-            <p className="text-[11px] text-[#8E8E93]">
+            <h2 className="text-2xl font-bold tracking-tight text-fg mt-1">Your Nuvia Blueprint</h2>
+            <p className="text-[11px] text-muted">
               Review your personalized metabolic and training strategy before entering.
             </p>
           </div>
 
           {/* Primary Metabolic Target Card */}
           {calculatedTargets && (
-            <div className="p-3.5 rounded-2xl bg-gradient-to-br from-[#1C1C1E] to-[#2C2C2E] border border-white/[0.1] shadow-xl space-y-2.5">
+            <div className="p-3.5 rounded-2xl bg-gradient-to-br from-card to-elevated border border-fg/[0.1] shadow-xl space-y-2.5">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider flex items-center gap-1.5">
-                  <Flame className="w-3.5 h-3.5 text-[#FF9500]" />
+                <span className="text-[11px] font-semibold text-muted uppercase tracking-wider flex items-center gap-1.5">
+                  <Flame className="w-3.5 h-3.5 text-orange-ink" />
                   Mifflin-St Jeor Energy Target
                 </span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#30D158]/20 text-[#30D158]">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-accent/20 text-green-ink">
                   Deterministic
                 </span>
               </div>
 
               <div className="flex items-baseline justify-between">
                 <div>
-                  <span className="text-3xl font-extrabold text-white tracking-tight">
+                  <span className="text-3xl font-extrabold text-fg tracking-tight">
                     {calculatedTargets.calorie_target.toLocaleString()}
                   </span>
-                  <span className="text-xs text-[#8E8E93] ml-1.5">kcal / day</span>
+                  <span className="text-xs text-muted ml-1.5">kcal / day</span>
                 </div>
-                <div className="text-right text-[10px] text-[#8E8E93]">
+                <div className="text-right text-[10px] text-muted">
                   <span>BMR: {calculatedTargets.bmr}</span> · <span>TDEE: {calculatedTargets.tdee}</span>
                 </div>
               </div>
 
               {/* Macros Row */}
-              <div className="grid grid-cols-3 gap-2 pt-1 border-t border-white/[0.06] text-center">
-                <div className="p-1.5 rounded-lg bg-black/30">
+              <div className="grid grid-cols-3 gap-2 pt-1 border-t border-fg/[0.06] text-center">
+                <div className="p-1.5 rounded-lg bg-app/30">
                   <p className="text-[10px] text-emerald-400 font-semibold">Protein</p>
-                  <p className="text-xs font-bold text-white mt-0.5">{calculatedTargets.protein_target}g</p>
+                  <p className="text-xs font-bold text-fg mt-0.5">{calculatedTargets.protein_target}g</p>
                 </div>
-                <div className="p-1.5 rounded-lg bg-black/30">
+                <div className="p-1.5 rounded-lg bg-app/30">
                   <p className="text-[10px] text-amber-400 font-semibold">Carbs</p>
-                  <p className="text-xs font-bold text-white mt-0.5">{calculatedTargets.carbohydrate_target}g</p>
+                  <p className="text-xs font-bold text-fg mt-0.5">{calculatedTargets.carbohydrate_target}g</p>
                 </div>
-                <div className="p-1.5 rounded-lg bg-black/30">
+                <div className="p-1.5 rounded-lg bg-app/30">
                   <p className="text-[10px] text-sky-400 font-semibold">Fats</p>
-                  <p className="text-xs font-bold text-white mt-0.5">{calculatedTargets.fat_target}g</p>
+                  <p className="text-xs font-bold text-fg mt-0.5">{calculatedTargets.fat_target}g</p>
                 </div>
               </div>
             </div>
           )}
 
           {/* Synthesized Training Strategy Card */}
-          <div className="p-3.5 rounded-2xl bg-[#1C1C1E] border border-white/[0.08] space-y-2">
+          <div className="p-3.5 rounded-2xl bg-card border border-fg/[0.08] space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#30D158] flex items-center gap-1.5">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-green-ink flex items-center gap-1.5">
                 <TrendingUp className="w-3.5 h-3.5" />
                 <span>Tailored Training Strategy</span>
               </span>
               <button
                 type="button"
                 onClick={() => setStep(3)}
-                className="text-[10px] font-semibold text-[#8E8E93] hover:text-white flex items-center gap-1"
+                className="text-[10px] font-semibold text-muted hover:text-fg flex items-center gap-1"
               >
                 <Pencil className="w-3 h-3" />
                 <span>Edit</span>
@@ -1248,7 +1249,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
             <div className="space-y-1.5">
               {synthesizedStrategy.map((bullet, idx) => (
                 <div key={idx} className="flex items-start gap-2 text-[11px] text-zinc-300 leading-relaxed">
-                  <span className="text-[#30D158] font-bold">•</span>
+                  <span className="text-green-ink font-bold">•</span>
                   <span>{bullet}</span>
                 </div>
               ))}
@@ -1256,15 +1257,15 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
           </div>
 
           {/* Visual Transformation Direction Card */}
-          <div className="p-3.5 rounded-2xl bg-[#1C1C1E] border border-white/[0.08] shadow-md space-y-2">
+          <div className="p-3.5 rounded-2xl bg-card border border-fg/[0.08] shadow-md space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#8E8E93]">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted">
                 Your Transformation Direction
               </span>
               <button
                 type="button"
                 onClick={() => setStep(3)}
-                className="text-[10px] font-semibold text-[#8E8E93] hover:text-white flex items-center gap-1"
+                className="text-[10px] font-semibold text-muted hover:text-fg flex items-center gap-1"
               >
                 <Pencil className="w-3 h-3" />
                 <span>Edit</span>
@@ -1273,41 +1274,41 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
 
             <div className="flex items-center justify-around py-1">
               <div className="flex flex-col items-center">
-                <span className="text-[9px] uppercase font-semibold text-[#8E8E93] mb-1">Current</span>
-                <div className="w-14 h-20 rounded-xl bg-black/50 border border-white/10 p-1 flex items-center justify-center">
+                <span className="text-[9px] uppercase font-semibold text-muted mb-1">Current</span>
+                <div className="w-14 h-20 rounded-xl bg-app/50 border border-fg/10 p-1 flex items-center justify-center">
                   <PhysiqueIllustration sex={sex} type={currentPhysique} className="w-full h-full" />
                 </div>
-                <span className="text-[10px] font-semibold text-white mt-1 text-center">
+                <span className="text-[10px] font-semibold text-fg mt-1 text-center">
                   {currentPhysiqueOptions.find((c) => c.id === currentPhysique)?.label}
                 </span>
               </div>
 
-              <div className="flex flex-col items-center px-1 text-[#30D158]">
+              <div className="flex flex-col items-center px-1 text-green-ink">
                 <ArrowRight className="w-4 h-4" />
-                <span className="text-[8px] font-medium text-[#8E8E93] mt-0.5">Target</span>
+                <span className="text-[8px] font-medium text-muted mt-0.5">Target</span>
               </div>
 
               <div className="flex flex-col items-center">
-                <span className="text-[9px] uppercase font-semibold text-[#30D158] mb-1">Desired</span>
-                <div className="w-14 h-20 rounded-xl bg-[#30D158]/10 border border-[#30D158]/30 p-1 flex items-center justify-center">
+                <span className="text-[9px] uppercase font-semibold text-green-ink mb-1">Desired</span>
+                <div className="w-14 h-20 rounded-xl bg-accent/10 border border-accent/30 p-1 flex items-center justify-center">
                   <PhysiqueIllustration sex={sex} type={desiredPhysique} className="w-full h-full" selected />
                 </div>
-                <span className="text-[10px] font-semibold text-[#30D158] mt-1 text-center">
+                <span className="text-[10px] font-semibold text-green-ink mt-1 text-center">
                   {desiredPhysiqueOptions.find((d) => d.id === desiredPhysique)?.label}
                 </span>
               </div>
             </div>
 
-            <div className="pt-2 border-t border-white/[0.04] grid grid-cols-2 gap-2 text-[10px]">
+            <div className="pt-2 border-t border-fg/[0.04] grid grid-cols-2 gap-2 text-[10px]">
               <div>
-                <p className="text-[#8E8E93]">Split &amp; Duration</p>
-                <p className="font-semibold text-white truncate">
+                <p className="text-muted">Split &amp; Duration</p>
+                <p className="font-semibold text-fg truncate">
                   {preferredSplit} · {durationMinutes}m
                 </p>
               </div>
               <div>
-                <p className="text-[#8E8E93]">Equipment Limits</p>
-                <p className="font-semibold text-[#30D158] truncate">
+                <p className="text-muted">Equipment Limits</p>
+                <p className="font-semibold text-green-ink truncate">
                   {equipment.slice(0, 2).join(', ')}{equipment.length > 2 ? ` +${equipment.length - 2}` : ''}
                 </p>
               </div>
@@ -1315,7 +1316,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
           </div>
 
           <div className="text-center pt-0.5">
-            <p className="text-[11px] text-[#8E8E93]">
+            <p className="text-[11px] text-muted">
               Does this look right? Tap below to establish these preferences.
             </p>
           </div>
@@ -1325,13 +1326,13 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
 
       {/* ── BOTTOM ACTION BUTTON ───────────────────────────────────────────── */}
       <div
-        className="shrink-0 px-5 pt-3 border-t border-white/[0.08] bg-black/80 backdrop-blur-xl z-10"
+        className="shrink-0 px-5 pt-3 border-t border-fg/[0.08] bg-black/80 backdrop-blur-xl z-10"
         style={{ paddingBottom: 'max(20px, env(safe-area-inset-bottom, 20px))' }}
       >
         {step < totalSteps ? (
           <button
             onClick={handleNextStep}
-            className="w-full py-3.5 rounded-2xl bg-white text-black font-bold text-xs transition-transform active:scale-[0.98] cursor-pointer shadow-md"
+            className="w-full py-3.5 rounded-2xl bg-fg text-app font-bold text-xs transition-transform active:scale-[0.98] cursor-pointer shadow-md"
           >
             Continue
           </button>
@@ -1340,14 +1341,14 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
             <button
               type="button"
               onClick={() => setStep(1)}
-              className="px-4 py-3.5 rounded-2xl bg-[#2C2C2E] hover:bg-[#3A3A3C] text-white font-semibold text-xs transition-colors"
+              className="px-4 py-3.5 rounded-2xl bg-elevated hover:bg-elevated-2 text-fg font-semibold text-xs transition-colors"
             >
               Edit
             </button>
             <button
               onClick={handleFinalSave}
               disabled={saving}
-              className="flex-1 py-3.5 rounded-2xl bg-[#30D158] hover:bg-[#28B84D] text-black font-extrabold text-xs transition-transform active:scale-[0.98] cursor-pointer shadow-lg shadow-[#30D158]/20 flex items-center justify-center gap-2"
+              className="flex-1 py-3.5 rounded-2xl bg-accent hover:bg-accent-hover text-on-accent font-extrabold text-xs transition-transform active:scale-[0.98] cursor-pointer shadow-lg shadow-accent/20 flex items-center justify-center gap-2"
             >
               {saving ? (
                 <span>Generating Your Plan...</span>

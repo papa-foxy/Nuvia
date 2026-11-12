@@ -139,7 +139,7 @@ export function AIPersonalizationSection({ userId, profile }: AIPersonalizationS
             {customPreferences.length > 0 ? (
               customPreferences.slice(0, 3).map((pref) => (
                 <div key={pref.id} className="flex items-start gap-2 text-xs text-zinc-300">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#30D158] mt-1.5 shrink-0" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-accent mt-1.5 shrink-0" />
                   <span className="leading-snug">{pref.text}</span>
                 </div>
               ))
@@ -167,7 +167,7 @@ export function AIPersonalizationSection({ userId, profile }: AIPersonalizationS
             {/* Modal Header */}
             <div className="flex items-center justify-between pb-2 border-b border-fg/10">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-[#30D158]/15 text-green-ink flex items-center justify-center">
+                <div className="w-7 h-7 rounded-lg bg-accent/15 text-green-ink flex items-center justify-center">
                   <Brain className="w-4 h-4" />
                 </div>
                 <div>
@@ -185,7 +185,7 @@ export function AIPersonalizationSection({ userId, profile }: AIPersonalizationS
             </div>
 
             {resetNotice && (
-              <div className="p-2.5 rounded-xl bg-[#30D158]/15 border border-[#30D158]/30 text-green-ink text-xs font-semibold">
+              <div className="p-2.5 rounded-xl bg-accent/15 border border-accent/30 text-green-ink text-xs font-semibold">
                 AI learned memory has been reset to default.
               </div>
             )}
@@ -227,12 +227,12 @@ export function AIPersonalizationSection({ userId, profile }: AIPersonalizationS
                   value={newPrefText}
                   onChange={(e) => setNewPrefText(e.target.value)}
                   placeholder="e.g. Prefer Malaysian cuisine, no dairy after 8pm"
-                  className="flex-1 px-3 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg text-xs placeholder:text-zinc-500 focus:outline-none focus:border-[#30D158]"
+                  className="flex-1 px-3 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg text-xs placeholder:text-zinc-500 focus:outline-none focus:border-accent"
                 />
                 <button
                   type="submit"
                   disabled={!newPrefText.trim()}
-                  className="px-3.5 py-2.5 rounded-xl bg-[#30D158] hover:bg-[#28B84D] disabled:opacity-50 text-black text-xs font-bold transition-colors flex items-center gap-1 shadow"
+                  className="px-3.5 py-2.5 rounded-xl bg-accent hover:bg-accent-hover disabled:opacity-50 text-on-accent text-xs font-bold transition-colors flex items-center gap-1 shadow"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Add</span>

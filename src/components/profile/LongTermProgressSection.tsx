@@ -73,7 +73,7 @@ export function LongTermProgressSection({
             className="w-full p-3 rounded-xl bg-app/30 hover:bg-app/40 border border-fg/[0.04] flex items-center justify-between text-left transition-colors group"
           >
             <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-[#30D158]/15 text-green-ink flex items-center justify-center shrink-0">
+              <div className="w-7 h-7 rounded-lg bg-accent/15 text-green-ink flex items-center justify-center shrink-0">
                 <Calendar className="w-4 h-4" />
               </div>
               <div>

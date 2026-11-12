@@ -51,8 +51,8 @@ export function BodyMuscleMap({
     const worked = isWorked(id);
     const selected = selectedMuscle === id;
 
-    if (selected) return '#30D158'; // Bright Emerald selected
-    if (worked) return isPumpActive ? '#30D158' : '#FF9500'; // Pump Emerald or Active Amber
+    if (selected) return 'var(--theme-accent)'; // Bright Emerald selected
+    if (worked) return isPumpActive ? 'var(--theme-accent)' : 'var(--theme-warn)'; // Pump Emerald or Active Amber
     return 'var(--theme-body-base)'; // Neutral body
   };
 
@@ -88,12 +88,12 @@ export function BodyMuscleMap({
               Muscle Activation
             </span>
             {isPumpActive ? (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-[#30D158]/20 text-green-ink border border-[#30D158]/30 animate-pulse">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-accent/20 text-green-ink border border-accent/30 animate-pulse">
                 <Sparkles className="w-2.5 h-2.5" />
                 PUMP ACTIVE
               </span>
             ) : (
-              <span className="inline-flex items-center px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-[#FF9500]/20 text-orange-ink">
+              <span className="inline-flex items-center px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-warn/20 text-orange-ink">
                 SCHEDULED
               </span>
             )}
@@ -385,11 +385,11 @@ export function BodyMuscleMap({
               onClick={() => handleMuscleClick(m)}
               className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all flex items-center gap-1 border ${
                 trained
-                  ? 'bg-[#FF9500]/15 text-orange-ink border-[#FF9500]/30 shadow-sm'
+                  ? 'bg-warn/15 text-orange-ink border-warn/30 shadow-sm'
                   : 'bg-fg/[0.03] text-zinc-400 border-fg/5 hover:text-fg'
               }`}
             >
-              <span className={`w-1.5 h-1.5 rounded-full ${trained ? 'bg-[#FF9500]' : 'bg-zinc-600'}`} />
+              <span className={`w-1.5 h-1.5 rounded-full ${trained ? 'bg-warn' : 'bg-zinc-600'}`} />
               <span className="capitalize">{m}</span>
               {trained && <span className="text-[9px] opacity-75">🔥</span>}
             </button>
@@ -407,7 +407,7 @@ export function BodyMuscleMap({
             {exercisesPerformed.map((ex, i) => (
               <span
                 key={i}
-                className="px-2 py-0.5 rounded-md bg-[#30D158]/10 border border-[#30D158]/20 text-[10px] text-green-ink font-medium"
+                className="px-2 py-0.5 rounded-md bg-accent/10 border border-accent/20 text-[10px] text-green-ink font-medium"
               >
                 ✓ {ex}
               </span>

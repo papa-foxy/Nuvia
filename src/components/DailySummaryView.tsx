@@ -169,7 +169,7 @@ export function DailySummaryView({ refreshKey }: { refreshKey?: number } = {}) {
           </div>
           <div className="w-full bg-elevated h-1.5 rounded-full overflow-hidden">
             <div
-              className="bg-[#30D158] h-full rounded-full"
+              className="bg-accent h-full rounded-full"
               style={{ width: `${Math.min(100, (proteinConsumed / proteinTarget) * 100)}%` }}
             />
           </div>
@@ -207,7 +207,7 @@ export function DailySummaryView({ refreshKey }: { refreshKey?: number } = {}) {
       {/* Nuvia Daily Summary Note */}
       <div className="bg-card p-4 rounded-2xl border border-fg/[0.06] space-y-1">
         <div className="flex items-center gap-1.5 text-xs font-semibold text-fg">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#30D158]" />
+          <span className="w-1.5 h-1.5 rounded-full bg-accent" />
           <span>Nuvia Day Summary</span>
         </div>
         <p className="text-xs text-fg-soft leading-relaxed">

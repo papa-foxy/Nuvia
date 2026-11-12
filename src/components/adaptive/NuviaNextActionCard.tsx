@@ -111,7 +111,7 @@ export function NuviaNextActionCard({
     <div className="space-y-2">
       {/* ── UNDO BANNER ─────────────────────────────────────────────────── */}
       {undoAdaptationId && (
-        <div className="p-3 rounded-2xl bg-[#0A84FF]/15 border border-[#0A84FF]/30 flex items-center justify-between gap-2 text-xs text-fg animate-fadeIn">
+        <div className="p-3 rounded-2xl bg-info/15 border border-info/30 flex items-center justify-between gap-2 text-xs text-fg animate-fadeIn">
           <div className="flex items-center gap-2">
             <Check className="w-4 h-4 text-blue-ink" />
             <span>Plan updated successfully.</span>
@@ -132,9 +132,9 @@ export function NuviaNextActionCard({
 
       {/* 1. START WORKOUT */}
       {action.type === 'start_workout' && (
-        <div className="rounded-3xl p-5 bg-gradient-to-br from-card via-card dark:via-[#161E18] to-card dark:to-[#121814] border border-[#30D158]/30 shadow-xl shadow-black/10 dark:shadow-black/40 space-y-4">
+        <div className="rounded-3xl p-5 bg-gradient-to-br from-card via-card dark:via-[#161E18] to-card dark:to-[#121814] border border-accent/30 shadow-xl shadow-black/10 dark:shadow-black/40 space-y-4">
           <div className="flex items-center justify-between">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-[#30D158]/20 text-green-ink border border-[#30D158]/30">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-accent/20 text-green-ink border border-accent/30">
               <Sparkles className="w-3 h-3" />
               Next Recommended Step
             </span>
@@ -156,7 +156,7 @@ export function NuviaNextActionCard({
           <button
             type="button"
             onClick={() => (onActionClick ? onActionClick(action) : onStartWorkout?.(action.routineId))}
-            className="w-full py-3.5 px-4 rounded-2xl bg-[#30D158] hover:bg-[#28B84D] text-black font-extrabold text-sm transition-transform active:scale-[0.98] flex items-center justify-center gap-2 shadow-lg shadow-[#30D158]/25 cursor-pointer"
+            className="w-full py-3.5 px-4 rounded-2xl bg-accent hover:bg-accent-hover text-on-accent font-extrabold text-sm transition-transform active:scale-[0.98] flex items-center justify-center gap-2 shadow-lg shadow-accent/25 cursor-pointer"
           >
             <Play className="w-4 h-4 fill-black" />
             <span>Start Today’s Workout</span>
@@ -166,9 +166,9 @@ export function NuviaNextActionCard({
 
       {/* 2. CONTINUE WORKOUT (In-Progress or Partial) */}
       {action.type === 'continue_workout' && (
-        <div className="rounded-3xl p-5 bg-gradient-to-br from-card via-card dark:via-[#1D1A15] to-card dark:to-[#14120E] border border-[#FF9F0A]/40 shadow-xl shadow-black/10 dark:shadow-black/40 space-y-4">
+        <div className="rounded-3xl p-5 bg-gradient-to-br from-card via-card dark:via-[#1D1A15] to-card dark:to-[#14120E] border border-warn/40 shadow-xl shadow-black/10 dark:shadow-black/40 space-y-4">
           <div className="flex items-center justify-between">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-[#FF9F0A]/20 text-orange-ink border border-[#FF9F0A]/30">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-warn/20 text-orange-ink border border-warn/30">
               <Clock className="w-3 h-3" />
               Resume Session ({action.percentage}%)
             </span>
@@ -189,7 +189,7 @@ export function NuviaNextActionCard({
           {/* Progress bar */}
           <div className="w-full h-2 rounded-full bg-fg/10 overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-[#FF9F0A] to-[#30D158] transition-all duration-500 rounded-full"
+              className="h-full bg-gradient-to-r from-warn to-accent transition-all duration-500 rounded-full"
               style={{ width: `${Math.max(8, action.percentage)}%` }}
             />
           </div>
@@ -197,7 +197,7 @@ export function NuviaNextActionCard({
           <button
             type="button"
             onClick={() => (onActionClick ? onActionClick(action) : onResumeWorkout?.(action.routineId))}
-            className="w-full py-3.5 px-4 rounded-2xl bg-[#FF9F0A] hover:bg-[#E08A05] text-black font-extrabold text-sm transition-transform active:scale-[0.98] flex items-center justify-center gap-2 shadow-lg shadow-[#FF9F0A]/25 cursor-pointer"
+            className="w-full py-3.5 px-4 rounded-2xl bg-warn hover:bg-warn text-black font-extrabold text-sm transition-transform active:scale-[0.98] flex items-center justify-center gap-2 shadow-lg shadow-warn/25 cursor-pointer"
           >
             <Play className="w-4 h-4 fill-black" />
             <span>Resume Workout</span>
@@ -266,9 +266,9 @@ export function NuviaNextActionCard({
 
       {/* 5. RESCHEDULE PROPOSAL (MISSED WORKOUT REVIEW) */}
       {action.type === 'reschedule' && (
-        <div className="rounded-3xl p-5 bg-gradient-to-br from-card via-card dark:via-[#20181A] to-card dark:to-[#171214] border border-[#FF453A]/40 shadow-xl shadow-black/10 dark:shadow-black/40 space-y-4 animate-fadeIn">
+        <div className="rounded-3xl p-5 bg-gradient-to-br from-card via-card dark:via-[#20181A] to-card dark:to-[#171214] border border-danger/40 shadow-xl shadow-black/10 dark:shadow-black/40 space-y-4 animate-fadeIn">
           <div className="flex items-center justify-between">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-[#FF453A]/20 text-red-ink border border-[#FF453A]/30">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-danger/20 text-red-ink border border-danger/30">
               <AlertCircle className="w-3 h-3" />
               Schedule Adaptation
             </span>

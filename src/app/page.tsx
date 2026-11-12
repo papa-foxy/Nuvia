@@ -12,6 +12,7 @@ import { AiCoachView } from '@/components/AiCoachView';
 import { DailySummaryView } from '@/components/DailySummaryView';
 import { GoalsView } from '@/components/GoalsView';
 import { ProfileView } from '@/components/ProfileView';
+import { ProgressView } from '@/components/ProgressView';
 import { AddMealModal } from '@/components/AddMealModal';
 import { AddExerciseModal } from '@/components/AddExerciseModal';
 import { PwaInstallBanner } from '@/components/PwaInstallBanner';
@@ -240,7 +241,7 @@ export default function HomePage() {
     >
       {/* Main Mobile App Container */}
       <div
-        className="w-full max-w-md bg-app md:border md:border-elevated shadow-2xl flex flex-col relative overflow-hidden md:rounded-[36px] md:h-[92vh] md:max-h-[92vh]"
+        className="w-full max-w-md bg-app md:border md:border-line md:shadow-2xl md:shadow-black/20 flex flex-col relative overflow-hidden md:rounded-[28px] md:h-[92vh] md:max-h-[920px]"
         style={{
           flex: 1,
           height: '100%',
@@ -300,6 +301,10 @@ export default function HomePage() {
                 refreshKey={refreshKey}
                 onWorkoutFinished={() => setRefreshKey((k) => k + 1)}
               />
+            </div>
+
+            <div style={{ display: activeTab === 'progress' ? 'contents' : 'none' }}>
+              <ProgressView onNavigateTab={setActiveTab} refreshKey={refreshKey} />
             </div>
 
             <div style={{ display: activeTab === 'coach' ? 'contents' : 'none' }}>

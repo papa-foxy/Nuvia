@@ -179,7 +179,7 @@ export function LandingView({ onStartOnboarding, onEnterDashboard }: LandingView
   };
 
   return (
-    <div className="relative min-h-screen w-full bg-black text-white overflow-hidden flex flex-col justify-between">
+    <div data-theme="dark" className="relative min-h-screen w-full bg-app text-fg overflow-hidden flex flex-col justify-between">
       {/* Ambient background with glowing emerald waves & dot matrix */}
       <div
         className="fixed inset-0 pointer-events-none z-0 bg-cover bg-center bg-no-repeat"
@@ -200,7 +200,7 @@ export function LandingView({ onStartOnboarding, onEnterDashboard }: LandingView
             alt="Nuvia Logo"
             className="w-8 h-8 rounded-xl shadow-lg shadow-emerald-500/25 border border-emerald-400/20"
           />
-          <span className="text-xl font-bold tracking-tight text-white">
+          <span className="text-xl font-bold tracking-tight text-fg">
             Nuvia
           </span>
         </div>
@@ -211,7 +211,7 @@ export function LandingView({ onStartOnboarding, onEnterDashboard }: LandingView
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
             Intelligent Nutrition &amp; Fitness
           </p>
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight">
+          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-fg leading-tight">
             Your Health,<br />
             <span className="bg-gradient-to-r from-white via-emerald-200 to-emerald-400 bg-clip-text text-transparent">
               Smarter.
@@ -226,21 +226,21 @@ export function LandingView({ onStartOnboarding, onEnterDashboard }: LandingView
         <div className="space-y-3 pb-4">
           <button
             onClick={() => openModal('signup')}
-            className="w-full py-4 rounded-full bg-white hover:bg-[#F5F5F7] text-black font-bold text-sm transition-all shadow-xl shadow-white/10 active:scale-[0.98]"
+            className="w-full py-4 rounded-full bg-fg hover:bg-fg/85 text-app font-bold text-sm transition-all shadow-xl shadow-fg/10 active:scale-[0.98]"
           >
             Get Started
           </button>
 
           <button
             onClick={() => openModal('login')}
-            className="w-full py-4 rounded-full bg-black/40 hover:bg-black/60 text-white font-semibold text-sm transition-colors border border-white/15 backdrop-blur-md"
+            className="w-full py-4 rounded-full bg-black/40 hover:bg-black/60 text-white font-semibold text-sm transition-colors border border-fg/15 backdrop-blur-md"
           >
             Log In
           </button>
 
           <button
             onClick={onStartOnboarding}
-            className="w-full py-2.5 text-center text-xs text-[#8E8E93] hover:text-emerald-400 transition-colors font-medium"
+            className="w-full py-2.5 text-center text-xs text-muted hover:text-emerald-400 transition-colors font-medium"
           >
             Or preview onboarding as guest →
           </button>
@@ -254,7 +254,7 @@ export function LandingView({ onStartOnboarding, onEnterDashboard }: LandingView
             
             {/* Header */}
             <div className="mb-4">
-              <h3 className="text-lg font-bold text-white mb-1">
+              <h3 className="text-lg font-bold text-fg mb-1">
                 {showAuthModal === 'signup'
                   ? otpStep === 'verify'
                     ? 'Verify Your Email'
@@ -265,7 +265,7 @@ export function LandingView({ onStartOnboarding, onEnterDashboard }: LandingView
                     : 'Reset Password'
                   : 'Welcome Back'}
               </h3>
-              <p className="text-xs text-[#8E8E93]">
+              <p className="text-xs text-muted">
                 {showAuthModal === 'signup'
                   ? otpStep === 'verify'
                     ? `Enter the 6-digit code sent to ${email}`
@@ -279,13 +279,13 @@ export function LandingView({ onStartOnboarding, onEnterDashboard }: LandingView
             </div>
 
             {errorMsg && (
-              <div className="mb-3.5 p-3 rounded-xl bg-[#FF453A]/10 border border-[#FF453A]/20 text-xs text-[#FF453A]">
+              <div className="mb-3.5 p-3 rounded-xl bg-danger/10 border border-danger/20 text-xs text-red-ink">
                 {errorMsg}
               </div>
             )}
 
             {successMsg && (
-              <div className="mb-3.5 p-3 rounded-xl bg-[#30D158]/10 border border-[#30D158]/20 text-xs text-[#30D158]">
+              <div className="mb-3.5 p-3 rounded-xl bg-accent/10 border border-accent/20 text-xs text-green-ink">
                 {successMsg}
               </div>
             )}
@@ -300,7 +300,7 @@ export function LandingView({ onStartOnboarding, onEnterDashboard }: LandingView
                 {otpStep === 'form' ? (
                   <form onSubmit={handleRegisterSubmit} className="space-y-3">
                     <div>
-                      <label className="block text-xs font-semibold text-[#8E8E93] uppercase tracking-wider mb-1">
+                      <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-1">
                         Full Name
                       </label>
                       <input
@@ -309,12 +309,12 @@ export function LandingView({ onStartOnboarding, onEnterDashboard }: LandingView
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="Syazwan"
-                        className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-[#121214] border border-white/[0.06] text-white focus:outline-none focus:border-[#30D158]"
+                        className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-surface border border-fg/[0.06] text-fg focus:outline-none focus:border-accent"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-[#8E8E93] uppercase tracking-wider mb-1">
+                      <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-1">
                         Email Address
                       </label>
                       <input
@@ -323,12 +323,12 @@ export function LandingView({ onStartOnboarding, onEnterDashboard }: LandingView
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="you@example.com"
-                        className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-[#121214] border border-white/[0.06] text-white focus:outline-none focus:border-[#30D158]"
+                        className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-surface border border-fg/[0.06] text-fg focus:outline-none focus:border-accent"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-[#8E8E93] uppercase tracking-wider mb-1">
+                      <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-1">
                         Create Password
                       </label>
                       <input
@@ -338,9 +338,9 @@ export function LandingView({ onStartOnboarding, onEnterDashboard }: LandingView
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="••••••••"
-                        className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-[#121214] border border-white/[0.06] text-white focus:outline-none focus:border-[#30D158]"
+                        className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-surface border border-fg/[0.06] text-fg focus:outline-none focus:border-accent"
                       />
-                      <p className="text-[11px] text-[#636366] mt-1">
+                      <p className="text-[11px] text-subtle mt-1">
                         Must be at least 6 characters long.
                       </p>
                     </div>
@@ -348,7 +348,7 @@ export function LandingView({ onStartOnboarding, onEnterDashboard }: LandingView
                     <button
                       type="submit"
                       disabled={loading}
-                      className="w-full mt-2 py-3.5 rounded-full bg-[#30D158] hover:bg-[#28B84D] text-black font-semibold text-sm transition-colors"
+                      className="w-full mt-2 py-3.5 rounded-full bg-accent hover:bg-accent-hover text-on-accent font-semibold text-sm transition-colors"
                     >
                       {loading ? 'Sending code...' : 'Continue & Verify Email'}
                     </button>
@@ -356,7 +356,7 @@ export function LandingView({ onStartOnboarding, onEnterDashboard }: LandingView
                 ) : (
                   <form onSubmit={handleVerifyRegisterOtp} className="space-y-4">
                     <div>
-                      <label className="block text-xs font-semibold text-[#8E8E93] uppercase tracking-wider mb-1.5 text-center">
+                      <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-1.5 text-center">
                         6-Digit Verification Code
                       </label>
                       <input
@@ -369,14 +369,14 @@ export function LandingView({ onStartOnboarding, onEnterDashboard }: LandingView
                         value={otpCode}
                         onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                         placeholder="123456"
-                        className="w-full text-center tracking-[0.4em] font-mono text-2xl py-3 rounded-2xl bg-[#121214] border border-white/[0.1] text-white focus:outline-none focus:border-[#30D158]"
+                        className="w-full text-center tracking-[0.4em] font-mono text-2xl py-3 rounded-2xl bg-surface border border-fg/[0.1] text-fg focus:outline-none focus:border-accent"
                       />
                     </div>
 
                     <button
                       type="submit"
                       disabled={loading || otpCode.length !== 6}
-                      className="w-full py-3.5 rounded-full bg-[#30D158] hover:bg-[#28B84D] disabled:opacity-50 text-black font-semibold text-sm transition-colors"
+                      className="w-full py-3.5 rounded-full bg-accent hover:bg-accent-hover disabled:opacity-50 text-on-accent font-semibold text-sm transition-colors"
                     >
                       {loading ? 'Verifying...' : 'Verify & Complete Registration'}
                     </button>
@@ -388,7 +388,7 @@ export function LandingView({ onStartOnboarding, onEnterDashboard }: LandingView
                           setOtpStep('form');
                           setErrorMsg('');
                         }}
-                        className="text-[#8E8E93] hover:text-white"
+                        className="text-muted hover:text-fg"
                       >
                         Change Details
                       </button>
@@ -397,7 +397,7 @@ export function LandingView({ onStartOnboarding, onEnterDashboard }: LandingView
                         type="button"
                         disabled={resendCooldown > 0 || loading}
                         onClick={(e) => handleRegisterSubmit(e)}
-                        className="text-[#30D158] hover:underline disabled:text-[#8E8E93] font-medium"
+                        className="text-green-ink hover:underline disabled:text-muted font-medium"
                       >
                         {resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : 'Resend Code'}
                       </button>
@@ -413,7 +413,7 @@ export function LandingView({ onStartOnboarding, onEnterDashboard }: LandingView
             {showAuthModal === 'login' && (
               <form onSubmit={handlePasswordLogin} className="space-y-3">
                 <div>
-                  <label className="block text-xs font-semibold text-[#8E8E93] uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-1">
                     Email Address
                   </label>
                   <input
@@ -422,19 +422,19 @@ export function LandingView({ onStartOnboarding, onEnterDashboard }: LandingView
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@example.com"
-                    className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-[#121214] border border-white/[0.06] text-white focus:outline-none focus:border-[#30D158]"
+                    className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-surface border border-fg/[0.06] text-fg focus:outline-none focus:border-accent"
                   />
                 </div>
 
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="block text-xs font-semibold text-[#8E8E93] uppercase tracking-wider">
+                    <label className="block text-xs font-semibold text-muted uppercase tracking-wider">
                       Password
                     </label>
                     <button
                       type="button"
                       onClick={() => openModal('forgot_password')}
-                      className="text-xs text-[#30D158] hover:underline"
+                      className="text-xs text-green-ink hover:underline"
                     >
                       Forgot password?
                     </button>
@@ -445,14 +445,14 @@ export function LandingView({ onStartOnboarding, onEnterDashboard }: LandingView
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-[#121214] border border-white/[0.06] text-white focus:outline-none focus:border-[#30D158]"
+                    className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-surface border border-fg/[0.06] text-fg focus:outline-none focus:border-accent"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full mt-2 py-3.5 rounded-full bg-[#30D158] hover:bg-[#28B84D] text-black font-semibold text-sm transition-colors"
+                  className="w-full mt-2 py-3.5 rounded-full bg-accent hover:bg-accent-hover text-on-accent font-semibold text-sm transition-colors"
                 >
                   {loading ? 'Signing in...' : 'Sign In'}
                 </button>
@@ -467,7 +467,7 @@ export function LandingView({ onStartOnboarding, onEnterDashboard }: LandingView
                 {otpStep === 'form' ? (
                   <form onSubmit={handleSendResetCode} className="space-y-3">
                     <div>
-                      <label className="block text-xs font-semibold text-[#8E8E93] uppercase tracking-wider mb-1">
+                      <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-1">
                         Email Address
                       </label>
                       <input
@@ -476,14 +476,14 @@ export function LandingView({ onStartOnboarding, onEnterDashboard }: LandingView
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="you@example.com"
-                        className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-[#121214] border border-white/[0.06] text-white focus:outline-none focus:border-[#30D158]"
+                        className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-surface border border-fg/[0.06] text-fg focus:outline-none focus:border-accent"
                       />
                     </div>
 
                     <button
                       type="submit"
                       disabled={loading}
-                      className="w-full mt-2 py-3.5 rounded-full bg-[#30D158] hover:bg-[#28B84D] text-black font-semibold text-sm transition-colors"
+                      className="w-full mt-2 py-3.5 rounded-full bg-accent hover:bg-accent-hover text-on-accent font-semibold text-sm transition-colors"
                     >
                       {loading ? 'Sending code...' : 'Send Reset Code'}
                     </button>
@@ -491,7 +491,7 @@ export function LandingView({ onStartOnboarding, onEnterDashboard }: LandingView
                 ) : (
                   <form onSubmit={handleVerifyAndResetPassword} className="space-y-3">
                     <div>
-                      <label className="block text-xs font-semibold text-[#8E8E93] uppercase tracking-wider mb-1.5 text-center">
+                      <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-1.5 text-center">
                         6-Digit Reset Code
                       </label>
                       <input
@@ -504,12 +504,12 @@ export function LandingView({ onStartOnboarding, onEnterDashboard }: LandingView
                         value={otpCode}
                         onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                         placeholder="123456"
-                        className="w-full text-center tracking-[0.4em] font-mono text-2xl py-3 rounded-2xl bg-[#121214] border border-white/[0.1] text-white focus:outline-none focus:border-[#30D158]"
+                        className="w-full text-center tracking-[0.4em] font-mono text-2xl py-3 rounded-2xl bg-surface border border-fg/[0.1] text-fg focus:outline-none focus:border-accent"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-[#8E8E93] uppercase tracking-wider mb-1">
+                      <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-1">
                         New Password
                       </label>
                       <input
@@ -519,14 +519,14 @@ export function LandingView({ onStartOnboarding, onEnterDashboard }: LandingView
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                         placeholder="••••••••"
-                        className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-[#121214] border border-white/[0.06] text-white focus:outline-none focus:border-[#30D158]"
+                        className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-surface border border-fg/[0.06] text-fg focus:outline-none focus:border-accent"
                       />
                     </div>
 
                     <button
                       type="submit"
                       disabled={loading || otpCode.length !== 6 || newPassword.length < 6}
-                      className="w-full mt-2 py-3.5 rounded-full bg-[#30D158] hover:bg-[#28B84D] disabled:opacity-50 text-black font-semibold text-sm transition-colors"
+                      className="w-full mt-2 py-3.5 rounded-full bg-accent hover:bg-accent-hover disabled:opacity-50 text-on-accent font-semibold text-sm transition-colors"
                     >
                       {loading ? 'Resetting...' : 'Save New Password & Sign In'}
                     </button>
@@ -538,7 +538,7 @@ export function LandingView({ onStartOnboarding, onEnterDashboard }: LandingView
                           setOtpStep('form');
                           setErrorMsg('');
                         }}
-                        className="text-[#8E8E93] hover:text-white"
+                        className="text-muted hover:text-fg"
                       >
                         Change Email
                       </button>
@@ -547,7 +547,7 @@ export function LandingView({ onStartOnboarding, onEnterDashboard }: LandingView
                         type="button"
                         disabled={resendCooldown > 0 || loading}
                         onClick={(e) => handleSendResetCode(e)}
-                        className="text-[#30D158] hover:underline disabled:text-[#8E8E93] font-medium"
+                        className="text-green-ink hover:underline disabled:text-muted font-medium"
                       >
                         {resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : 'Resend Code'}
                       </button>
@@ -558,13 +558,13 @@ export function LandingView({ onStartOnboarding, onEnterDashboard }: LandingView
             )}
 
             {/* Modal Bottom Switchers */}
-            <div className="mt-5 pt-3 border-t border-white/[0.06] flex items-center justify-between text-xs">
+            <div className="mt-5 pt-3 border-t border-fg/[0.06] flex items-center justify-between text-xs">
               <button
                 type="button"
                 onClick={() =>
                   openModal(showAuthModal === 'login' ? 'signup' : 'login')
                 }
-                className="text-[#8E8E93] hover:text-white"
+                className="text-muted hover:text-fg"
               >
                 {showAuthModal === 'login'
                   ? 'Need an account? Sign up'
@@ -574,7 +574,7 @@ export function LandingView({ onStartOnboarding, onEnterDashboard }: LandingView
               <button
                 type="button"
                 onClick={() => setShowAuthModal(null)}
-                className="text-[#8E8E93] hover:text-white"
+                className="text-muted hover:text-fg"
               >
                 Cancel
               </button>

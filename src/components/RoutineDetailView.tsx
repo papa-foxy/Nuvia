@@ -23,7 +23,6 @@ import {
   Info,
   Calendar,
   Check,
-  Timer,
   Weight,
   History,
   TrendingUp,
@@ -91,6 +90,8 @@ export function RoutineDetailView({
 
   // Progressive overload history: exercise name -> last session string
   const [exerciseHistoryMap, setExerciseHistoryMap] = useState<Record<string, string>>({});
+  // Last session's completed sets per exercise (by lower-cased name), shown beside each set row.
+  const [previousSetsMap, setPreviousSetsMap] = useState<Record<string, LoggedSet[]>>({});
 
   // Active workout session state
   const [status, setStatus] = useState<WorkoutStatus>('idle');
@@ -245,6 +246,7 @@ export function RoutineDetailView({
 
         // Fetch previous performance for each exercise
         const historyMap: Record<string, string> = {};
+        const previousMap: Record<string, LoggedSet[]> = {};
         for (const ex of currentRoutine.exercises) {
           const prev = await DataService.getExercisePerformanceHistory(ex.name, user?.id);
           if (prev && prev.sets.length > 0) {
@@ -252,6 +254,7 @@ export function RoutineDetailView({
             const repSummary = completedSets.map((s) => s.reps).join(', ');
             const weightPrefix = prev.sets[0]?.weight_kg ? `${prev.sets[0].weight_kg}kg · ` : '';
             historyMap[ex.name.toLowerCase()] = `${weightPrefix}${repSummary} reps`;
+            previousMap[ex.name.toLowerCase()] = completedSets;
 
             // Pre-fill working weight from previous session if sets are unassigned
             if (prev.sets[0]?.weight_kg) {
@@ -271,6 +274,7 @@ export function RoutineDetailView({
         }
         if (isMounted) {
           setExerciseHistoryMap(historyMap);
+          setPreviousSetsMap(previousMap);
         }
       } catch (err) {
         console.warn('Failed to load routine stats:', err);
@@ -626,7 +630,7 @@ export function RoutineDetailView({
         {/* Hero Card with Title, Focus, and Training Days */}
         <div className="space-y-2 pt-1">
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#30D158]/15 text-green-ink border border-[#30D158]/25">
+            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-accent/15 text-green-ink border border-accent/25">
               {currentRoutine.focus || 'Workout'}
             </span>
             <span className="text-xs text-muted">
@@ -674,7 +678,7 @@ export function RoutineDetailView({
               <span>Routine Activity History</span>
             </span>
             {stats && stats.completedCount > 0 && (
-              <span className="text-[10px] text-green-ink font-semibold bg-[#30D158]/10 px-2 py-0.5 rounded-full">
+              <span className="text-[10px] text-green-ink font-semibold bg-accent/10 px-2 py-0.5 rounded-full">
                 Active Routine
               </span>
             )}
@@ -734,7 +738,7 @@ export function RoutineDetailView({
         <button
           type="button"
           onClick={handleStartWorkout}
-          className="w-full py-4 rounded-2xl bg-[#30D158] hover:bg-[#28B84D] active:scale-[0.99] text-black font-extrabold text-sm tracking-wide transition-all flex items-center justify-center gap-2 shadow-xl shadow-[#30D158]/25"
+          className="w-full py-4 rounded-2xl bg-accent hover:bg-accent-hover active:scale-[0.99] text-on-accent font-extrabold text-sm tracking-wide transition-all flex items-center justify-center gap-2 shadow-xl shadow-accent/25"
         >
           <Play className="w-5 h-5 fill-black" />
           <span>Start Workout Session</span>
@@ -831,49 +835,12 @@ export function RoutineDetailView({
           </span>
           <div className="w-16 h-2 bg-fg/10 rounded-full overflow-hidden">
             <div
-              className="h-full bg-[#30D158] transition-all duration-300"
+              className="h-full bg-accent transition-all duration-300"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
         </div>
       </div>
-
-      {/* Floating Rest Countdown Timer Widget (Phase 4) */}
-      {isRestTimerActive && restSecondsRemaining !== null && restSecondsRemaining > 0 && (
-        <div className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-500/20 via-card to-card border border-[#30D158]/40 shadow-xl flex items-center justify-between animate-fadeIn">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-[#30D158]/20 text-green-ink flex items-center justify-center">
-              <Timer className="w-4 h-4 animate-spin" />
-            </div>
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-green-ink">Resting Between Sets</p>
-              <p className="font-mono text-lg font-black text-fg leading-tight">
-                {formatTimer(restSecondsRemaining)}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={() => setRestSecondsRemaining((prev) => (prev ? prev + 30 : 30))}
-              className="px-2.5 py-1.5 rounded-xl bg-fg/10 hover:bg-fg/15 text-fg text-xs font-semibold"
-            >
-              +30s
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setIsRestTimerActive(false);
-                setRestSecondsRemaining(0);
-              }}
-              className="px-2.5 py-1.5 rounded-xl bg-fg/10 hover:bg-fg/15 text-zinc-300 text-xs font-semibold"
-            >
-              Skip
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Live Controller Card */}
       <div className="p-4 rounded-3xl bg-gradient-to-b from-card to-card dark:to-[#141416] border border-fg/[0.1] shadow-xl space-y-3.5">
@@ -882,9 +849,9 @@ export function RoutineDetailView({
             <span
               className={`w-2.5 h-2.5 rounded-full ${
                 status === 'active'
-                  ? 'bg-[#30D158] animate-pulse'
+                  ? 'bg-accent animate-pulse'
                   : status === 'paused'
-                  ? 'bg-[#FF9F0A]'
+                  ? 'bg-warn'
                   : 'bg-[#8E8E93]'
               }`}
             />
@@ -900,8 +867,8 @@ export function RoutineDetailView({
               <span className="font-mono text-sm font-bold tracking-wider">{formatTimer(elapsedSeconds)}</span>
             </div>
 
-            <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#30D158]/10 border border-[#30D158]/25 text-green-ink">
-              <Flame className="w-3 h-3 fill-[#30D158]" />
+            <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-accent/10 border border-accent/25 text-green-ink">
+              <Flame className="w-3 h-3 fill-accent" />
               <span className="text-xs font-bold">{currentCaloriesBurned} kcal</span>
             </div>
           </div>
@@ -936,9 +903,9 @@ export function RoutineDetailView({
               <button
                 type="button"
                 onClick={handlePauseWorkout}
-                className="flex-1 py-3 px-4 rounded-2xl bg-elevated hover:bg-elevated-2 text-orange-ink font-bold text-xs flex items-center justify-center gap-2 border border-[#FF9F0A]/30 transition-all"
+                className="flex-1 py-3 px-4 rounded-2xl bg-elevated hover:bg-elevated-2 text-orange-ink font-bold text-xs flex items-center justify-center gap-2 border border-warn/30 transition-all"
               >
-                <Pause className="w-4 h-4 fill-[#FF9F0A]" />
+                <Pause className="w-4 h-4 fill-warn" />
                 <span>Pause</span>
               </button>
 
@@ -948,7 +915,7 @@ export function RoutineDetailView({
                   setStatus('finished');
                   setShowCompletionModal(true);
                 }}
-                className="flex-1 py-3 px-4 rounded-2xl bg-[#30D158] hover:bg-[#28B84D] text-black font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-[#30D158]/20 transition-all"
+                className="flex-1 py-3 px-4 rounded-2xl bg-accent hover:bg-accent-hover text-on-accent font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-accent/20 transition-all"
               >
                 <CheckCircle2 className="w-4 h-4" />
                 <span>Finish Workout</span>
@@ -959,7 +926,7 @@ export function RoutineDetailView({
               <button
                 type="button"
                 onClick={handleResumeWorkout}
-                className="flex-1 py-3 px-4 rounded-2xl bg-[#30D158] hover:bg-[#28B84D] text-black font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-[#30D158]/20 transition-all"
+                className="flex-1 py-3 px-4 rounded-2xl bg-accent hover:bg-accent-hover text-on-accent font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-accent/20 transition-all"
               >
                 <Play className="w-4 h-4 fill-black" />
                 <span>Resume Session</span>
@@ -1012,7 +979,7 @@ export function RoutineDetailView({
               key={ex.id || exIdx}
               className={`p-3.5 rounded-2xl border transition-all space-y-3 ${
                 allSetsDone
-                  ? 'bg-[#30D158]/[0.03] border-[#30D158]/30 shadow-sm'
+                  ? 'bg-accent/[0.03] border-accent/30 shadow-sm'
                   : 'bg-fg/[0.02] border-fg/[0.08]'
               }`}
             >
@@ -1062,7 +1029,7 @@ export function RoutineDetailView({
               {/* Set-by-Set Table (Phase 4) */}
               <div className="space-y-1.5 pt-1">
                 <div className="grid grid-cols-12 gap-1 text-[10px] text-muted font-semibold px-2">
-                  <span className="col-span-2">SET</span>
+                  <span className="col-span-2">SET · LAST</span>
                   <span className="col-span-4 text-center">REPS</span>
                   <span className="col-span-4 text-center">WEIGHT (KG)</span>
                   <span className="col-span-2 text-right">DONE</span>
@@ -1071,14 +1038,26 @@ export function RoutineDetailView({
                 {sets.map((set, sIdx) => (
                   <div
                     key={sIdx}
-                    className={`grid grid-cols-12 gap-1 items-center p-2 rounded-xl border transition-colors ${
+                    className={`grid grid-cols-12 gap-1 items-center px-2 py-1.5 rounded-xl border transition-colors ${
                       set.completed
-                        ? 'bg-[#30D158]/10 border-[#30D158]/25'
+                        ? 'bg-accent/10 border-accent/25'
                         : 'bg-app/30 border-fg/[0.04]'
                     }`}
                   >
-                    <span className="col-span-2 text-xs font-bold text-fg px-1">
-                      {set.set_number}
+                    <span className="col-span-2 px-1 flex flex-col leading-tight">
+                      <span className="text-xs font-bold text-fg">{set.set_number}</span>
+                      {(() => {
+                        const prev = previousSetsMap[ex.name.toLowerCase()]?.[sIdx];
+                        if (!prev) return null;
+                        return (
+                          <span
+                            className="mt-0.5 text-[10px] font-semibold text-subtle tabular-nums whitespace-nowrap"
+                            title="Last session"
+                          >
+                            {prev.weight_kg ? `${prev.weight_kg}×${prev.reps}` : `×${prev.reps}`}
+                          </span>
+                        );
+                      })()}
                     </span>
 
                     {/* Reps stepper */}
@@ -1086,17 +1065,17 @@ export function RoutineDetailView({
                       <button
                         type="button"
                         onClick={() => handleUpdateSetReps(ex.id, sIdx, -1)}
-                        className="w-5 h-5 rounded bg-fg/5 text-fg flex items-center justify-center text-xs"
+                        className="w-8 h-8 rounded-lg bg-elevated text-fg flex items-center justify-center text-base font-bold cursor-pointer active:scale-95"
                       >
                         -
                       </button>
-                      <span className="font-mono font-bold text-fg text-xs w-6 text-center">
+                      <span className="font-bold tabular-nums text-fg text-sm w-6 text-center">
                         {set.reps}
                       </span>
                       <button
                         type="button"
                         onClick={() => handleUpdateSetReps(ex.id, sIdx, 1)}
-                        className="w-5 h-5 rounded bg-fg/5 text-fg flex items-center justify-center text-xs"
+                        className="w-8 h-8 rounded-lg bg-elevated text-fg flex items-center justify-center text-base font-bold cursor-pointer active:scale-95"
                       >
                         +
                       </button>
@@ -1117,7 +1096,9 @@ export function RoutineDetailView({
                             e.target.value ? Number(e.target.value) : undefined
                           )
                         }
-                        className="w-14 px-1.5 py-1 text-center font-mono text-xs rounded-lg bg-app/40 border border-fg/10 text-fg focus:outline-none focus:border-[#30D158]"
+                        inputMode="decimal"
+                        aria-label={`Weight for set ${set.set_number} in kilograms`}
+                        className="w-16 h-9 px-1.5 text-center tabular-nums text-sm font-bold rounded-lg bg-app/40 border border-fg/10 text-fg focus:outline-none focus:border-accent"
                       />
                     </div>
 
@@ -1126,13 +1107,15 @@ export function RoutineDetailView({
                       <button
                         type="button"
                         onClick={() => handleToggleSetComplete(ex.id, sIdx, ex.rest_seconds ?? 90)}
-                        className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
+                        aria-label={`${set.completed ? 'Unmark' : 'Complete'} set ${set.set_number}`}
+                        aria-pressed={set.completed}
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all cursor-pointer active:scale-95 ${
                           set.completed
-                            ? 'bg-[#30D158] text-black shadow'
-                            : 'bg-fg/10 hover:bg-fg/15 text-zinc-400'
+                            ? 'bg-accent text-on-accent shadow'
+                            : 'bg-elevated hover:bg-elevated-2 text-muted'
                         }`}
                       >
-                        <Check className="w-4 h-4" />
+                        <Check className="w-5 h-5 stroke-[3]" />
                       </button>
                     </div>
                   </div>
@@ -1165,11 +1148,54 @@ export function RoutineDetailView({
         })}
       </div>
 
+      {/* Docked rest timer: stays above the bottom bar while you scroll (auto-starts when a set is ticked) */}
+      {isRestTimerActive && restSecondsRemaining !== null && restSecondsRemaining > 0 && (
+        <div
+          role="timer"
+          aria-label="Rest timer"
+          className="sticky z-30 rounded-[var(--radius-card)] bg-surface border border-line shadow-xl shadow-black/30 p-3 flex items-center justify-between gap-3 animate-fadeIn"
+          style={{ bottom: 'calc(var(--bottom-nav-height, 56px) + env(safe-area-inset-bottom, 0px) + 12px)' }}
+        >
+          <div className="pl-1">
+            <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-muted">Rest</p>
+            <p className="text-[30px] leading-none font-extrabold tabular-nums text-fg">
+              {formatTimer(restSecondsRemaining)}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setRestSecondsRemaining((prev) => Math.max(1, (prev ?? 0) - 15))}
+              className="h-11 min-w-[52px] px-3 rounded-[var(--radius-control)] bg-elevated text-fg text-sm font-bold tabular-nums cursor-pointer"
+            >
+              −15
+            </button>
+            <button
+              type="button"
+              onClick={() => setRestSecondsRemaining((prev) => (prev ?? 0) + 15)}
+              className="h-11 min-w-[52px] px-3 rounded-[var(--radius-control)] bg-elevated text-fg text-sm font-bold tabular-nums cursor-pointer"
+            >
+              +15
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setIsRestTimerActive(false);
+                setRestSecondsRemaining(0);
+              }}
+              className="h-11 px-4 rounded-[var(--radius-control)] bg-accent text-on-accent text-sm font-extrabold hover:bg-accent-hover cursor-pointer"
+            >
+              Skip
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Completion Dialog */}
       {showCompletionModal && (
         <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
           <div className="w-full max-w-sm bg-card border border-fg/15 rounded-3xl p-6 shadow-2xl space-y-4 text-center">
-            <div className="w-14 h-14 rounded-full bg-[#30D158]/20 text-green-ink flex items-center justify-center mx-auto">
+            <div className="w-14 h-14 rounded-full bg-accent/20 text-green-ink flex items-center justify-center mx-auto">
               <Award className="w-7 h-7" />
             </div>
 
@@ -1196,7 +1222,7 @@ export function RoutineDetailView({
                 type="button"
                 onClick={() => handleSaveAndConfirm(true)}
                 disabled={isSaving}
-                className="w-full py-3.5 rounded-2xl bg-[#30D158] hover:bg-[#28B84D] disabled:opacity-60 disabled:cursor-not-allowed text-black font-extrabold text-xs shadow-lg shadow-[#30D158]/20 transition-all"
+                className="w-full py-3.5 rounded-2xl bg-accent hover:bg-accent-hover disabled:opacity-60 disabled:cursor-not-allowed text-on-accent font-extrabold text-xs shadow-lg shadow-accent/20 transition-all"
               >
                 {isSaving ? 'Saving…' : 'Save & View Today Summary'}
               </button>

@@ -130,7 +130,7 @@ export function MacroDonutChart({
                 cy={center}
                 r={radius}
                 fill="transparent"
-                stroke="#30D158"
+                stroke="var(--theme-accent)"
                 strokeWidth={hoveredMacro === 'protein' ? strokeWidth + 3 : strokeWidth}
                 strokeDasharray={`${proteinDash} ${circumference}`}
                 strokeDashoffset={proteinOffset}
@@ -146,7 +146,7 @@ export function MacroDonutChart({
                 cy={center}
                 r={radius}
                 fill="transparent"
-                stroke="#FF9500"
+                stroke="var(--theme-warn)"
                 strokeWidth={hoveredMacro === 'carbs' ? strokeWidth + 3 : strokeWidth}
                 strokeDasharray={`${carbsDash} ${circumference}`}
                 strokeDashoffset={carbsOffset}
@@ -189,7 +189,7 @@ export function MacroDonutChart({
                 cy={center}
                 r={ring1Radius}
                 fill="transparent"
-                stroke="#FF3B30"
+                stroke="var(--theme-danger)"
                 strokeWidth={ringWidth}
                 strokeDasharray={ring1Circumference}
                 strokeDashoffset={ring1Circumference * (1 - Math.min(1, calCompletion))}
@@ -211,7 +211,7 @@ export function MacroDonutChart({
                 cy={center}
                 r={ring2Radius}
                 fill="transparent"
-                stroke="#30D158"
+                stroke="var(--theme-accent)"
                 strokeWidth={ringWidth}
                 strokeDasharray={ring2Circumference}
                 strokeDashoffset={ring2Circumference * (1 - Math.min(1, proteinCompletion))}
@@ -233,7 +233,7 @@ export function MacroDonutChart({
                 cy={center}
                 r={ring3Radius}
                 fill="transparent"
-                stroke="#0A84FF"
+                stroke="var(--theme-info)"
                 strokeWidth={ringWidth}
                 strokeDasharray={ring3Circumference}
                 strokeDashoffset={ring3Circumference * (1 - Math.min(1, exCompletion))}
@@ -276,12 +276,12 @@ export function MacroDonutChart({
                 onMouseLeave={() => setHoveredMacro(null)}
                 className={`p-2 rounded-xl transition-all border flex items-center justify-between ${
                   hoveredMacro === 'protein'
-                    ? 'bg-[#30D158]/15 border-[#30D158]/30'
+                    ? 'bg-accent/15 border-accent/30'
                     : 'bg-fg/[0.03] border-fg/5'
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#30D158] shadow-sm shadow-emerald-500/50" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-accent shadow-sm shadow-emerald-500/50" />
                   <div>
                     <span className="text-xs font-semibold text-fg block">Protein</span>
                     <span className="text-[10px] text-zinc-400">{protein}g / {proteinTarget}g target</span>
@@ -299,12 +299,12 @@ export function MacroDonutChart({
                 onMouseLeave={() => setHoveredMacro(null)}
                 className={`p-2 rounded-xl transition-all border flex items-center justify-between ${
                   hoveredMacro === 'carbs'
-                    ? 'bg-[#FF9500]/15 border-[#FF9500]/30'
+                    ? 'bg-warn/15 border-warn/30'
                     : 'bg-fg/[0.03] border-fg/5'
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#FF9500] shadow-sm shadow-orange-500/50" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-warn shadow-sm shadow-orange-500/50" />
                   <div>
                     <span className="text-xs font-semibold text-fg block">Carbs</span>
                     <span className="text-[10px] text-zinc-400">{carbs}g / {carbsTarget}g target</span>
@@ -344,7 +344,7 @@ export function MacroDonutChart({
               {/* Calories Ring Legend */}
               <div className="p-2 rounded-xl bg-fg/[0.03] border border-fg/5 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#FF3B30] shadow-sm shadow-red-500/50" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-danger shadow-sm shadow-red-500/50" />
                   <div>
                     <span className="text-xs font-semibold text-fg block">Calories</span>
                     <span className="text-[10px] text-zinc-400">{calories} / {calorieTarget} kcal</span>
@@ -356,7 +356,7 @@ export function MacroDonutChart({
               {/* Protein Ring Legend */}
               <div className="p-2 rounded-xl bg-fg/[0.03] border border-fg/5 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#30D158] shadow-sm shadow-emerald-500/50" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-accent shadow-sm shadow-emerald-500/50" />
                   <div>
                     <span className="text-xs font-semibold text-fg block">Protein Target</span>
                     <span className="text-[10px] text-zinc-400">{protein}g / {proteinTarget}g</span>
@@ -368,7 +368,7 @@ export function MacroDonutChart({
               {/* Exercise Ring Legend */}
               <div className="p-2 rounded-xl bg-fg/[0.03] border border-fg/5 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#0A84FF] shadow-sm shadow-blue-500/50" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-info shadow-sm shadow-blue-500/50" />
                   <div>
                     <span className="text-xs font-semibold text-fg block">Exercise Time</span>
                     <span className="text-[10px] text-zinc-400">{exerciseMinutes}m / {exerciseTarget}m</span>

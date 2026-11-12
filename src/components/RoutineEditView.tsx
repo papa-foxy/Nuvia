@@ -216,7 +216,7 @@ export function RoutineEditView({
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. Upper Body Hypertrophy"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg font-semibold text-xs focus:outline-none focus:border-[#30D158]"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg font-semibold text-xs focus:outline-none focus:border-accent"
                 required
               />
             </div>
@@ -229,7 +229,7 @@ export function RoutineEditView({
                 <select
                   value={focus}
                   onChange={(e) => setFocus(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg font-semibold text-xs focus:outline-none focus:border-[#30D158]"
+                  className="w-full px-3 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg font-semibold text-xs focus:outline-none focus:border-accent"
                 >
                   {CATEGORIES.filter((c) => c !== 'All').map((c) => (
                     <option key={c} value={c} className="bg-card">
@@ -248,7 +248,7 @@ export function RoutineEditView({
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="e.g. Push-up board + dumbbells"
-                  className="w-full px-3 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg text-xs focus:outline-none focus:border-[#30D158]"
+                  className="w-full px-3 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg text-xs focus:outline-none focus:border-accent"
                 />
               </div>
             </div>
@@ -269,7 +269,7 @@ export function RoutineEditView({
                     onClick={() => toggleDay(day)}
                     className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
                       isSelected
-                        ? 'bg-[#30D158] text-black font-bold shadow'
+                        ? 'bg-accent text-on-accent font-bold shadow'
                         : 'bg-fg/5 text-muted hover:text-fg border border-fg/5'
                     }`}
                   >
@@ -372,7 +372,7 @@ export function RoutineEditView({
                           max={20}
                           value={ex.sets}
                           onChange={(e) => handleUpdateExercise(ex.id, 'sets', Number(e.target.value) || 1)}
-                          className="w-full px-2 py-1.5 rounded-lg bg-app/40 border border-fg/10 text-fg font-semibold text-center focus:outline-none focus:border-[#30D158]"
+                          className="w-full px-2 py-1.5 rounded-lg bg-app/40 border border-fg/10 text-fg font-semibold text-center focus:outline-none focus:border-accent"
                         />
                       </div>
 
@@ -383,7 +383,7 @@ export function RoutineEditView({
                           value={ex.reps}
                           onChange={(e) => handleUpdateExercise(ex.id, 'reps', e.target.value)}
                           placeholder="10-12"
-                          className="w-full px-2 py-1.5 rounded-lg bg-app/40 border border-fg/10 text-fg font-semibold text-center focus:outline-none focus:border-[#30D158]"
+                          className="w-full px-2 py-1.5 rounded-lg bg-app/40 border border-fg/10 text-fg font-semibold text-center focus:outline-none focus:border-accent"
                         />
                       </div>
 
@@ -400,7 +400,7 @@ export function RoutineEditView({
                             step={15}
                             value={ex.rest_seconds ?? 90}
                             onChange={(e) => handleUpdateExercise(ex.id, 'rest_seconds', Number(e.target.value) || 0)}
-                            className="w-full px-1.5 py-1.5 rounded-lg bg-app/40 border border-fg/10 text-fg font-semibold text-center focus:outline-none focus:border-[#30D158]"
+                            className="w-full px-1.5 py-1.5 rounded-lg bg-app/40 border border-fg/10 text-fg font-semibold text-center focus:outline-none focus:border-accent"
                           />
                         </div>
                       </div>
@@ -417,7 +417,7 @@ export function RoutineEditView({
                           value={ex.target_weight_kg || ''}
                           placeholder="—"
                           onChange={(e) => handleUpdateExercise(ex.id, 'target_weight_kg', e.target.value ? Number(e.target.value) : undefined)}
-                          className="w-full px-1.5 py-1.5 rounded-lg bg-app/40 border border-fg/10 text-fg font-semibold text-center focus:outline-none focus:border-[#30D158]"
+                          className="w-full px-1.5 py-1.5 rounded-lg bg-app/40 border border-fg/10 text-fg font-semibold text-center focus:outline-none focus:border-accent"
                         />
                       </div>
                     </div>
@@ -439,7 +439,7 @@ export function RoutineEditView({
             <button
               type="submit"
               disabled={saving || exercises.length === 0}
-              className="flex-1 py-3 rounded-xl bg-[#30D158] hover:bg-[#28B84D] disabled:opacity-50 text-black font-bold text-xs transition-colors flex items-center justify-center gap-1.5 shadow"
+              className="flex-1 py-3 rounded-xl bg-accent hover:bg-accent-hover disabled:opacity-50 text-on-accent font-bold text-xs transition-colors flex items-center justify-center gap-1.5 shadow"
             >
               <Check className="w-4 h-4" />
               <span>{saving ? 'Saving...' : 'Save Changes'}</span>
@@ -481,7 +481,7 @@ export function RoutineEditView({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search 80+ verified exercises..."
-                  className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg text-xs placeholder:text-zinc-500 focus:outline-none focus:border-[#30D158]"
+                  className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg text-xs placeholder:text-zinc-500 focus:outline-none focus:border-accent"
                 />
               </div>
 
@@ -494,7 +494,7 @@ export function RoutineEditView({
                     onClick={() => setActiveCategory(cat)}
                     className={`px-3 py-1 rounded-full text-[11px] font-semibold transition-colors shrink-0 ${
                       activeCategory === cat
-                        ? 'bg-[#30D158] text-black font-bold'
+                        ? 'bg-accent text-on-accent font-bold'
                         : 'bg-fg/5 text-muted hover:text-fg'
                     }`}
                   >

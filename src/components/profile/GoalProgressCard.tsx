@@ -63,7 +63,7 @@ export function GoalProgressCard({ profile, goals }: GoalProgressCardProps) {
         <div className="p-3 rounded-2xl bg-fg/[0.03] border border-fg/[0.04]">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-medium text-muted block">Target</span>
-            <span className="text-[10px] font-semibold text-green-ink px-1.5 py-0.2 rounded-full bg-[#30D158]/10">
+            <span className="text-[10px] font-semibold text-green-ink px-1.5 py-0.2 rounded-full bg-accent/10">
               {goalFormatted}
             </span>
           </div>
@@ -85,7 +85,7 @@ export function GoalProgressCard({ profile, goals }: GoalProgressCardProps) {
                 <TrendingDown className="w-3.5 h-3.5" />
               </div>
             ) : isGaining ? (
-              <div className="w-6 h-6 rounded-lg bg-[#0A84FF]/15 text-blue-ink flex items-center justify-center">
+              <div className="w-6 h-6 rounded-lg bg-info/15 text-blue-ink flex items-center justify-center">
                 <TrendingUp className="w-3.5 h-3.5" />
               </div>
             ) : (

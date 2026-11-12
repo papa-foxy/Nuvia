@@ -1,6 +1,13 @@
 import type { Metadata, Viewport } from 'next';
+import { Manrope } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/lib/auth-context';
+
+const manrope = Manrope({
+  subsets: ['latin'],
+  variable: '--font-manrope',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: 'Nuvia — AI Nutrition & Fitness PWA',
@@ -33,8 +40,8 @@ const THEME_INIT_SCRIPT = `(function(){try{var p=localStorage.getItem('nuvia_the
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f2f2f7' },
-    { media: '(prefers-color-scheme: dark)', color: '#000000' },
+    { media: '(prefers-color-scheme: light)', color: '#f4f5f2' },
+    { media: '(prefers-color-scheme: dark)', color: '#111315' },
   ],
   width: 'device-width',
   initialScale: 1,
@@ -49,11 +56,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="bg-app" data-theme="dark" suppressHydrationWarning>
+    <html lang="en" className={`bg-app ${manrope.variable}`} data-theme="dark" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
-      <body className="bg-app text-fg antialiased selection:bg-[#30D158] selection:text-black">
+      <body className="bg-app text-fg font-sans antialiased selection:bg-accent selection:text-on-accent">
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

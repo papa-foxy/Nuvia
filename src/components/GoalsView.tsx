@@ -231,9 +231,9 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
 
       {/* ── RECALCULATION NOTIFICATION BANNER ───────────────────────────── */}
       {recalcNotice && (
-        <div className="p-3.5 rounded-2xl bg-gradient-to-r from-[#30D158]/15 via-fg/[0.03] to-black border border-[#30D158]/30 flex items-start justify-between gap-3 animate-slideDown">
+        <div className="p-3.5 rounded-2xl bg-gradient-to-r from-accent/15 via-fg/[0.03] to-black border border-accent/30 flex items-start justify-between gap-3 animate-slideDown">
           <div className="flex items-start gap-2.5">
-            <div className="w-6 h-6 rounded-full bg-[#30D158] text-black flex items-center justify-center shrink-0 mt-0.5">
+            <div className="w-6 h-6 rounded-full bg-accent text-on-accent flex items-center justify-center shrink-0 mt-0.5">
               <Sparkles className="w-3.5 h-3.5 fill-black" />
             </div>
             <div>
@@ -263,7 +263,7 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
           <span className="text-[11px] font-bold tracking-wider text-muted uppercase">
             Your Goal
           </span>
-          <span className="text-[10px] font-semibold text-green-ink px-2.5 py-0.5 rounded-full bg-[#30D158]/10 border border-[#30D158]/20">
+          <span className="text-[10px] font-semibold text-green-ink px-2.5 py-0.5 rounded-full bg-accent/10 border border-accent/20">
             Active Plan
           </span>
         </div>
@@ -399,7 +399,7 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
           </div>
 
           {/* Goal Target */}
-          <div className="p-3.5 rounded-2xl bg-gradient-to-b from-[#30D158]/10 to-transparent border border-[#30D158]/30 relative overflow-hidden">
+          <div className="p-3.5 rounded-2xl bg-gradient-to-b from-accent/10 to-transparent border border-accent/30 relative overflow-hidden">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold text-fg block">
                 Daily goal target
@@ -409,7 +409,7 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
                   currentCalc.adjustment < 0
                     ? 'bg-emerald-500/20 text-green-ink'
                     : currentCalc.adjustment > 0
-                    ? 'bg-[#0A84FF]/20 text-blue-ink'
+                    ? 'bg-info/20 text-blue-ink'
                     : 'bg-fg/10 text-zinc-300'
                 }`}
               >
@@ -503,7 +503,7 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
         <div className="space-y-1.5 pt-1">
           <div className="relative h-2.5 w-full bg-fg/[0.08] rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-[#30D158] to-[#0A84FF] rounded-full transition-all duration-500"
+              className="h-full bg-gradient-to-r from-accent to-info rounded-full transition-all duration-500"
               style={{
                 width: isAtGoal
                   ? '100%'
@@ -543,7 +543,7 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
         {/* Macro Ratio Split Bar */}
         <div className="h-2 w-full bg-fg/[0.06] rounded-full flex overflow-hidden">
           <div
-            className="bg-[#30D158] h-full"
+            className="bg-accent h-full"
             style={{ width: `${proteinPct}%` }}
             title={`Protein ${proteinPct}%`}
           />
@@ -553,7 +553,7 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
             title={`Carbs ${carbPct}%`}
           />
           <div
-            className="bg-[#0A84FF] h-full"
+            className="bg-info h-full"
             style={{ width: `${fatPct}%` }}
             title={`Fats ${fatPct}%`}
           />
@@ -564,7 +564,7 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
           {/* Protein Row */}
           <div className="py-2.5 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="w-6 h-6 rounded-lg bg-[#30D158]/15 text-green-ink flex items-center justify-center shrink-0">
+              <div className="w-6 h-6 rounded-lg bg-accent/15 text-green-ink flex items-center justify-center shrink-0">
                 <Beef className="w-3.5 h-3.5" />
               </div>
               <div>
@@ -602,7 +602,7 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
           {/* Fat Row */}
           <div className="py-2.5 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="w-6 h-6 rounded-lg bg-[#0A84FF]/15 text-blue-ink flex items-center justify-center shrink-0">
+              <div className="w-6 h-6 rounded-lg bg-info/15 text-blue-ink flex items-center justify-center shrink-0">
                 <Droplets className="w-3.5 h-3.5" />
               </div>
               <div>
@@ -856,7 +856,7 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
                 </p>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-gradient-to-r from-[#30D158]/20 to-card border border-[#30D158]/40 flex items-center justify-between text-xs">
+              <div className="p-3.5 rounded-xl bg-gradient-to-r from-accent/20 to-card border border-accent/40 flex items-center justify-between text-xs">
                 <div>
                   <span className="font-bold text-fg block">Recommended Daily Target</span>
                   <span className="text-[10px] text-muted">Synchronized across Nuvia</span>
@@ -920,7 +920,7 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
                   onClick={() => setDraftGoal(opt.id)}
                   className={`w-full p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
                     draftGoal === opt.id
-                      ? 'bg-fg/[0.08] border-[#30D158] text-fg'
+                      ? 'bg-fg/[0.08] border-accent text-fg'
                       : 'bg-fg/[0.02] border-fg/[0.06] text-muted hover:text-fg'
                   }`}
                 >
@@ -968,7 +968,7 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
               <button
                 onClick={() => handleSavePlan({ goal: draftGoal })}
                 disabled={saving}
-                className="flex-1 py-3 rounded-xl bg-[#30D158] hover:bg-[#28B84D] text-black font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                className="flex-1 py-3 rounded-xl bg-accent hover:bg-accent-hover text-on-accent font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 {saving ? 'Updating...' : 'Update Goal'}
               </button>
@@ -1044,7 +1044,7 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
               <button
                 onClick={() => handleSavePlan({ target_weight_kg: draftWeight })}
                 disabled={saving}
-                className="flex-1 py-3 rounded-xl bg-[#30D158] hover:bg-[#28B84D] text-black font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                className="flex-1 py-3 rounded-xl bg-accent hover:bg-accent-hover text-on-accent font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 {saving ? 'Saving...' : 'Save Target'}
               </button>
@@ -1091,7 +1091,7 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
                     onClick={() => setDraftActivity(level)}
                     className={`w-full p-3 rounded-2xl border text-left transition-all cursor-pointer ${
                       isSelected
-                        ? 'bg-fg/[0.08] border-[#30D158] text-fg'
+                        ? 'bg-fg/[0.08] border-accent text-fg'
                         : 'bg-fg/[0.02] border-fg/[0.06] text-muted hover:text-fg'
                     }`}
                   >
@@ -1115,7 +1115,7 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
               <button
                 onClick={() => handleSavePlan({ activity_level: draftActivity })}
                 disabled={saving}
-                className="flex-1 py-3 rounded-xl bg-[#30D158] hover:bg-[#28B84D] text-black font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                className="flex-1 py-3 rounded-xl bg-accent hover:bg-accent-hover text-on-accent font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 {saving ? 'Updating...' : 'Update Activity'}
               </button>
@@ -1164,7 +1164,7 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
                     onClick={() => setDraftPace(opt.value)}
                     className={`w-full p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
                       isSelected
-                        ? 'bg-fg/[0.08] border-[#30D158] text-fg'
+                        ? 'bg-fg/[0.08] border-accent text-fg'
                         : 'bg-fg/[0.02] border-fg/[0.06] text-muted hover:text-fg'
                     }`}
                   >
@@ -1201,7 +1201,7 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
               <button
                 onClick={() => handleSavePlan({ weekly_pace_kg: draftPace })}
                 disabled={saving}
-                className="flex-1 py-3 rounded-xl bg-[#30D158] hover:bg-[#28B84D] text-black font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                className="flex-1 py-3 rounded-xl bg-accent hover:bg-accent-hover text-on-accent font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 {saving ? 'Updating...' : 'Set Pace'}
               </button>

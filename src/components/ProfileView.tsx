@@ -205,9 +205,9 @@ export function ProfileView({
 
       {/* 4. COMPACT NEXT WORKOUT CALLOUT (Summary of upcoming routine) */}
       {nextWorkoutInfo && (
-        <div className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-card to-card border border-[#30D158]/25 flex items-center justify-between">
+        <div className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-card to-card border border-accent/25 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-[#30D158]/20 text-green-ink flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-accent/20 text-green-ink flex items-center justify-center shrink-0">
               <Dumbbell className="w-4 h-4" />
             </div>
             <div>

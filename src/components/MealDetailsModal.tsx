@@ -207,11 +207,11 @@ export function MealDetailsModal({
 
   const mealTypeColor =
     meal.meal_type === 'breakfast'
-      ? 'bg-[#FF9500]/20 text-orange-ink border-[#FF9500]/30'
+      ? 'bg-warn/20 text-orange-ink border-warn/30'
       : meal.meal_type === 'lunch'
-      ? 'bg-[#30D158]/20 text-green-ink border-[#30D158]/30'
+      ? 'bg-accent/20 text-green-ink border-accent/30'
       : meal.meal_type === 'dinner'
-      ? 'bg-[#0A84FF]/20 text-blue-ink border-[#0A84FF]/30'
+      ? 'bg-info/20 text-blue-ink border-info/30'
       : 'bg-[#BF5AF2]/20 text-[#BF5AF2] border-[#BF5AF2]/30';
 
   const handleDelete = async () => {
@@ -428,12 +428,12 @@ export function MealDetailsModal({
             <div className="w-full h-2.5 rounded-full overflow-hidden bg-fg/10 flex gap-0.5">
               <div
                 style={{ width: `${proteinPct}%` }}
-                className="bg-[#30D158] h-full transition-all duration-300"
+                className="bg-accent h-full transition-all duration-300"
                 title={`Protein ${proteinPct}%`}
               />
               <div
                 style={{ width: `${carbsPct}%` }}
-                className="bg-[#FF9500] h-full transition-all duration-300"
+                className="bg-warn h-full transition-all duration-300"
                 title={`Carbs ${carbsPct}%`}
               />
               <div
@@ -445,11 +445,11 @@ export function MealDetailsModal({
 
             <div className="flex items-center justify-between text-[11px] text-zinc-400 pt-0.5">
               <span className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-[#30D158]" />
+                <span className="w-2 h-2 rounded-full bg-accent" />
                 Protein {proteinPct}%
               </span>
               <span className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-[#FF9500]" />
+                <span className="w-2 h-2 rounded-full bg-warn" />
                 Carbs {carbsPct}%
               </span>
               <span className="flex items-center gap-1">

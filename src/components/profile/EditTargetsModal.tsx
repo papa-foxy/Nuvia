@@ -131,7 +131,7 @@ export function EditTargetsModal({
         </div>
 
         {/* Auto-Calculate Quick Action */}
-        <div className="p-3 rounded-2xl bg-gradient-to-r from-[#30D158]/15 via-fg/[0.04] to-transparent border border-[#30D158]/30 flex items-center justify-between">
+        <div className="p-3 rounded-2xl bg-gradient-to-r from-accent/15 via-fg/[0.04] to-transparent border border-accent/30 flex items-center justify-between">
           <div>
             <span className="text-xs font-bold text-fg flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-green-ink" />
@@ -144,7 +144,7 @@ export function EditTargetsModal({
           <button
             type="button"
             onClick={handleAutoCalculate}
-            className="px-3 py-1.5 rounded-xl bg-[#30D158] hover:bg-[#28B84D] text-black font-bold text-xs flex items-center gap-1 transition-transform active:scale-95 shadow cursor-pointer"
+            className="px-3 py-1.5 rounded-xl bg-accent hover:bg-accent-hover text-on-accent font-bold text-xs flex items-center gap-1 transition-transform active:scale-95 shadow cursor-pointer"
           >
             <RefreshCw className="w-3 h-3" />
             <span>Recalculate</span>
@@ -152,7 +152,7 @@ export function EditTargetsModal({
         </div>
 
         {calculatedNotice && (
-          <div className="p-2 rounded-xl bg-[#30D158]/10 border border-[#30D158]/30 text-[11px] text-green-ink font-medium flex items-center gap-2">
+          <div className="p-2 rounded-xl bg-accent/10 border border-accent/30 text-[11px] text-green-ink font-medium flex items-center gap-2">
             <Check className="w-3.5 h-3.5 shrink-0" />
             <span>{calculatedNotice}</span>
           </div>
@@ -171,7 +171,7 @@ export function EditTargetsModal({
                   type="number"
                   value={calorieTarget}
                   onChange={(e) => setCalorieTarget(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg font-semibold focus:outline-none focus:border-[#30D158]"
+                  className="w-full px-3 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg font-semibold focus:outline-none focus:border-accent"
                 />
                 <span className="absolute right-3 top-2.5 text-[10px] text-muted">kcal</span>
               </div>
@@ -188,7 +188,7 @@ export function EditTargetsModal({
                   step="0.1"
                   value={targetWeight}
                   onChange={(e) => setTargetWeight(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg font-semibold focus:outline-none focus:border-[#30D158]"
+                  className="w-full px-3 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg font-semibold focus:outline-none focus:border-accent"
                 />
                 <span className="absolute right-3 top-2.5 text-[10px] text-muted">kg</span>
               </div>
@@ -207,7 +207,7 @@ export function EditTargetsModal({
                   type="number"
                   value={proteinTarget}
                   onChange={(e) => setProteinTarget(e.target.value)}
-                  className="w-full px-2.5 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg font-semibold focus:outline-none focus:border-[#30D158]"
+                  className="w-full px-2.5 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg font-semibold focus:outline-none focus:border-accent"
                 />
                 <span className="absolute right-2 top-2.5 text-[10px] text-muted">g</span>
               </div>
@@ -223,7 +223,7 @@ export function EditTargetsModal({
                   type="number"
                   value={carbTarget}
                   onChange={(e) => setCarbTarget(e.target.value)}
-                  className="w-full px-2.5 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg font-semibold focus:outline-none focus:border-[#30D158]"
+                  className="w-full px-2.5 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg font-semibold focus:outline-none focus:border-accent"
                 />
                 <span className="absolute right-2 top-2.5 text-[10px] text-muted">g</span>
               </div>
@@ -239,7 +239,7 @@ export function EditTargetsModal({
                   type="number"
                   value={fatTarget}
                   onChange={(e) => setFatTarget(e.target.value)}
-                  className="w-full px-2.5 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg font-semibold focus:outline-none focus:border-[#30D158]"
+                  className="w-full px-2.5 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg font-semibold focus:outline-none focus:border-accent"
                 />
                 <span className="absolute right-2 top-2.5 text-[10px] text-muted">g</span>
               </div>
@@ -257,7 +257,7 @@ export function EditTargetsModal({
                 type="number"
                 value={exerciseMinutes}
                 onChange={(e) => setExerciseMinutes(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg font-semibold focus:outline-none focus:border-[#30D158]"
+                className="w-full px-3 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg font-semibold focus:outline-none focus:border-accent"
               />
               <span className="absolute right-3 top-2.5 text-[10px] text-muted">minutes</span>
             </div>
@@ -275,7 +275,7 @@ export function EditTargetsModal({
             <button
               type="submit"
               disabled={saving}
-              className="flex-1 py-3 rounded-xl bg-[#30D158] hover:bg-[#28B84D] text-black font-bold transition-colors flex items-center justify-center gap-1.5 shadow"
+              className="flex-1 py-3 rounded-xl bg-accent hover:bg-accent-hover text-on-accent font-bold transition-colors flex items-center justify-center gap-1.5 shadow"
             >
               <Check className="w-4 h-4" />
               <span>{saving ? 'Saving...' : 'Save Targets'}</span>

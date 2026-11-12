@@ -51,8 +51,8 @@ export function PhysiqueIllustration({
 
   // Colors
   const fillGradientId = `body-grad-${sex}-${normalizedType}-${selected ? 'active' : 'idle'}`;
-  const contourColor = selected ? '#30D158' : '#52525B';
-  const detailColor = selected ? '#30D158' : '#71717A';
+  const contourColor = selected ? 'var(--theme-accent)' : '#52525B';
+  const detailColor = selected ? 'var(--theme-accent)' : '#71717A';
 
   // Head and neutral features common across models for uniform scale
   const renderHead = () => (
@@ -89,13 +89,13 @@ export function PhysiqueIllustration({
           strokeDasharray={normalizedType === 'not_sure' ? '3 3' : 'none'}
         />
         {normalizedType === 'not_sure' ? (
-          <text x="50" y="80" textAnchor="middle" fill={selected ? '#30D158' : '#A1A1AA'} fontSize="16" fontWeight="bold">
+          <text x="50" y="80" textAnchor="middle" fill={selected ? 'var(--theme-accent)' : '#A1A1AA'} fontSize="16" fontWeight="bold">
             ?
           </text>
         ) : (
           <path
             d="M50 68 L50 88 M40 78 L60 78"
-            stroke={selected ? '#30D158' : '#A1A1AA'}
+            stroke={selected ? 'var(--theme-accent)' : '#A1A1AA'}
             strokeWidth="2"
             strokeLinecap="round"
           />

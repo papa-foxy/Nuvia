@@ -177,7 +177,7 @@ export function MealResultModal({
             <div className="relative rounded-2xl overflow-hidden h-44 border border-fg/[0.08] shadow-lg bg-app">
               <img src={imagePreviewUrl} alt="Analyzed Food" className="w-full h-full object-cover" />
               <div className="absolute top-2 left-2 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md text-[10px] font-bold text-white flex items-center gap-1.5 border border-fg/10">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#30D158]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-accent" />
                 <span>AI Photo Analyzed</span>
               </div>
             </div>
@@ -185,7 +185,7 @@ export function MealResultModal({
 
           {/* Nuvia Food Memory Context Badge */}
           {contextBadge && (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#30D158]/10 border border-[#30D158]/25 text-xs text-green-ink">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-accent/10 border border-accent/25 text-xs text-green-ink">
               <Sparkles className="w-3.5 h-3.5 shrink-0" />
               <span className="font-semibold">{contextBadge}</span>
               {contextNote && <span className="text-muted text-[11px]">· {contextNote}</span>}
@@ -225,7 +225,7 @@ export function MealResultModal({
           {/* Inline Nuvia Contextual Note */}
           <div className="bg-surface p-3.5 rounded-2xl border border-fg/[0.06] space-y-1">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-fg">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#30D158]" />
+              <span className="w-1.5 h-1.5 rounded-full bg-accent" />
               <span>Nuvia Estimation Note</span>
             </div>
             <p className="text-xs text-fg-soft leading-relaxed">
@@ -307,7 +307,7 @@ export function MealResultModal({
           </div>
 
           {savedSuccess && (
-            <div className="p-3 rounded-xl bg-[#30D158]/15 border border-[#30D158]/30 flex items-center gap-2">
+            <div className="p-3 rounded-xl bg-accent/15 border border-accent/30 flex items-center gap-2">
               <Check className="w-4 h-4 text-green-ink shrink-0" />
               <span className="text-xs text-green-ink font-bold">
                 Recorded +{totalCalories} kcal to today's daily calories!
@@ -323,7 +323,7 @@ export function MealResultModal({
               <button
                 onClick={handleConfirmSave}
                 disabled={saving}
-                className="flex-1 py-3.5 rounded-2xl bg-[#30D158] hover:bg-[#28B84D] text-black font-bold text-sm transition-colors shadow-lg shadow-[#30D158]/20 flex items-center justify-center gap-1.5"
+                className="flex-1 py-3.5 rounded-2xl bg-accent hover:bg-accent-hover text-on-accent font-bold text-sm transition-colors shadow-lg shadow-accent/20 flex items-center justify-center gap-1.5"
               >
                 {saving ? 'Recording...' : 'Record to Daily Calories'}
               </button>
@@ -344,7 +344,7 @@ export function MealResultModal({
               </button>
               <button
                 onClick={onClose}
-                className="flex-1 py-3.5 rounded-2xl bg-[#30D158] text-black font-bold text-sm hover:bg-[#28B84D] transition-colors"
+                className="flex-1 py-3.5 rounded-2xl bg-accent text-on-accent font-bold text-sm hover:bg-accent-hover transition-colors"
               >
                 Done
               </button>

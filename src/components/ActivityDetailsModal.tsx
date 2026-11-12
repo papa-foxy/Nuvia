@@ -74,7 +74,7 @@ export function ActivityDetailsModal({
             className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider border ${
               data.isPartial
                 ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
-                : 'bg-[#30D158]/15 text-green-ink border-[#30D158]/30'
+                : 'bg-accent/15 text-green-ink border-accent/30'
             }`}
           >
             {data.statusLabel}
@@ -110,7 +110,7 @@ export function ActivityDetailsModal({
         {/* Primary Metrics Strip */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           <div className="p-3.5 rounded-2xl bg-fg/[0.04] border border-fg/[0.06] flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#FF453A]/15 text-red-ink flex items-center justify-center shrink-0">
+            <div className="w-9 h-9 rounded-xl bg-danger/15 text-red-ink flex items-center justify-center shrink-0">
               <Flame className="w-5 h-5" />
             </div>
             <div>
@@ -124,7 +124,7 @@ export function ActivityDetailsModal({
           </div>
 
           <div className="p-3.5 rounded-2xl bg-fg/[0.04] border border-fg/[0.06] flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#0A84FF]/15 text-blue-ink flex items-center justify-center shrink-0">
+            <div className="w-9 h-9 rounded-xl bg-info/15 text-blue-ink flex items-center justify-center shrink-0">
               <Clock className="w-5 h-5" />
             </div>
             <div>
@@ -139,7 +139,7 @@ export function ActivityDetailsModal({
 
           {data.movementsSummary && (
             <div className="col-span-2 sm:col-span-1 p-3.5 rounded-2xl bg-fg/[0.04] border border-fg/[0.06] flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-[#30D158]/15 text-green-ink flex items-center justify-center shrink-0">
+              <div className="w-9 h-9 rounded-xl bg-accent/15 text-green-ink flex items-center justify-center shrink-0">
                 <Dumbbell className="w-5 h-5" />
               </div>
               <div>
@@ -207,7 +207,7 @@ export function ActivityDetailsModal({
                             key={sIdx}
                             className={`text-[10px] px-2 py-0.5 rounded-lg border font-mono ${
                               s.completed
-                                ? 'bg-[#30D158]/10 text-green-ink border-[#30D158]/30'
+                                ? 'bg-accent/10 text-green-ink border-accent/30'
                                 : 'bg-fg/5 text-muted border-fg/10'
                             }`}
                           >
@@ -235,7 +235,7 @@ export function ActivityDetailsModal({
 
         {/* AI Tip / Feedback if present */}
         {log.ai_analysis?.ai_tip && (
-          <div className="p-3 rounded-2xl bg-[#0A84FF]/10 border border-[#0A84FF]/20 flex items-start gap-2.5 text-xs text-blue-ink">
+          <div className="p-3 rounded-2xl bg-info/10 border border-info/20 flex items-start gap-2.5 text-xs text-blue-ink">
             <Sparkles className="w-4 h-4 shrink-0 mt-0.5" />
             <p className="leading-relaxed">{log.ai_analysis.ai_tip}</p>
           </div>

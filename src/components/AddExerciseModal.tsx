@@ -311,7 +311,7 @@ export function AddExerciseModal({
                     value={durationMinutes}
                     onChange={(e) => setDurationMinutes(e.target.value)}
                     placeholder="30"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-surface border border-fg/[0.06] text-sm text-fg focus:outline-none focus:border-[#30D158]"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-surface border border-fg/[0.06] text-sm text-fg focus:outline-none focus:border-accent"
                   />
                 </div>
 
@@ -325,7 +325,7 @@ export function AddExerciseModal({
                     value={distanceKm}
                     onChange={(e) => setDistanceKm(e.target.value)}
                     placeholder="e.g. 5.0"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-surface border border-fg/[0.06] text-sm text-fg focus:outline-none focus:border-[#30D158]"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-surface border border-fg/[0.06] text-sm text-fg focus:outline-none focus:border-accent"
                   />
                 </div>
               </div>
@@ -361,7 +361,7 @@ export function AddExerciseModal({
                 value={textPrompt}
                 onChange={(e) => setTextPrompt(e.target.value)}
                 placeholder="Tell Nuvia what you did (e.g. Ran 5km in 30 minutes, or did my usual Saturday walk)..."
-                className="w-full p-3.5 rounded-xl bg-surface border border-fg/[0.06] text-xs text-fg placeholder-muted focus:outline-none focus:border-[#30D158] resize-none"
+                className="w-full p-3.5 rounded-xl bg-surface border border-fg/[0.06] text-xs text-fg placeholder-muted focus:outline-none focus:border-accent resize-none"
               />
 
               {suggestions.length > 0 && (
@@ -374,7 +374,7 @@ export function AddExerciseModal({
                       className="text-[11px] px-2.5 py-1 rounded-full bg-surface hover:bg-elevated text-muted hover:text-fg border border-fg/[0.06] transition-colors flex items-center gap-1.5"
                     >
                       {preset.badge && (
-                        <span className="text-[9px] px-1 py-0.2 rounded bg-[#30D158]/20 text-green-ink font-bold">
+                        <span className="text-[9px] px-1 py-0.2 rounded bg-accent/20 text-green-ink font-bold">
                           {preset.badge}
                         </span>
                       )}
@@ -397,7 +397,7 @@ export function AddExerciseModal({
           {parsedResult && (
             <div className="bg-surface p-4 rounded-2xl border border-fg/[0.08] space-y-2">
               {contextBadge && (
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#30D158]/10 border border-[#30D158]/25 text-xs text-green-ink mb-1">
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-accent/10 border border-accent/25 text-xs text-green-ink mb-1">
                   <Sparkles className="w-3.5 h-3.5 shrink-0" />
                   <span className="font-semibold">{contextBadge}</span>
                   {contextNote && <span className="text-muted text-[11px]">· {contextNote}</span>}
@@ -436,7 +436,7 @@ export function AddExerciseModal({
             <button
               onClick={handleParse}
               disabled={isParsing}
-              className="w-full py-3.5 rounded-2xl bg-[#30D158] hover:bg-[#28B84D] disabled:opacity-50 text-black font-semibold text-sm transition-colors"
+              className="w-full py-3.5 rounded-2xl bg-accent hover:bg-accent-hover disabled:opacity-50 text-on-accent font-semibold text-sm transition-colors"
             >
               {isParsing ? 'Calculating...' : 'Calculate Expenditure'}
             </button>
@@ -445,7 +445,7 @@ export function AddExerciseModal({
               <button
                 onClick={handleSaveToLog}
                 disabled={saving}
-                className="flex-1 py-3.5 rounded-2xl bg-[#30D158] text-black font-semibold text-sm"
+                className="flex-1 py-3.5 rounded-2xl bg-accent text-on-accent font-semibold text-sm"
               >
                 {saving ? 'Saving...' : 'Save Activity'}
               </button>

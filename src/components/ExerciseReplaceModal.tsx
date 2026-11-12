@@ -117,7 +117,7 @@ export function ExerciseReplaceModal({
         <div className="mt-3 p-2.5 rounded-xl bg-fg/[0.04] border border-fg/[0.06] flex items-center justify-between text-xs shrink-0">
           <span className="text-muted">Replacing:</span>
           <span className="font-bold text-fg truncate max-w-[200px]">{exercise.name}</span>
-          <span className="text-[10px] text-green-ink font-semibold bg-[#30D158]/10 px-1.5 py-0.5 rounded">
+          <span className="text-[10px] text-green-ink font-semibold bg-accent/10 px-1.5 py-0.5 rounded">
             {exercise.target_muscle}
           </span>
         </div>
@@ -130,7 +130,7 @@ export function ExerciseReplaceModal({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={`Search ${activeCategory} alternatives...`}
-            className="w-full pl-8 pr-3 py-2 rounded-xl bg-fg/5 border border-fg/10 text-fg text-xs placeholder:text-zinc-500 focus:outline-none focus:border-[#30D158]"
+            className="w-full pl-8 pr-3 py-2 rounded-xl bg-fg/5 border border-fg/10 text-fg text-xs placeholder:text-zinc-500 focus:outline-none focus:border-accent"
           />
         </div>
 
@@ -143,7 +143,7 @@ export function ExerciseReplaceModal({
               onClick={() => setActiveCategory(cat)}
               className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-colors shrink-0 ${
                 activeCategory === cat
-                  ? 'bg-[#30D158] text-black font-bold'
+                  ? 'bg-accent text-on-accent font-bold'
                   : 'bg-fg/5 text-muted hover:text-fg'
               }`}
             >
@@ -160,7 +160,7 @@ export function ExerciseReplaceModal({
             onClick={() => setOnlyMyEquipment((prev) => !prev)}
             className={`px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-colors flex items-center gap-1.5 ${
               onlyMyEquipment
-                ? 'bg-[#30D158]/15 text-green-ink border border-[#30D158]/30'
+                ? 'bg-accent/15 text-green-ink border border-accent/30'
                 : 'bg-fg/5 text-muted border border-fg/10 hover:text-fg'
             }`}
           >

@@ -136,7 +136,7 @@ export function DateFilterBar({
             {/* Header */}
             <div className="flex items-center justify-between pb-1 border-b border-fg/[0.06]">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-[#30D158]/15 flex items-center justify-center text-green-ink">
+                <div className="w-8 h-8 rounded-full bg-accent/15 flex items-center justify-center text-green-ink">
                   <CalendarIcon className="w-4 h-4" />
                 </div>
                 <div>
@@ -207,15 +207,15 @@ export function DateFilterBar({
                     type="button"
                     className={`h-8 rounded-xl flex items-center justify-center text-xs font-semibold transition-all relative ${
                       isDaySelected
-                        ? 'bg-[#30D158] text-black font-bold shadow-md shadow-[#30D158]/30 scale-105 z-10'
+                        ? 'bg-accent text-on-accent font-bold shadow-md shadow-accent/30 scale-105 z-10'
                         : isDayToday
-                        ? 'border border-[#30D158] text-green-ink hover:bg-[#30D158]/10'
+                        ? 'border border-accent text-green-ink hover:bg-accent/10'
                         : 'text-fg hover:bg-fg/10'
                     }`}
                   >
                     <span>{dayNum}</span>
                     {isDayToday && !isDaySelected && (
-                      <span className="absolute bottom-1 w-1 h-1 rounded-full bg-[#30D158]" />
+                      <span className="absolute bottom-1 w-1 h-1 rounded-full bg-accent" />
                     )}
                   </button>
                 );

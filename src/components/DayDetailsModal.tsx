@@ -313,10 +313,10 @@ export function DayDetailsModal({
                 <div
                   className={`w-9 h-9 rounded-xl flex items-center justify-center ${
                     hasExercises
-                      ? 'bg-[#30D158]/20 text-green-ink'
+                      ? 'bg-accent/20 text-green-ink'
                       : routine
-                      ? 'bg-[#FF9500]/20 text-orange-ink'
-                      : 'bg-[#0A84FF]/20 text-blue-ink'
+                      ? 'bg-warn/20 text-orange-ink'
+                      : 'bg-info/20 text-blue-ink'
                   }`}
                 >
                   {hasExercises ? (
@@ -344,10 +344,10 @@ export function DayDetailsModal({
               <span
                 className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
                   hasExercises
-                    ? 'bg-[#30D158]/20 text-green-ink border border-[#30D158]/30'
+                    ? 'bg-accent/20 text-green-ink border border-accent/30'
                     : routine
-                    ? 'bg-[#FF9500]/20 text-orange-ink border border-[#FF9500]/30'
-                    : 'bg-[#0A84FF]/20 text-blue-ink border border-[#0A84FF]/30'
+                    ? 'bg-warn/20 text-orange-ink border border-warn/30'
+                    : 'bg-info/20 text-blue-ink border border-info/30'
                 }`}
               >
                 {hasExercises ? 'Completed' : routine ? 'Prescribed' : 'Rest Day'}
@@ -379,10 +379,10 @@ export function DayDetailsModal({
 
           {/* SCHEDULED ROUTINE MOVEMENTS (If day has routine prescribed & not completed yet) */}
           {routine && !hasExercises && (
-            <div className="ios-card p-4 space-y-3 border border-[#30D158]/25 bg-gradient-to-br from-[#30D158]/10 via-card to-surface">
+            <div className="ios-card p-4 space-y-3 border border-accent/25 bg-gradient-to-br from-accent/10 via-card to-surface">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-[#30D158]/20 text-green-ink flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-xl bg-accent/20 text-green-ink flex items-center justify-center">
                     <Dumbbell className="w-4 h-4" />
                   </div>
                   <div>
@@ -392,7 +392,7 @@ export function DayDetailsModal({
                     </p>
                   </div>
                 </div>
-                <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#30D158] text-black">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-accent text-on-accent">
                   Scheduled
                 </span>
               </div>
@@ -428,13 +428,13 @@ export function DayDetailsModal({
 
           {/* REST DAY GUIDELINE (If no workout routine scheduled & no workout logged) */}
           {!routine && !hasExercises && (
-            <div className="ios-card p-4 space-y-2.5 border border-[#0A84FF]/25 bg-gradient-to-br from-[#0A84FF]/10 via-card to-surface">
+            <div className="ios-card p-4 space-y-2.5 border border-info/25 bg-gradient-to-br from-info/10 via-card to-surface">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-blue-ink">
                   <Heart className="w-4 h-4" />
                   <span className="text-xs font-bold uppercase tracking-wider">Rest & Recovery Guideline</span>
                 </div>
-                <span className="text-[10px] font-semibold text-sky-400 px-2 py-0.5 rounded-full bg-[#0A84FF]/15 border border-[#0A84FF]/20">
+                <span className="text-[10px] font-semibold text-sky-400 px-2 py-0.5 rounded-full bg-info/15 border border-info/20">
                   Active Recovery
                 </span>
               </div>

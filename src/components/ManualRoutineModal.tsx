@@ -207,7 +207,7 @@ export function ManualRoutineModal({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Upper Body Hypertrophy or Leg Day"
-              className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-surface border border-fg/[0.08] text-fg focus:outline-none focus:border-[#30D158]"
+              className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-surface border border-fg/[0.08] text-fg focus:outline-none focus:border-accent"
             />
           </div>
 
@@ -226,7 +226,7 @@ export function ManualRoutineModal({
                     onClick={() => toggleDay(day)}
                     className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                       isSelected
-                        ? 'bg-[#30D158] text-black font-semibold'
+                        ? 'bg-accent text-on-accent font-semibold'
                         : 'bg-surface border border-fg/[0.08] text-muted hover:text-fg'
                     }`}
                   >
@@ -245,7 +245,7 @@ export function ManualRoutineModal({
             <select
               value={focus}
               onChange={(e) => setFocus(e.target.value)}
-              className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-surface border border-fg/[0.08] text-fg focus:outline-none focus:border-[#30D158]"
+              className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-surface border border-fg/[0.08] text-fg focus:outline-none focus:border-accent"
             >
               <option value="Upper Body">Upper Body</option>
               <option value="Abs &amp; Core">Abs &amp; Core</option>
@@ -328,7 +328,7 @@ export function ManualRoutineModal({
                           onChange={(e) =>
                             handleUpdateExercise(ex.id, 'sets', parseInt(e.target.value, 10) || 1)
                           }
-                          className="w-full px-2.5 py-1.5 text-xs rounded-lg bg-card border border-fg/[0.06] text-fg focus:outline-none focus:border-[#30D158]"
+                          className="w-full px-2.5 py-1.5 text-xs rounded-lg bg-card border border-fg/[0.06] text-fg focus:outline-none focus:border-accent"
                         />
                       </div>
                       <div>
@@ -340,7 +340,7 @@ export function ManualRoutineModal({
                           value={ex.reps}
                           onChange={(e) => handleUpdateExercise(ex.id, 'reps', e.target.value)}
                           placeholder="e.g. 10-12 or 45 sec"
-                          className="w-full px-2.5 py-1.5 text-xs rounded-lg bg-card border border-fg/[0.06] text-fg focus:outline-none focus:border-[#30D158]"
+                          className="w-full px-2.5 py-1.5 text-xs rounded-lg bg-card border border-fg/[0.06] text-fg focus:outline-none focus:border-accent"
                         />
                       </div>
                       <div>
@@ -361,7 +361,7 @@ export function ManualRoutineModal({
                               parseInt(e.target.value, 10) || 0
                             )
                           }
-                          className="w-full px-2.5 py-1.5 text-xs rounded-lg bg-card border border-fg/[0.06] text-fg focus:outline-none focus:border-[#30D158]"
+                          className="w-full px-2.5 py-1.5 text-xs rounded-lg bg-card border border-fg/[0.06] text-fg focus:outline-none focus:border-accent"
                         />
                       </div>
                     </div>
@@ -375,7 +375,7 @@ export function ManualRoutineModal({
             <button
               type="submit"
               disabled={!title.trim() || exercises.length === 0}
-              className="w-full py-3.5 rounded-full bg-[#30D158] hover:bg-[#28B84D] disabled:opacity-50 text-black font-semibold text-sm transition-colors shadow-lg shadow-[#30D158]/20"
+              className="w-full py-3.5 rounded-full bg-accent hover:bg-accent-hover disabled:opacity-50 text-on-accent font-semibold text-sm transition-colors shadow-lg shadow-accent/20"
             >
               Save Routine
             </button>
@@ -406,7 +406,7 @@ export function ManualRoutineModal({
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search exercises..."
-                    className="w-full pl-9 pr-3.5 py-2 text-xs rounded-xl bg-surface border border-fg/[0.08] text-fg focus:outline-none focus:border-[#30D158]"
+                    className="w-full pl-9 pr-3.5 py-2 text-xs rounded-xl bg-surface border border-fg/[0.08] text-fg focus:outline-none focus:border-accent"
                     autoFocus
                   />
                 </div>
@@ -470,7 +470,7 @@ export function ManualRoutineModal({
                         </div>
                         <button
                           type="button"
-                          className="px-2.5 py-1 rounded-full bg-[#30D158]/15 text-green-ink text-xs font-medium shrink-0 group-hover:bg-[#30D158] group-hover:text-black transition-colors"
+                          className="px-2.5 py-1 rounded-full bg-accent/15 text-green-ink text-xs font-medium shrink-0 group-hover:bg-accent group-hover:text-on-accent transition-colors"
                         >
                           + Add
                         </button>
@@ -514,7 +514,7 @@ export function ManualRoutineModal({
 
                           <button
                             type="button"
-                            className="px-2.5 py-1 rounded-full bg-[#30D158]/15 text-green-ink text-xs font-medium shrink-0 group-hover:bg-[#30D158] group-hover:text-black transition-colors"
+                            className="px-2.5 py-1 rounded-full bg-accent/15 text-green-ink text-xs font-medium shrink-0 group-hover:bg-accent group-hover:text-on-accent transition-colors"
                           >
                             + Add
                           </button>
@@ -548,7 +548,7 @@ export function ManualRoutineModal({
                       value={customName}
                       onChange={(e) => setCustomName(e.target.value)}
                       placeholder="Exercise name *"
-                      className="w-full px-3 py-2 text-xs rounded-xl bg-card border border-fg/[0.08] text-fg focus:outline-none focus:border-[#30D158]"
+                      className="w-full px-3 py-2 text-xs rounded-xl bg-card border border-fg/[0.08] text-fg focus:outline-none focus:border-accent"
                       autoFocus
                     />
                     <div className="grid grid-cols-2 gap-2">
@@ -557,14 +557,14 @@ export function ManualRoutineModal({
                         value={customMuscle}
                         onChange={(e) => setCustomMuscle(e.target.value)}
                         placeholder="Primary muscle"
-                        className="px-3 py-2 text-xs rounded-xl bg-card border border-fg/[0.08] text-fg focus:outline-none focus:border-[#30D158]"
+                        className="px-3 py-2 text-xs rounded-xl bg-card border border-fg/[0.08] text-fg focus:outline-none focus:border-accent"
                       />
                       <input
                         type="text"
                         value={customEquipment}
                         onChange={(e) => setCustomEquipment(e.target.value)}
                         placeholder="Equipment"
-                        className="px-3 py-2 text-xs rounded-xl bg-card border border-fg/[0.08] text-fg focus:outline-none focus:border-[#30D158]"
+                        className="px-3 py-2 text-xs rounded-xl bg-card border border-fg/[0.08] text-fg focus:outline-none focus:border-accent"
                       />
                     </div>
                     <div className="flex gap-2">
@@ -572,7 +572,7 @@ export function ManualRoutineModal({
                         type="button"
                         onClick={handleCreateAndAddCustom}
                         disabled={!customName.trim()}
-                        className="flex-1 py-2 rounded-xl bg-[#30D158] disabled:opacity-40 text-black text-xs font-semibold"
+                        className="flex-1 py-2 rounded-xl bg-accent disabled:opacity-40 text-on-accent text-xs font-semibold"
                       >
                         Create &amp; Add
                       </button>

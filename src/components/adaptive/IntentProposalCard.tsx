@@ -78,7 +78,7 @@ export function IntentProposalCard({
 
   if (appliedAdaptationId) {
     return (
-      <div className="p-3.5 rounded-2xl bg-[#0A84FF]/15 border border-[#0A84FF]/30 text-xs text-fg flex items-center justify-between gap-3 animate-fadeIn">
+      <div className="p-3.5 rounded-2xl bg-info/15 border border-info/30 text-xs text-fg flex items-center justify-between gap-3 animate-fadeIn">
         <div className="flex items-center gap-2">
           <Check className="w-4 h-4 text-blue-ink" />
           <span>Plan updated based on your intent.</span>

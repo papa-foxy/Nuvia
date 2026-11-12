@@ -331,9 +331,9 @@ export function AddMealModal({
 
                     {/* Scan Line Animation while analyzing */}
                     {isAnalyzing && (
-                      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#30D158]/25 to-transparent animate-pulse pointer-events-none flex flex-col justify-center items-center">
-                        <div className="w-full h-1 bg-[#30D158] shadow-[0_0_15px_#30D158]" />
-                        <div className="mt-3 px-3 py-1.5 rounded-full bg-black/80 backdrop-blur-md border border-[#30D158]/40 text-xs font-semibold text-green-ink flex items-center gap-2">
+                      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-accent/25 to-transparent animate-pulse pointer-events-none flex flex-col justify-center items-center">
+                        <div className="w-full h-1 bg-accent shadow-[0_0_15px_var(--theme-accent)]" />
+                        <div className="mt-3 px-3 py-1.5 rounded-full bg-black/80 backdrop-blur-md border border-accent/40 text-xs font-semibold text-green-ink flex items-center gap-2">
                           <Sparkles className="w-3.5 h-3.5 animate-spin" />
                           <span>Nuvia AI is calculating calories...</span>
                         </div>
@@ -367,15 +367,15 @@ export function AddMealModal({
                     <button
                       type="button"
                       onClick={() => cameraInputRef.current?.click()}
-                      className="w-full text-left p-4 rounded-2xl bg-gradient-to-r from-[#30D158]/15 via-card to-surface border border-[#30D158]/30 hover:border-[#30D158] transition-all flex items-center gap-3.5 group active:scale-[0.99]"
+                      className="w-full text-left p-4 rounded-2xl bg-gradient-to-r from-accent/15 via-card to-surface border border-accent/30 hover:border-accent transition-all flex items-center gap-3.5 group active:scale-[0.99]"
                     >
-                      <div className="w-12 h-12 rounded-xl bg-[#30D158] text-black flex items-center justify-center shrink-0 shadow-lg shadow-[#30D158]/20 group-hover:scale-105 transition-transform">
+                      <div className="w-12 h-12 rounded-xl bg-accent text-on-accent flex items-center justify-center shrink-0 shadow-lg shadow-accent/20 group-hover:scale-105 transition-transform">
                         <Camera className="w-6 h-6 stroke-[2.5]" />
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-1.5">
                           <p className="text-sm font-bold text-fg">Take Photo</p>
-                          <span className="text-[10px] uppercase font-extrabold px-1.5 py-0.5 rounded bg-[#30D158] text-black">
+                          <span className="text-[10px] uppercase font-extrabold px-1.5 py-0.5 rounded bg-accent text-on-accent">
                             Camera
                           </span>
                         </div>
@@ -420,7 +420,7 @@ export function AddMealModal({
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="e.g. Grilled chicken breast with white rice & broccoli"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-surface border border-fg/[0.06] text-xs text-fg placeholder-muted focus:outline-none focus:border-[#30D158]"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-surface border border-fg/[0.06] text-xs text-fg placeholder-muted focus:outline-none focus:border-accent"
                   />
                 </div>
               </div>
@@ -434,7 +434,7 @@ export function AddMealModal({
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Tell Nuvia what you ate (e.g. 2 eggs with toast, chicken rice, or a protein shake)..."
-                  className="w-full p-3.5 rounded-xl bg-surface border border-fg/[0.06] text-xs text-fg placeholder-muted focus:outline-none focus:border-[#30D158] resize-none"
+                  className="w-full p-3.5 rounded-xl bg-surface border border-fg/[0.06] text-xs text-fg placeholder-muted focus:outline-none focus:border-accent resize-none"
                 />
 
                 {suggestions.length > 0 && (
@@ -447,7 +447,7 @@ export function AddMealModal({
                         className="text-[11px] px-2.5 py-1 rounded-full bg-surface hover:bg-elevated text-muted hover:text-fg border border-fg/[0.06] transition-colors flex items-center gap-1.5"
                       >
                         {preset.badge && (
-                          <span className="text-[9px] px-1 py-0.2 rounded bg-[#30D158]/20 text-green-ink font-bold">
+                          <span className="text-[9px] px-1 py-0.2 rounded bg-accent/20 text-green-ink font-bold">
                             {preset.badge}
                           </span>
                         )}
@@ -472,7 +472,7 @@ export function AddMealModal({
             <button
               onClick={handleAnalyze}
               disabled={isAnalyzing || isCompressing || (activeTab === 'photo' && !imagePreview && !description.trim())}
-              className="w-full py-3.5 rounded-2xl bg-[#30D158] hover:bg-[#28B84D] disabled:opacity-50 text-black font-bold text-sm transition-colors flex items-center justify-center gap-2 shadow-lg shadow-[#30D158]/20"
+              className="w-full py-3.5 rounded-2xl bg-accent hover:bg-accent-hover disabled:opacity-50 text-on-accent font-bold text-sm transition-colors flex items-center justify-center gap-2 shadow-lg shadow-accent/20"
             >
               {isAnalyzing ? (
                 <>

@@ -100,7 +100,7 @@ export function WeeklyReportModal({ report, isOpen, onClose }: WeeklyReportModal
 
         {/* ── ADAPTATIONS LOG ────────────────────────────────────────────── */}
         {report.adaptationsSummary && report.adaptationsSummary.length > 0 && (
-          <div className="p-3.5 rounded-2xl bg-[#0A84FF]/10 border border-[#0A84FF]/20 text-xs space-y-1.5">
+          <div className="p-3.5 rounded-2xl bg-info/10 border border-info/20 text-xs space-y-1.5">
             <span className="font-bold text-blue-ink text-[11px] block">
               Adaptations ({report.adaptationsSummary.length}):
             </span>

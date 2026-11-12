@@ -2,6 +2,9 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/lib/auth-context';
+import { ScreenHeader } from './ScreenHeader';
+import { SegmentedControl } from './ui';
+import { ExerciseLibraryView } from './ExerciseLibraryView';
 import { DataService, getLocalDateString } from '@/lib/data-service';
 import { Meal, ExerciseLog, DailySummary } from '@/types/database';
 import { WorkoutRoutine, RoutineExercise } from '@/types/routine';
@@ -48,15 +51,15 @@ interface ExerciseListViewProps {
   onOpenAddExercise: () => void;
   onOpenAddMeal?: () => void;
   onNavigateTab?: (tab: TabType) => void;
-  initialViewMode?: 'today' | 'plans' | 'history';
+  initialViewMode?: 'today' | 'plans' | 'library' | 'history';
   refreshKey?: number;
   onWorkoutFinished?: () => void;
 }
 
 function intensityColor(intensity: string) {
-  if (intensity === 'high') return '#FF453A';
-  if (intensity === 'low') return '#30D158';
-  return '#FF9F0A';
+  if (intensity === 'high') return 'var(--theme-danger)';
+  if (intensity === 'low') return 'var(--theme-accent)';
+  return 'var(--theme-warn)';
 }
 
 function fmtDuration(mins: number) {
@@ -75,7 +78,7 @@ export function ExerciseListView({
   onWorkoutFinished,
 }: ExerciseListViewProps) {
   const { user, goals } = useAuth();
-  const [viewMode, setViewMode] = useState<'today' | 'plans' | 'history'>(initialViewMode);
+  const [viewMode, setViewMode] = useState<'today' | 'plans' | 'library' | 'history'>(initialViewMode);
 
   // Routines State
   const [routines, setRoutines] = useState<WorkoutRoutine[]>([]);
@@ -540,24 +543,17 @@ export function ExerciseListView({
   return (
     <div className="flex-1 flex flex-col pb-28 px-4 pt-3 w-full max-w-md mx-auto space-y-6 animate-fadeIn">
       {/* ── HEADER ──────────────────────────────────────────────────────── */}
-      <div className="pt-1 flex items-end justify-between">
-        <div>
-          <p className="text-[11px] font-semibold tracking-wider text-muted uppercase">
-            Fitness & Training
-          </p>
-          <h1 className="text-3xl font-bold tracking-tight text-fg mt-0.5">Activity</h1>
-        </div>
-
-        {viewMode === 'today' && (
-          <p className="text-xs text-muted mb-1 font-medium">
-            {todayDayName}
-          </p>
-        )}
+      <div className="-mx-4 -mt-1">
+        <ScreenHeader
+          eyebrow={todayDayName}
+          title="Workout"
+          onOpenProfile={() => onNavigateTab?.('profile')}
+        />
       </div>
 
       {/* ── TOAST NOTIFICATION ──────────────────────────────────────────── */}
       {successBanner && (
-        <div className="p-3 rounded-2xl bg-[#30D158]/15 border border-[#30D158]/30 text-green-ink text-xs font-semibold flex items-center gap-2 animate-fadeIn">
+        <div className="p-3 rounded-2xl bg-accent/15 border border-accent/30 text-green-ink text-xs font-semibold flex items-center gap-2 animate-fadeIn">
           <CheckCircle2 className="w-4 h-4 shrink-0" />
           <span>{successBanner}</span>
         </div>
@@ -565,10 +561,10 @@ export function ExerciseListView({
 
       {/* ── ACTIVE IN-PROGRESS WORKOUT RECOVERY BANNER ────────────────────── */}
       {activeSession && (
-        <div className="p-3.5 rounded-2xl bg-gradient-to-r from-[#FF9F0A]/20 via-card to-card border border-[#FF9F0A]/40 shadow-xl flex items-center justify-between gap-3 animate-fadeIn">
+        <div className="p-3.5 rounded-2xl bg-gradient-to-r from-warn/20 via-card to-card border border-warn/40 shadow-xl flex items-center justify-between gap-3 animate-fadeIn">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-8 h-8 rounded-xl bg-[#FF9F0A]/20 text-orange-ink flex items-center justify-center shrink-0">
-              <Play className="w-4 h-4 fill-[#FF9F0A]" />
+            <div className="w-8 h-8 rounded-xl bg-warn/20 text-orange-ink flex items-center justify-center shrink-0">
+              <Play className="w-4 h-4 fill-warn" />
             </div>
             <div className="min-w-0">
               <p className="text-xs font-bold text-fg truncate">Session in Progress</p>
@@ -589,7 +585,7 @@ export function ExerciseListView({
             <button
               type="button"
               onClick={handleResumeActiveSession}
-              className="px-3 py-1.5 rounded-xl bg-[#FF9F0A] text-black text-xs font-bold hover:bg-[#FF9F0A]/90 transition-all flex items-center gap-1 shadow"
+              className="px-3 py-1.5 rounded-xl bg-warn text-on-accent text-xs font-bold hover:bg-warn/90 transition-all flex items-center gap-1 shadow"
             >
               <span>Resume</span>
               <ArrowRight className="w-3 h-3" />
@@ -599,43 +595,24 @@ export function ExerciseListView({
       )}
 
       {/* ── COMPACT APPLE SEGMENTED CONTROL ─────────────────────────────── */}
-      <div className="p-1 bg-card border border-fg/[0.08] rounded-xl flex items-center">
-        <button
-          type="button"
-          onClick={() => setViewMode('today')}
-          className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all text-center cursor-pointer ${
-            viewMode === 'today'
-              ? 'bg-elevated text-fg shadow-sm'
-              : 'text-muted hover:text-fg'
-          }`}
-        >
-          Today
-        </button>
+      <SegmentedControl
+        ariaLabel="Workout sections"
+        value={viewMode}
+        onChange={setViewMode}
+        options={[
+          { value: 'today', label: 'Today' },
+          { value: 'plans', label: 'Routines' },
+          { value: 'library', label: 'Library' },
+          { value: 'history', label: 'History' },
+        ]}
+      />
 
-        <button
-          type="button"
-          onClick={() => setViewMode('plans')}
-          className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all text-center cursor-pointer ${
-            viewMode === 'plans'
-              ? 'bg-elevated text-fg shadow-sm'
-              : 'text-muted hover:text-fg'
-          }`}
-        >
-          Plans
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setViewMode('history')}
-          className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all text-center cursor-pointer ${
-            viewMode === 'history'
-              ? 'bg-elevated text-fg shadow-sm'
-              : 'text-muted hover:text-fg'
-          }`}
-        >
-          History
-        </button>
-      </div>
+      {/* ── EXERCISE LIBRARY ────────────────────────────────────────────── */}
+      {viewMode === 'library' && (
+        <div className="px-1">
+          <ExerciseLibraryView />
+        </div>
+      )}
 
       {/* ══════════════════════════════════════════════════════════════════ */}
       {/* ── 1. TODAY VIEW ("What have I done today, and what next?") ────── */}
@@ -720,7 +697,7 @@ export function ExerciseListView({
               /* Tomorrow is a workout day */
               <div className="ios-card p-4 space-y-3 hover:border-fg/20 transition-all">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#0A84FF]/20 text-blue-ink border border-[#0A84FF]/30">
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-info/20 text-blue-ink border border-info/30">
                     Tomorrow · Workout Day
                   </span>
                   <span className="text-xs text-muted">
@@ -868,7 +845,7 @@ export function ExerciseListView({
                 <button
                   type="button"
                   onClick={onOpenAddExercise}
-                  className="mt-2 px-4 py-2 rounded-full bg-[#30D158] text-black font-bold text-xs inline-flex items-center gap-1 cursor-pointer"
+                  className="mt-2 px-4 py-2 rounded-full bg-accent text-on-accent font-bold text-xs inline-flex items-center gap-1 cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Log Activity</span>
@@ -1031,7 +1008,7 @@ export function ExerciseListView({
                 <button
                   type="button"
                   onClick={() => setIsManualRoutineOpen(true)}
-                  className="px-4 py-2 rounded-xl bg-[#30D158] text-black font-bold text-xs cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-accent text-on-accent font-bold text-xs cursor-pointer"
                 >
                   Build Custom
                 </button>
@@ -1054,7 +1031,7 @@ export function ExerciseListView({
                       <div>
                         <div className="flex items-center gap-1.5 mb-1">
                           {isScheduledToday && (
-                            <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-[#30D158] text-black">
+                            <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-accent text-on-accent">
                               Today
                             </span>
                           )}
@@ -1241,8 +1218,8 @@ export function ExerciseListView({
                   >
                     <span className="leading-none text-[11px]">{dayNum}</span>
                     <div className="flex gap-0.5 mt-0.5">
-                      {hasWorkout && <span className="w-1 h-1 rounded-full bg-[#30D158]" />}
-                      {hasMeal && <span className="w-1 h-1 rounded-full bg-[#FF9500]" />}
+                      {hasWorkout && <span className="w-1 h-1 rounded-full bg-accent" />}
+                      {hasMeal && <span className="w-1 h-1 rounded-full bg-warn" />}
                     </div>
                   </button>
                 );
@@ -1253,11 +1230,11 @@ export function ExerciseListView({
             <div className="pt-2 border-t border-fg/5 flex items-center justify-between text-[10px] text-zinc-500">
               <div className="flex items-center gap-3">
                 <span className="flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#30D158]" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-accent" />
                   <span>Workout</span>
                 </span>
                 <span className="flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#FF9500]" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-warn" />
                   <span>Meal</span>
                 </span>
               </div>
