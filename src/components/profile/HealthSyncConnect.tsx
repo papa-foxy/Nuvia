@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Activity, Check, ChevronRight, Copy, KeyRound, Link2, Smartphone } from 'lucide-react';
+import { Check, ChevronRight, Copy, KeyRound, Link2 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { createClient, isSupabaseConfigured } from '@/lib/supabase/client';
 import { NuviaBottomSheet } from '../NuviaBottomSheet';
+import { IntegrationIcon } from './IntegrationIcon';
 
 type KeyState =
   | { status: 'idle' | 'loading' }
@@ -92,16 +93,13 @@ export function HealthSyncConnect() {
 
   return (
     <>
-      <section aria-label="Connections" className="ios-card overflow-hidden">
-        <button
+      <button
           type="button"
           onClick={open}
           className="w-full p-3.5 flex items-center justify-between gap-3 text-left hover:bg-fg/[0.03] transition-colors cursor-pointer"
         >
           <span className="flex items-center gap-3 min-w-0">
-            <span className="w-8 h-8 rounded-[10px] bg-info/15 text-blue-ink flex items-center justify-center shrink-0">
-              <Activity className="w-4 h-4" />
-            </span>
+            <IntegrationIcon app="adidas" badge="apple-health" size={34} />
             <span className="min-w-0">
               <span className="block text-sm font-bold text-fg">Connect adidas Running</span>
               <span className="block text-[11px] text-muted truncate">Auto-import runs through Apple Health</span>
@@ -109,7 +107,6 @@ export function HealthSyncConnect() {
           </span>
           <ChevronRight className="w-4 h-4 text-muted shrink-0" />
         </button>
-      </section>
 
       <NuviaBottomSheet
         isOpen={isOpen}
@@ -119,9 +116,7 @@ export function HealthSyncConnect() {
         contentClassName="space-y-5"
         title={
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-[10px] bg-info/15 text-blue-ink flex items-center justify-center shrink-0">
-              <Smartphone className="w-4 h-4" />
-            </div>
+            <IntegrationIcon app="adidas" badge="apple-health" size={34} label="adidas Running and Apple Health" />
             <div>
               <h3 className="text-base font-bold text-fg leading-snug">Connect adidas Running</h3>
               <p className="text-[11px] text-muted">adidas Running → Apple Health → Shortcut → Nuvia</p>

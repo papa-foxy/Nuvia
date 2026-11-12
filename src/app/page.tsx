@@ -35,7 +35,9 @@ export default function HomePage() {
   const { user, profile, goals, isLoading, hasCompletedOnboarding, refreshProfileAndGoals } =
     useAuth();
 
-  const [activeTab, setActiveTab] = useState<TabType>('home');
+  const [activeTab, setActiveTab] = useState<TabType>(() =>
+    typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('strava') ? 'profile' : 'home',
+  );
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [isAddMealOpen, setIsAddMealOpen] = useState(false);
   const [isAddExerciseOpen, setIsAddExerciseOpen] = useState(false);

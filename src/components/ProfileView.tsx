@@ -9,6 +9,7 @@ import { AboutYouSection } from './profile/AboutYouSection';
 import { AIPersonalizationSection } from './profile/AIPersonalizationSection';
 import { ProfileSettingsSection } from './profile/ProfileSettingsSection';
 import { HealthSyncConnect } from './profile/HealthSyncConnect';
+import { StravaConnect } from './profile/StravaConnect';
 
 interface ProfileViewProps {
   onReplayOnboarding: () => void;
@@ -82,8 +83,14 @@ export function ProfileView({
         ))}
       </nav>
 
-      {/* Connections: adidas Running via Apple Health */}
-      <HealthSyncConnect />
+      {/* Connections: activity apps */}
+      <div className="space-y-2">
+        <span className="text-xs font-semibold text-muted uppercase tracking-wider px-1">Connected apps</span>
+        <section aria-label="Connected apps" className="ios-card divide-y divide-fg/[0.05] overflow-hidden">
+          <HealthSyncConnect />
+          <StravaConnect />
+        </section>
+      </div>
 
       {/* 6. ABOUT YOU (Stored profile parameters with inline editor) */}
       <AboutYouSection

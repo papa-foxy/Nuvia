@@ -161,3 +161,21 @@ Apple Health and an iPhone Shortcut automation.
 - Tested: parser (17 cases), endpoint auth/validation and dry-run parsing.
   Not tested: a real insert and the key flow with a signed-in session (needs
   the deployed app and a real account).
+
+## Strava (12 November)
+
+- OAuth connect (scope `read,activity:read_all`), tokens stored server-only in
+  `strava_connections` (migration in supabase/migrations), refreshed and
+  rotated automatically.
+- Last 30 days imported on connect; webhook (`/api/strava/webhook`) imports new
+  activities, applies renames/type changes, removes deleted ones, and handles
+  deauthorization. Sync now and Disconnect (optionally removing imported
+  activities) in Profile → Connected apps.
+- Shared ingest (src/lib/server/activity-ingest.ts) now serves Apple Health and
+  Strava; the same session from both sources is logged once.
+- Connected apps card with app icons (IntegrationIcon).
+- Setup the owner must do: docs/STRAVA_SETUP.md.
+- Tested: activity mapping, OAuth state signing, ingest de-duplication (unit),
+  route auth/redirects, webhook validation handshake and fast event response.
+  Not tested: a real Strava sign-in, token refresh and webhook events (need
+  the Strava API app and the deployed site).
