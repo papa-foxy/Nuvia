@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Camera, Image as ImageIcon, RefreshCw, X, AlertCircle, Sparkles } from 'lucide-react';
 import { AiService, MealAnalysisResult } from '@/lib/ai-service';
+import { MealAnalysisRunner, useMealAnalysis } from '@/lib/meal-analysis-runner';
 import { MealType } from '@/types/database';
 import { MealResultModal } from './MealResultModal';
 import { useAuth } from '@/lib/auth-context';
@@ -85,6 +86,14 @@ export function AddMealModal({
   const [contextNote, setContextNote] = useState<string | undefined>(initialContextNote);
   const [nlContext, setNlContext] = useState<NaturalLanguageLoggingContext | null>(null);
   const [suggestions, setSuggestions] = useState<ContextualSuggestion[]>([]);
+  // Photo analysis runs in MealAnalysisRunner so it survives closing the sheet or the app.
+  const analysis = useMealAnalysis();
+  const backgroundBusy = analysis.status === 'analyzing';
+  const analyzing = isAnalyzing || backgroundBusy;
+  const shownImage = imagePreview ?? (analysis.status !== 'idle' ? analysis.image : null);
+  const shownResult = analysisResult ?? (analysis.status === 'done' ? analysis.result ?? null : null);
+  const shownError = errorMsg || (analysis.status === 'failed' ? analysis.error || '' : '');
+  const resultSource: 'photo' | 'text' = shownImage ? 'photo' : activeTab === 'photo' ? 'photo' : 'text';
 
   useEffect(() => {
     if (initialAnalysisResult) {
@@ -122,6 +131,7 @@ export function AddMealModal({
 
     setIsCompressing(true);
     setErrorMsg('');
+    MealAnalysisRunner.clear();
     try {
       const compressed = await compressImage(file);
       setImagePreview(compressed);
@@ -188,13 +198,11 @@ export function AddMealModal({
         }
       }
 
-      const result = await AiService.analyzeMeal({
-        imageBase64: imagePreview || undefined,
-        mimeType: 'image/jpeg',
+      MealAnalysisRunner.start({
+        image: imagePreview,
         textPrompt: description.trim() || undefined,
         mealType,
       });
-      setAnalysisResult(result);
     } catch (err: any) {
       setErrorMsg(err.message || "We couldn't analyze this right now. Please try again.");
     } finally {
@@ -211,6 +219,8 @@ export function AddMealModal({
 
   const handleCloseAll = () => {
     resetForm();
+    // Closing while the photo is analyzing keeps it running in the background.
+    if (analysis.status !== 'analyzing') MealAnalysisRunner.clear();
     onClose();
   };
 
@@ -325,22 +335,27 @@ export function AddMealModal({
                 />
 
                 {/* State 1: Photo Preview (When image has been taken or selected) */}
-                {imagePreview ? (
+                {shownImage ? (
                   <div className="relative rounded-2xl overflow-hidden h-52 border border-fg/[0.08] bg-app shadow-lg">
-                    <img src={imagePreview} alt="Captured Food" className="w-full h-full object-cover" />
+                    <img src={shownImage} alt="Captured Food" className="w-full h-full object-cover" />
 
                     {/* Scan Line Animation while analyzing */}
-                    {isAnalyzing && (
+                    {analyzing && (
                       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-accent/25 to-transparent animate-pulse pointer-events-none flex flex-col justify-center items-center">
                         <div className="w-full h-1 bg-accent shadow-[0_0_15px_var(--theme-accent)]" />
                         <div className="mt-3 px-3 py-1.5 rounded-full bg-black/80 backdrop-blur-md border border-accent/40 text-xs font-semibold text-green-ink flex items-center gap-2">
                           <Sparkles className="w-3.5 h-3.5 animate-spin" />
                           <span>Nuvia AI is calculating calories...</span>
                         </div>
+                        {backgroundBusy && (
+                          <p className="mt-2 px-3 py-1 rounded-full bg-black/70 text-[11px] font-medium text-white/90">
+                            You can close Nuvia. We&apos;ll finish in the background.
+                          </p>
+                        )}
                       </div>
                     )}
 
-                    {!isAnalyzing && (
+                    {!analyzing && (
                       <div className="absolute top-2 right-2 flex gap-1.5">
                         <button
                           type="button"
@@ -352,7 +367,10 @@ export function AddMealModal({
                         </button>
                         <button
                           type="button"
-                          onClick={() => setImagePreview(null)}
+                          onClick={() => {
+                            setImagePreview(null);
+                            MealAnalysisRunner.clear();
+                          }}
                           className="px-2.5 py-1 rounded-lg bg-black/70 backdrop-blur-md text-xs text-red-ink hover:bg-black/90"
                         >
                           Remove
@@ -459,10 +477,10 @@ export function AddMealModal({
               </div>
             )}
 
-            {errorMsg && (
+            {shownError && (
               <p className="text-xs text-red-ink flex items-center gap-1.5">
                 <AlertCircle className="w-3.5 h-3.5" />
-                <span>{errorMsg}</span>
+                <span>{shownError}</span>
               </p>
             )}
           </div>
@@ -471,10 +489,10 @@ export function AddMealModal({
           <div className="p-4 border-t border-fg/[0.08]">
             <button
               onClick={handleAnalyze}
-              disabled={isAnalyzing || isCompressing || (activeTab === 'photo' && !imagePreview && !description.trim())}
+              disabled={analyzing || isCompressing || (activeTab === 'photo' && !shownImage && !description.trim())}
               className="w-full py-3.5 rounded-2xl bg-accent hover:bg-accent-hover disabled:opacity-50 text-on-accent font-bold text-sm transition-colors flex items-center justify-center gap-2 shadow-lg shadow-accent/20"
             >
-              {isAnalyzing ? (
+              {analyzing ? (
                 <>
                   <RefreshCw className="w-4 h-4 animate-spin" />
                   <span>Calculating Calories with AI...</span>
@@ -490,27 +508,35 @@ export function AddMealModal({
         </div>
       </div>
 
-      {analysisResult && (
+      {shownResult && (
         <MealResultModal
-          initialData={analysisResult}
-          imagePreviewUrl={imagePreview}
-          source={activeTab === 'photo' ? 'photo' : 'text'}
+          initialData={shownResult}
+          imagePreviewUrl={shownImage}
+          source={resultSource}
           contextBadge={contextBadge}
           contextNote={contextNote}
           onSave={async (mealData) => {
             await onSaveMeal({
               ...mealData,
-              image_url: imagePreview,
-              source: activeTab === 'photo' ? 'photo' : 'text',
-              ai_analysis: analysisResult,
+              image_url: shownImage,
+              source: resultSource,
+              ai_analysis: shownResult,
             });
+            // Saved: keep showing it here, but don't offer it again on the next launch.
+            if (analysis.status === 'done') {
+              setAnalysisResult(shownResult);
+              setImagePreview(shownImage);
+              MealAnalysisRunner.clear();
+            }
           }}
           onClose={() => {
             setAnalysisResult(null);
+            MealAnalysisRunner.clear();
             handleCloseAll();
           }}
           onAddAnother={() => {
             resetForm();
+            MealAnalysisRunner.clear();
           }}
         />
       )}

@@ -16,6 +16,7 @@ import { ProgressView } from '@/components/ProgressView';
 import { AddMealModal } from '@/components/AddMealModal';
 import { AddExerciseModal } from '@/components/AddExerciseModal';
 import { PwaInstallBanner } from '@/components/PwaInstallBanner';
+import { MealAnalysisPill } from '@/components/MealAnalysisPill';
 import { DataService } from '@/lib/data-service';
 import {
   NuviaCache,
@@ -335,6 +336,9 @@ export default function HomePage() {
               />
             </div>
         </main>
+
+        {/* Background meal-photo analysis status */}
+        <MealAnalysisPill hidden={isAddMealOpen} onReview={() => setIsAddMealOpen(true)} />
 
         {/* Bottom Tab Navigation */}
         <BottomNav
