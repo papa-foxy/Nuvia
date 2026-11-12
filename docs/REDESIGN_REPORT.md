@@ -11,7 +11,9 @@ Status: complete in the working tree, **not committed**.
   Files: `src/app/globals.css`, `src/app/layout.tsx`.
 - **Navigation**: Home · Workout · + · Nutrition · Progress. Profile opens
   from the avatar in screen headers. `src/components/Navigation.tsx`.
-- **Home**: greeting header with streak, "This week" ring with a 7-day strip,
+- **Home**: greeting header with streak; **calories today first** (intake vs
+  target, no net calories; changed 12 Nov at the owner's request), then a
+  "This week" ring with a 7-day strip,
   today's workout moved above nutrition, a stats grid.
   `DashboardView.tsx`, `home/TrainingOverview.tsx`, `ScreenHeader.tsx`.
 - **Progress (new)**: 4-week, 12-week and 6-month ranges; workouts, time and
@@ -89,3 +91,26 @@ behaviour. No dependencies added. No backend changes.
   `equipment`. The 91-exercise catalog has no per-exercise step lists and
   does not split legs into quads, hamstrings, glutes and calves.
 - Body weight has no history chart because only the current weight is stored.
+
+## Changes on 12 November (owner feedback)
+
+- **Calories first, intake only.** Home opens with a Calories today card:
+  remaining = target − eaten. Exercise calories are no longer subtracted on
+  Home or in the AI coach's replies.
+- **No duplicate sections.** Each piece of information has one screen (see
+  UX_DESIGN_DIRECTION.md). Removed from Home: This week, Activity, Your stats,
+  schedule-adaptation card, Up next, today's workouts and meals lists. Removed
+  from Profile: Goal progress, Daily plan, Long-term progress, Next planned
+  workout (replaced by links to Goals and Progress). Deleted the now-unused
+  GoalProgressCard, DailyPlanSection, LongTermProgressSection and
+  EditTargetsModal.
+- **Move a meal to another day** from its details sheet (Yesterday / Today
+  shortcuts or any past date). Keeps the time of day; re-syncs both days'
+  summaries. Future dates are blocked.
+- **One shared bottom sheet.** NuviaBottomSheet now uses the same slide-up and
+  fade as the date picker on every open, slides down on every close, and
+  renders into the app frame. The date picker and the + Log Entry sheet both
+  use it.
+- **Fixes:** date picker no longer overlaps the bottom bar; meal photo title
+  readable in light mode.
+

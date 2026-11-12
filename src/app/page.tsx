@@ -241,6 +241,7 @@ export default function HomePage() {
     >
       {/* Main Mobile App Container */}
       <div
+        id="nuvia-app-frame"
         className="w-full max-w-md bg-app md:border md:border-line md:shadow-2xl md:shadow-black/20 flex flex-col relative overflow-hidden md:rounded-[28px] md:h-[92vh] md:max-h-[920px]"
         style={{
           flex: 1,
@@ -290,6 +291,10 @@ export default function HomePage() {
               <MealsListView
                 onOpenAddMeal={() => setIsAddMealOpen(true)}
                 refreshKey={refreshKey}
+                onMealsChanged={() => {
+                  NuviaCache.invalidatePrefix('today-');
+                  setRefreshKey((k) => k + 1);
+                }}
               />
             </div>
 

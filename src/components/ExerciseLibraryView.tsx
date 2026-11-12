@@ -56,6 +56,7 @@ export function ExerciseLibraryView() {
   const [muscle, setMuscle] = useState<string | null>(null);
   const [equipment, setEquipment] = useState<string | null>(null);
   const [selected, setSelected] = useState<CatalogExercise | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [video, setVideo] = useState<RoutineExercise | null>(null);
 
   // Only offer equipment filters that actually match something in the catalog.
@@ -163,7 +164,10 @@ export function ExerciseLibraryView() {
             <li key={e.id}>
               <button
                 type="button"
-                onClick={() => setSelected(e)}
+                onClick={() => {
+                  setSelected(e);
+                  setIsDetailOpen(true);
+                }}
                 className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-elevated/40 transition-colors cursor-pointer"
               >
                 <div className="w-14 h-14 shrink-0">
@@ -186,8 +190,8 @@ export function ExerciseLibraryView() {
 
       {/* Detail */}
       <NuviaBottomSheet
-        isOpen={!!selected}
-        onClose={() => setSelected(null)}
+        isOpen={isDetailOpen}
+        onClose={() => setIsDetailOpen(false)}
         title={selected ? displayName(selected.name) : undefined}
         subtitle={selected ? `${selected.target_muscle} · ${selected.category}` : undefined}
       >

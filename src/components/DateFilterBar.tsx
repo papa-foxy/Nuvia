@@ -5,9 +5,9 @@ import {
   Calendar as CalendarIcon,
   ChevronLeft,
   ChevronRight,
-  X,
 } from 'lucide-react';
 import { getLocalDateString } from '@/lib/data-service';
+import { NuviaBottomSheet } from './NuviaBottomSheet';
 
 export interface DateFilterBarProps {
   selectedDate: string; // Format: 'YYYY-MM-DD'
@@ -129,101 +129,96 @@ export function DateFilterBar({
         </button>
       </div>
 
-      {/* Calendar Selector Modal */}
-      {isCalendarOpen && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end md:items-center justify-center p-4">
-          <div className="w-full max-w-sm bg-card border border-fg/[0.12] rounded-3xl p-5 shadow-2xl space-y-4 animate-slideUp">
-            {/* Header */}
-            <div className="flex items-center justify-between pb-1 border-b border-fg/[0.06]">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-accent/15 flex items-center justify-center text-green-ink">
-                  <CalendarIcon className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-fg tracking-tight">Select Date</h3>
-                  <p className="text-[11px] text-muted">Choose a date to view entries</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setIsCalendarOpen(false)}
-                className="w-7 h-7 rounded-full bg-elevated flex items-center justify-center text-muted hover:text-fg transition-colors"
-                type="button"
-              >
-                <X className="w-4 h-4" />
-              </button>
+      {/* Calendar Selector: the shared slide-up sheet used across the app */}
+      <NuviaBottomSheet
+        isOpen={isCalendarOpen}
+        onClose={() => setIsCalendarOpen(false)}
+        variant="compact"
+        maxWidth="max-w-sm"
+        ariaLabel="Select date"
+        title={
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-accent/15 flex items-center justify-center text-green-ink">
+              <CalendarIcon className="w-4 h-4" />
             </div>
-
-            {/* Month / Year Navigator */}
-            <div className="flex items-center justify-between px-1">
-              <button
-                onClick={handlePrevMonth}
-                className="w-8 h-8 rounded-full bg-elevated hover:bg-fg/10 flex items-center justify-center text-fg transition-colors"
-                type="button"
-                title="Previous Month"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <span className="text-sm font-bold text-fg">{monthName}</span>
-              <button
-                onClick={handleNextMonth}
-                className="w-8 h-8 rounded-full bg-elevated hover:bg-fg/10 flex items-center justify-center text-fg transition-colors"
-                type="button"
-                title="Next Month"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Calendar Weekday Headers */}
-            <div className="grid grid-cols-7 text-center text-[10px] font-semibold text-muted uppercase tracking-wider">
-              <span>Mo</span>
-              <span>Tu</span>
-              <span>We</span>
-              <span>Th</span>
-              <span>Fr</span>
-              <span>Sa</span>
-              <span>Su</span>
-            </div>
-
-            {/* Calendar Days Grid */}
-            <div className="grid grid-cols-7 gap-1">
-              {/* Blank offset days */}
-              {Array.from({ length: leadingBlanks }).map((_, idx) => (
-                <div key={`blank-${idx}`} className="h-8" />
-              ))}
-
-              {/* Month Days */}
-              {Array.from({ length: daysInMonth }).map((_, idx) => {
-                const dayNum = idx + 1;
-                const dObj = new Date(viewYear, viewMonth, dayNum);
-                const dStr = getLocalDateString(dObj);
-                const isDaySelected = dStr === selectedDate;
-                const isDayToday = dStr === todayStr;
-
-                return (
-                  <button
-                    key={dStr}
-                    onClick={() => handleSelectDay(dayNum)}
-                    type="button"
-                    className={`h-8 rounded-xl flex items-center justify-center text-xs font-semibold transition-all relative ${
-                      isDaySelected
-                        ? 'bg-accent text-on-accent font-bold shadow-md shadow-accent/30 scale-105 z-10'
-                        : isDayToday
-                        ? 'border border-accent text-green-ink hover:bg-accent/10'
-                        : 'text-fg hover:bg-fg/10'
-                    }`}
-                  >
-                    <span>{dayNum}</span>
-                    {isDayToday && !isDaySelected && (
-                      <span className="absolute bottom-1 w-1 h-1 rounded-full bg-accent" />
-                    )}
-                  </button>
-                );
-              })}
+            <div>
+              <h3 className="text-sm font-bold text-fg tracking-tight">Select Date</h3>
+              <p className="text-[11px] text-muted">Choose a date to view entries</p>
             </div>
           </div>
+        }
+      >
+        <div className="space-y-4">
+        {/* Month / Year Navigator */}
+        <div className="flex items-center justify-between px-1">
+          <button
+            onClick={handlePrevMonth}
+            className="w-8 h-8 rounded-full bg-elevated hover:bg-fg/10 flex items-center justify-center text-fg transition-colors"
+            type="button"
+            title="Previous Month"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <span className="text-sm font-bold text-fg">{monthName}</span>
+          <button
+            onClick={handleNextMonth}
+            className="w-8 h-8 rounded-full bg-elevated hover:bg-fg/10 flex items-center justify-center text-fg transition-colors"
+            type="button"
+            title="Next Month"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
         </div>
-      )}
+
+        {/* Calendar Weekday Headers */}
+        <div className="grid grid-cols-7 text-center text-[10px] font-semibold text-muted uppercase tracking-wider">
+          <span>Mo</span>
+          <span>Tu</span>
+          <span>We</span>
+          <span>Th</span>
+          <span>Fr</span>
+          <span>Sa</span>
+          <span>Su</span>
+        </div>
+
+        {/* Calendar Days Grid */}
+        <div className="grid grid-cols-7 gap-1">
+          {/* Blank offset days */}
+          {Array.from({ length: leadingBlanks }).map((_, idx) => (
+            <div key={`blank-${idx}`} className="h-8" />
+          ))}
+
+          {/* Month Days */}
+          {Array.from({ length: daysInMonth }).map((_, idx) => {
+            const dayNum = idx + 1;
+            const dObj = new Date(viewYear, viewMonth, dayNum);
+            const dStr = getLocalDateString(dObj);
+            const isDaySelected = dStr === selectedDate;
+            const isDayToday = dStr === todayStr;
+
+            return (
+              <button
+                key={dStr}
+                onClick={() => handleSelectDay(dayNum)}
+                type="button"
+                className={`h-8 rounded-xl flex items-center justify-center text-xs font-semibold transition-all relative ${
+                  isDaySelected
+                    ? 'bg-accent text-on-accent font-bold shadow-md shadow-accent/30 scale-105 z-10'
+                    : isDayToday
+                    ? 'border border-accent text-green-ink hover:bg-accent/10'
+                    : 'text-fg hover:bg-fg/10'
+                }`}
+              >
+                <span>{dayNum}</span>
+                {isDayToday && !isDaySelected && (
+                  <span className="absolute bottom-1 w-1 h-1 rounded-full bg-accent" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+        </div>
+      </NuviaBottomSheet>
     </>
   );
 }

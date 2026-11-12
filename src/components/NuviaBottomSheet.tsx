@@ -1,7 +1,15 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
+
+/**
+ * id of the app frame element. Sheets are portalled into it so they are
+ * positioned against the app (bottom nav, desktop frame) no matter which
+ * component renders them. Falls back to rendering in place if it is missing.
+ */
+export const SHEET_ROOT_ID = 'nuvia-app-frame';
 
 export type BottomSheetVariant = 'compact' | 'standard' | 'full';
 
@@ -19,6 +27,8 @@ export interface NuviaBottomSheetProps {
   triggerRef?: React.RefObject<HTMLElement | null>;
   closeOnBackdropClick?: boolean;
   bottomGap?: number; // optional extra gap in px above bottom nav
+  /** Accessible name for the dialog when `title` is not a plain string. */
+  ariaLabel?: string;
 }
 
 export function NuviaBottomSheet({
@@ -35,11 +45,30 @@ export function NuviaBottomSheet({
   triggerRef,
   closeOnBackdropClick = true,
   bottomGap,
+  ariaLabel,
 }: NuviaBottomSheetProps) {
   const [dragY, setDragY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
-  const [isEntering, setIsEntering] = useState(true);
+  // Stays true during the exit animation after isOpen turns false.
+  const [rendered, setRendered] = useState(isOpen);
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+
+  // Respond to isOpen changes during render (React's recommended pattern for
+  // deriving state from props). Closing from any source — X, backdrop, Escape,
+  // drag, or the parent setting isOpen=false — slides the sheet down first.
+  if (isOpen !== prevIsOpen) {
+    setPrevIsOpen(isOpen);
+    if (isOpen) {
+      setRendered(true);
+      setIsClosing(false);
+      setDragY(0);
+      setIsDragging(false);
+    } else if (rendered) {
+      setIsClosing(true);
+      setIsDragging(false);
+    }
+  }
 
   const startYRef = useRef(0);
   const currentDragYRef = useRef(0);
@@ -79,36 +108,26 @@ export function NuviaBottomSheet({
     }
   }, [isOpen]);
 
-  // Entrance animation trigger
+
+  // The entrance is a CSS keyframe (animate-slideUp / animate-fadeIn) that plays
+  // on mount, so it runs reliably on every open — the same motion as the date
+  // picker. After the exit slide finishes, unmount and restore focus.
   useEffect(() => {
-    if (isOpen) {
-      setIsEntering(true);
+    if (!isClosing) return;
+    const t = setTimeout(() => {
+      setRendered(false);
       setIsClosing(false);
       setDragY(0);
-      setIsDragging(false);
-
-      const timer = setTimeout(() => {
-        setIsEntering(false);
-      }, 20);
-      return () => clearTimeout(timer);
-    }
-  }, [isOpen]);
-
-  const triggerClose = useCallback(() => {
-    setIsClosing(true);
-    setIsDragging(false);
-    setTimeout(() => {
-      onClose();
-      setIsClosing(false);
-      setDragY(0);
-
-      if (triggerRef?.current) {
-        triggerRef.current.focus();
-      } else if (lastFocusedElementRef.current) {
-        lastFocusedElementRef.current.focus();
-      }
+      if (triggerRef?.current) triggerRef.current.focus();
+      else lastFocusedElementRef.current?.focus();
     }, 220);
-  }, [onClose, triggerRef]);
+    return () => clearTimeout(t);
+  }, [isClosing, triggerRef]);
+
+  // Ask the parent to close; the effect above plays the exit animation.
+  const triggerClose = useCallback(() => {
+    onClose();
+  }, [onClose]);
 
   // Keyboard accessibility: Escape to close
   useEffect(() => {
@@ -204,7 +223,7 @@ export function NuviaBottomSheet({
     };
   }, [isDragging, triggerClose]);
 
-  if (!isOpen) return null;
+  if (!rendered) return null;
 
   // Compute height styling based on variant
   const cardHeightStyle = isCompact
@@ -220,7 +239,7 @@ export function NuviaBottomSheet({
 
   const containerPadding = isCompact ? 'px-3 sm:px-0' : 'px-0';
 
-  return (
+  const sheet = (
     <>
       {/* 
         ── LAYER 2: BACKDROP ─────────────────────────────────────────────
@@ -230,15 +249,19 @@ export function NuviaBottomSheet({
       */}
       <div
         role="presentation"
-        className="fixed md:absolute top-0 left-0 right-0 z-40 bg-black/75 backdrop-blur-sm transition-opacity"
-        style={{
-          bottom: `calc(var(--bottom-nav-height, 56px) + env(safe-area-inset-bottom, 0px))`,
-          opacity: isClosing || isEntering ? 0 : Math.max(0.1, 1 - dragY / 300),
-          transitionDuration: isDragging ? '0ms' : isEntering ? '280ms' : '200ms',
-        }}
+        className="fixed md:absolute top-0 left-0 right-0 z-40 animate-fadeIn"
+        style={{ bottom: `calc(var(--bottom-nav-height, 56px) + env(safe-area-inset-bottom, 0px))` }}
         onClick={closeOnBackdropClick ? triggerClose : undefined}
         aria-hidden="true"
-      />
+      >
+        <div
+          className="absolute inset-0 bg-black/75 backdrop-blur-sm transition-opacity"
+          style={{
+            opacity: isClosing ? 0 : Math.max(0.1, 1 - dragY / 300),
+            transitionDuration: isDragging ? '0ms' : '200ms',
+          }}
+        />
+      </div>
 
       {/* 
         ── LAYER 3: BOTTOM SHEET CONTAINER ──────────────────────────────
@@ -248,24 +271,20 @@ export function NuviaBottomSheet({
       <div
         role="dialog"
         aria-modal="true"
+        aria-label={ariaLabel ?? (typeof title === 'string' ? title : undefined)}
         className={`fixed md:absolute left-0 right-0 z-45 flex items-end justify-center pointer-events-none ${containerPadding}`}
         style={{
           bottom: `calc(var(--bottom-nav-height, 56px) + env(safe-area-inset-bottom, 0px) + ${gapPx}px)`,
         }}
       >
-        {/* Sheet Card */}
+        {/* Entrance wrapper: plays the shared slide-up keyframe on open */}
+        <div className={`w-full ${maxWidth} flex justify-center animate-slideUp`}>
+        {/* Sheet Card: drag-to-dismiss and the slide-down exit use its own transform */}
         <div
           onClick={(e) => e.stopPropagation()}
           style={{
-            transform:
-              isClosing || isEntering
-                ? 'translateY(100%)'
-                : `translateY(${dragY}px)`,
-            transition: isDragging
-              ? 'none'
-              : isEntering
-              ? 'transform 0.32s cubic-bezier(0.16, 1, 0.3, 1)'
-              : 'transform 0.22s cubic-bezier(0.2, 0.9, 0.3, 1)',
+            transform: isClosing ? 'translateY(110%)' : `translateY(${dragY}px)`,
+            transition: isDragging ? 'none' : 'transform 0.22s cubic-bezier(0.2, 0.9, 0.3, 1)',
           }}
           className={`pointer-events-auto relative w-full ${maxWidth} ${cardShapeStyle} ${cardHeightStyle} z-10 will-change-transform select-none sm:select-auto`}
         >
@@ -331,7 +350,13 @@ export function NuviaBottomSheet({
             {children}
           </div>
         </div>
+        </div>
       </div>
     </>
   );
+
+  // Portal into the app frame when it exists (positions against the bottom nav
+  // and the desktop frame); otherwise render in place.
+  const portalTarget = typeof document !== 'undefined' ? document.getElementById(SHEET_ROOT_ID) : null;
+  return portalTarget ? createPortal(sheet, portalTarget) : sheet;
 }

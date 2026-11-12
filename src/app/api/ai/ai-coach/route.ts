@@ -108,20 +108,19 @@ export async function POST(req: NextRequest) {
     const authoritativeCalorieTarget = goals?.calorie_target || authCalc.calorie_target;
     const goalAdjustment = authoritativeCalorieTarget - maintenanceCalories;
 
-    // Structured Net Calorie Accounting:
+    // Intake-only calorie accounting (matches the Home screen):
+    // remaining = daily target − food eaten. Exercise is reported but not subtracted.
     const foodCalories = todaySummary?.calories_consumed || 0;
     const exerciseCalories = todaySummary?.calories_burned || 0;
-    const netCalories = foodCalories - exerciseCalories;
-    const remainingCalories = authoritativeCalorieTarget - netCalories;
-    const isOverTarget = netCalories > authoritativeCalorieTarget;
-    const overCalories = isOverTarget ? netCalories - authoritativeCalorieTarget : 0;
+    const remainingCalories = Math.max(0, authoritativeCalorieTarget - foodCalories);
+    const isOverTarget = foodCalories > authoritativeCalorieTarget;
+    const overCalories = isOverTarget ? foodCalories - authoritativeCalorieTarget : 0;
 
     const structuredCalorieState = {
       dailyTarget: authoritativeCalorieTarget,
-      foodCalories,
-      exerciseCalories,
-      netCalories,
+      caloriesEaten: foodCalories,
       remainingCalories,
+      overTargetBy: overCalories,
       goalType: profile?.goal || 'lose_weight',
     };
 
@@ -141,12 +140,10 @@ USER CONTEXT:
 - Goal: ${profile?.goal || 'lose_weight'}
 - Estimated Maintenance (TDEE): ${maintenanceCalories} kcal/day
 - Daily Calorie Target: ${authoritativeCalorieTarget} kcal/day (Goal Adjustment: ${goalAdjustment >= 0 ? `+${goalAdjustment}` : goalAdjustment} kcal/day vs maintenance)
-- Structured Net Calorie State: ${JSON.stringify(structuredCalorieState, null, 2)}
-- Calorie Accounting Today:
-  * Food consumed (eaten): ${foodCalories} kcal
-  * Activity burned: ${exerciseCalories} kcal
-  * Net calories: ${netCalories} kcal (${foodCalories} eaten - ${exerciseCalories} burned)
-  * Budget status: ${isOverTarget ? `${overCalories} kcal above target` : `${remainingCalories} kcal remaining in net budget`}
+- Calorie Intake Today: ${JSON.stringify(structuredCalorieState, null, 2)}
+- Calorie Intake Status:
+  * Eaten: ${foodCalories} kcal of ${authoritativeCalorieTarget} kcal target
+  * ${isOverTarget ? `${overCalories} kcal above target` : `${remainingCalories} kcal left to eat today`}
 - Protein Goal: ${goals?.protein_target || authCalc.protein_target} g (Consumed: ${todaySummary?.protein_consumed || 0} g, Remaining: ${remainingProtein} g)
 - Exercise: ${todaySummary?.exercise_minutes || 0} min / Target ${goals?.exercise_minutes_target || authCalc.exercise_minutes_target} min (Burned: ${exerciseCalories} kcal)
 - Dietary Preference: ${profile?.dietary_preference || 'None'}
@@ -182,7 +179,7 @@ STRICT RULE: Explain this recommendation directly and concisely in 2-3 sentences
         }
 
         const systemPrompt = `You are Nuvia's intelligent AI Coach, specialized in progressive resistance training, practical macro tracking, and Malaysian/Southeast Asian lifestyles (e.g. eating out at mamak stalls, hawker centers, Ayam Gepuk, Nasi Kandar, ordering 'kurang manis' or 'kosong' drinks, finding high-protein options locally).
-IMPORTANT NUTRITION RULE: Nuvia uses a net calorie budgeting model (dailyTarget: ${authoritativeCalorieTarget} kcal, food: ${foodCalories} kcal, activity: -${exerciseCalories} kcal, net: ${netCalories} kcal, remaining: ${remainingCalories} kcal). Do NOT say the user only consumed ${netCalories} kcal.
+IMPORTANT NUTRITION RULE: Nuvia tracks calorie INTAKE against the daily target (dailyTarget: ${authoritativeCalorieTarget} kcal, eaten: ${foodCalories} kcal, left: ${remainingCalories} kcal). Exercise calories are NOT added back to the budget: never tell the user they can eat more because they exercised, and never subtract exercise from what they ate.
 IMPORTANT WORKOUT RULE: Never generate a generic workout. Always check the user's Weekly Training Structure, Available Equipment, Recovery Status, and Previous Performance. Follow the WORKOUT GENERATION & MODIFICATION RULES strictly.
 Respond warmly, directly, concisely, and practically in 2-4 focused sentences or bullet points.`;
 
@@ -276,14 +273,14 @@ Generate prioritized, highly actionable guidance in strictly valid JSON format:
       const q = chatMessage.toLowerCase();
       let reply =
         remainingCalories > 0
-          ? `You have ${remainingCalories} kcal remaining in your net calorie budget today (${foodCalories} kcal eaten, ${exerciseCalories} kcal activity) and are ${remainingProtein}g short of your protein goal.`
-          : `You have reached your daily calorie target (${netCalories} kcal net of ${authoritativeCalorieTarget} kcal target) and are ${remainingProtein}g short of your protein goal.`;
+          ? `You have ${remainingCalories} kcal left today (${foodCalories} of ${authoritativeCalorieTarget} kcal eaten) and are ${remainingProtein}g short of your protein goal.`
+          : `You have reached your daily calorie target (${foodCalories} of ${authoritativeCalorieTarget} kcal eaten) and are ${remainingProtein}g short of your protein goal.`;
 
       if (q.includes('dinner') || q.includes('eat') || q.includes('food')) {
         if (remainingProtein > 25) {
-          reply = `Yes! You have around ${remainingCalories} kcal remaining in your net budget and still need ${remainingProtein}g of protein. A high-protein dinner like grilled chicken or salmon with vegetables and quinoa (around 500–600 kcal) would fit your target perfectly.`;
+          reply = `Yes! You have around ${remainingCalories} kcal left today and still need ${remainingProtein}g of protein. A high-protein dinner like grilled chicken or salmon with vegetables and quinoa (around 500–600 kcal) would fit your target perfectly.`;
         } else {
-          reply = `You have ${remainingCalories} kcal left in your net budget. Since your protein intake is in good shape, a balanced, lighter dinner like a stir-fry or salad with lean protein would keep you right on track!`;
+          reply = `You have ${remainingCalories} kcal left today. Since your protein intake is in good shape, a balanced, lighter dinner like a stir-fry or salad with lean protein would keep you right on track!`;
         }
       } else if (q.includes('exercise') || q.includes('workout') || q.includes('run')) {
         if (remainingExercise > 0) {
@@ -303,7 +300,7 @@ Generate prioritized, highly actionable guidance in strictly valid JSON format:
         priority: 1,
         message:
           remainingCalories > 0
-            ? `You have ${remainingCalories} kcal remaining in your net daily budget today. Consider a balanced meal or snack if you feel hungry.`
+            ? `You have ${remainingCalories} kcal left to eat today. Consider a balanced meal or snack if you feel hungry.`
             : `You've reached your daily calorie target. Stick to water or herbal tea for the rest of the evening.`,
       },
       {

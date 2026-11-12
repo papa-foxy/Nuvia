@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { ChevronRight, Sparkles, Send, Dumbbell, Flame, CheckCircle2, Camera, Moon, X, Loader2 } from 'lucide-react';
+import { ChevronRight, Sparkles, Send, Dumbbell, CheckCircle2, Camera, Moon, X, Loader2 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { DataService, getLocalDateString } from '@/lib/data-service';
 import { DailySummary, Meal, ExerciseLog } from '@/types/database';
@@ -17,12 +17,11 @@ import { calculateTargets, getUserCalculationContext } from '@/lib/calculator';
 import { cleanActivityTitle } from '@/lib/activity-utils';
 import { FitnessContextService } from '@/lib/fitness-context-service';
 import { NuviaFitnessContext } from '@/types/fitness-context';
-import { NuviaNextActionCard } from './adaptive/NuviaNextActionCard';
 import { IntentProposalCard } from './adaptive/IntentProposalCard';
 import { AiService } from '@/lib/ai-service';
 import { ScreenHeader } from './ScreenHeader';
-import { SectionHeader } from './ui';
-import { useTrainingOverview, WeekOverviewCard, HomeStatsGrid } from './home/TrainingOverview';
+import { Card, ProgressBar, ProgressRing } from './ui';
+import { useTrainingOverview } from './home/TrainingOverview';
 import {
   NaturalLanguageLoggingContext,
   NaturalLanguageParseResult,
@@ -193,28 +192,20 @@ export function DashboardView({
   // Food consumed from logged meals
   const foodCalories = summary?.calories_consumed || 0;
   // Exercise calories burned from logged workouts/activities
-  const exerciseCalories = summary?.calories_burned || 0;
-  const exerciseMinutes = summary?.exercise_minutes || 0;
   const proteinConsumed = summary?.protein_consumed || 0;
   const carbsConsumed = summary?.carbohydrate_consumed || 0;
   const fatConsumed = summary?.fat_consumed || 0;
 
   /**
-   * Authoritative Calorie Accounting Pipeline:
-   * 1. Maintenance (TDEE): Baseline energy expenditure calculated from Mifflin-St Jeor BMR * Activity Multiplier.
-   * 2. Goal Adjustment: Deficit/surplus based on user's target (e.g. -500 kcal for fat loss, +250 kcal for muscle gain).
-   * 3. Daily Calorie Target: The authoritative dietary baseline allowance (TDEE + Goal Adjustment).
-   * 4. Eligible Exercise Credit: Workout and activity calories burned logged today (exerciseCalories).
-   * 5. Net Calories: Actual food consumed minus eligible exercise credit (foodCalories - exerciseCalories).
-   * 6. Remaining Budget: Allowance remaining within the daily target (dailyTarget - netCalories).
-   *
-   * Accounting integrity: Food consumed is never artificially altered, recorded workout burns remain
-   * exact, and exercise directly offsets food intake within the daily net budget without double-counting baseline activity.
+   * Calorie accounting is intake-only:
+   *   remaining = daily target − food eaten.
+   * Exercise calories are shown in the Activity section for information but are
+   * NOT subtracted from intake. The daily target itself (TDEE ± goal adjustment)
+   * already accounts for the user's activity level.
    */
-  const netCalories = foodCalories - exerciseCalories;
-  const remainingCalories = calorieTarget - netCalories;
-  const isOverTarget = netCalories > calorieTarget;
-  const overCalories = isOverTarget ? netCalories - calorieTarget : 0;
+  const remainingCalories = Math.max(0, calorieTarget - foodCalories);
+  const isOverTarget = foodCalories > calorieTarget;
+  const overCalories = isOverTarget ? foodCalories - calorieTarget : 0;
   const proteinGap = Math.max(0, proteinTarget - proteinConsumed);
 
   const goalType = profile?.goal || 'lose_weight';
@@ -412,9 +403,97 @@ export function DashboardView({
         />
       </div>
 
-      {/* This week (WHOOP-style overview + Oura-style guidance sentence) */}
-      <WeekOverviewCard logs={overview.logs} routines={routines} onOpenProgress={() => onNavigateTab('progress')} />
+      {/* CALORIES TODAY — intake vs target (the first thing on Home). Exercise is not subtracted. */}
+      <Card as="section" aria-label="Calories today" className="p-5">
+        <div className="flex items-center justify-between">
+          <h2 className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted">Calories today</h2>
+          <button
+            type="button"
+            onClick={() => onNavigateTab('summary')}
+            className="inline-flex items-center gap-0.5 text-xs font-semibold text-muted hover:text-fg transition-colors cursor-pointer -my-2 py-2"
+          >
+            Summary
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
 
+        <div className="mt-4 flex items-center gap-5">
+          <ProgressRing value={foodCalories} max={calorieTarget} size={124} stroke={10} label="Calories eaten">
+            <span
+              className={`text-[26px] leading-none font-extrabold tabular-nums tracking-tight ${
+                isOverTarget ? 'text-orange-ink' : 'text-fg'
+              }`}
+            >
+              {(isOverTarget ? overCalories : remainingCalories).toLocaleString()}
+            </span>
+            <span className="mt-1 text-[11px] font-bold text-muted">{isOverTarget ? 'kcal over' : 'kcal left'}</span>
+          </ProgressRing>
+
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-semibold text-muted">Eaten</p>
+            <p className="mt-1 flex items-baseline gap-1.5">
+              <span className="text-[34px] leading-none font-extrabold tabular-nums tracking-tight text-fg">
+                {foodCalories.toLocaleString()}
+              </span>
+              <span className="text-sm font-semibold text-muted">kcal</span>
+            </p>
+            <p className="mt-2 text-xs font-medium text-muted tabular-nums">
+              of {calorieTarget.toLocaleString()} kcal target
+            </p>
+            <button
+              type="button"
+              onClick={() => onNavigateTab('goals')}
+              className="mt-1 text-[11px] font-semibold text-subtle hover:text-fg transition-colors cursor-pointer"
+            >
+              Why this target? →
+            </button>
+          </div>
+        </div>
+
+        {/* Macros */}
+        <div className="mt-5 pt-4 border-t border-line grid grid-cols-3 gap-4">
+          {[
+            { label: 'Protein', value: proteinConsumed, target: proteinTarget, tone: 'accent' as const },
+            { label: 'Carbs', value: carbsConsumed, target: carbsTarget, tone: 'fg' as const },
+            { label: 'Fat', value: fatConsumed, target: fatTarget, tone: 'fg' as const },
+          ].map((m) => (
+            <button
+              key={m.label}
+              type="button"
+              onClick={() => onNavigateTab('goals')}
+              className="text-left cursor-pointer group"
+            >
+              <p className="text-[11px] font-semibold text-muted">{m.label}</p>
+              <p className="mt-0.5 text-lg font-extrabold tabular-nums text-fg tracking-tight">
+                {Math.round(m.value)}
+                <span className="text-xs font-semibold text-muted"> / {Math.round(m.target)}g</span>
+              </p>
+              <ProgressBar value={m.value} max={m.target} tone={m.tone} label={`${m.label} eaten`} className="mt-1.5" />
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-5 grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={onOpenAddMeal}
+            className="h-11 rounded-[var(--radius-control)] bg-accent text-on-accent text-sm font-extrabold flex items-center justify-center gap-2 hover:bg-accent-hover transition-colors cursor-pointer"
+          >
+            <Camera className="w-4 h-4 stroke-[2.5]" />
+            Log a meal
+          </button>
+          <button
+            type="button"
+            onClick={() => onNavigateTab('meals')}
+            className="h-11 rounded-[var(--radius-control)] bg-elevated text-fg text-sm font-bold hover:bg-elevated-2 transition-colors cursor-pointer"
+          >
+            Today&apos;s meals
+          </button>
+        </div>
+      </Card>
+
+
+      <div className="ios-divider" />
 
       {/* TARGET RECALCULATION NOTIFICATION (When authoritative calorie target changes) */}
       {targetUpdateNotice && (
@@ -452,550 +531,101 @@ export function DashboardView({
         </div>
       )}
 
-      {/* SECTION 3B: ADAPTIVE TRAINING ENGINE NEXT ACTION */}
-      {fitnessContext?.adaptive?.next_action && (
-        <NuviaNextActionCard
-          action={fitnessContext.adaptive.next_action}
-          onActionClick={() => onNavigateTab('exercise')}
-          onAcceptProposal={async (prop: any, opt: any) => {
-            if (!userId) return;
-            const targetDate = opt.to_date || prop.suggested_date || todayStr;
-            await DataService.saveScheduleAdaptation({
-              user_id: userId,
-              routine_id: prop.routine_id,
-              routine_title: prop.routine_title,
-              date: targetDate,
-              original_date: prop.from_date,
-              target_date: targetDate,
-              action: opt.action === 'move' ? 'move_workout' : opt.action === 'add_activity' ? 'add_activity' : 'cancel_workout',
-              reason: prop.reason,
-              status: 'accepted',
-              user_confirmed: true,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            });
-            FitnessContextService.invalidateFitnessContext(userId);
-            fetchAndCache(false);
-          }}
-          onUndoProposal={async (changeId: string) => {
-            await DataService.undoScheduleAdaptation(changeId);
-            FitnessContextService.invalidateFitnessContext(userId);
-            fetchAndCache(false);
-          }}
-        />
-      )}
-
-      {/* SECTION 3C: WORKOUT ROUTINE SCHEDULING (AUTHORITATIVE SESSION & STRICT DAY MATCHING) */}
+      {/* TODAY'S WORKOUT — one compact card; the full schedule, adaptation and
+          activity live on the Workout screen. */}
       {(() => {
-        const isRoutineScheduledForDay = (r: WorkoutRoutine, dayName: string) => {
-          if (!r.days || !Array.isArray(r.days)) return false;
-          const targetFull = dayName.toLowerCase();
-          const targetShort = targetFull.slice(0, 3);
-          return r.days.some((d) => {
-            const dLower = d.trim().toLowerCase();
-            return dLower === targetFull || dLower.startsWith(targetShort);
+        const scheduledFor = (r: WorkoutRoutine, dayName: string) => {
+          const full = dayName.toLowerCase();
+          const short = full.slice(0, 3);
+          return (r.days || []).some((d) => {
+            const x = d.trim().toLowerCase();
+            return x === full || x.startsWith(short);
           });
         };
-
-        const scheduledRoutinesToday = routines.filter((r) =>
-          isRoutineScheduledForDay(r, todayDayName)
-        );
-
-        // Authoritative workout-session status inspection
-        const getRoutineSessionStatus = (routine: WorkoutRoutine) => {
-          const matchingLog = recentExercises.find((e) => {
-            const logRoutineId = e.ai_analysis?.routine_id;
-            if (logRoutineId && logRoutineId === routine.id) return true;
-            if (e.exercise_type?.toLowerCase() === routine.title.toLowerCase()) return true;
-            if (e.source === 'routine' && (e.description || '').toLowerCase().includes(routine.title.toLowerCase())) return true;
-            return false;
-          });
-
-          if (!matchingLog) {
-            return { status: 'unstarted' as const, log: null, executedCount: 0, totalExercises: routine.exercises?.length || 0 };
-          }
-
-          const executedCount = matchingLog.ai_analysis?.executed_count;
-          const totalExercises = matchingLog.ai_analysis?.total_exercises || routine.exercises?.length || 0;
-
-          if (executedCount !== undefined && totalExercises > 0 && executedCount < totalExercises) {
-            return {
-              status: 'partial' as const,
-              log: matchingLog,
-              executedCount,
-              totalExercises,
-            };
-          }
-
-          return {
-            status: 'completed' as const,
-            log: matchingLog,
-            executedCount: totalExercises,
-            totalExercises,
-          };
-        };
-
-        // If today has scheduled routines:
-        if (scheduledRoutinesToday.length > 0) {
-          return (
-            <div className="space-y-3">
-              {scheduledRoutinesToday.map((routine) => {
-                const sessionStatus = getRoutineSessionStatus(routine);
-                const isFinished = sessionStatus.status === 'completed';
-                const isPartial = sessionStatus.status === 'partial';
-                const hasLogged = isFinished || isPartial;
-
-                return (
-                  <div
-                    key={routine.id}
-                    onClick={() => onNavigateTab('exercise')}
-                    className={`rounded-2xl p-4 border transition-all cursor-pointer space-y-3.5 group ${
-                      isFinished
-                        ? 'bg-card border-accent/40 shadow-sm'
-                        : isPartial
-                        ? 'bg-card border-info/40 shadow-sm'
-                        : 'bg-card border-fg/[0.08] hover:border-accent/40'
-                    }`}
-                  >
-                    {/* Top Bar: Routine Header & Status Badge */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div
-                          className={`w-6 h-6 rounded-lg flex items-center justify-center ${
-                            isFinished
-                              ? 'bg-accent/20 text-green-ink'
-                              : isPartial
-                              ? 'bg-info/20 text-blue-ink'
-                              : 'bg-accent/15 text-green-ink'
-                          }`}
-                        >
-                          {isFinished ? (
-                            <CheckCircle2 className="w-3.5 h-3.5" />
-                          ) : (
-                            <Dumbbell className="w-3.5 h-3.5" />
-                          )}
-                        </div>
-                        <span className="text-xs font-bold uppercase tracking-wider text-fg">
-                          Today's Workout
-                        </span>
-                        {isFinished && sessionStatus.log && (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-accent text-on-accent flex items-center gap-1">
-                            <CheckCircle2 className="w-3 h-3" />
-                            <span>Completed ({sessionStatus.log.calories_burned} kcal)</span>
-                          </span>
-                        )}
-                        {isPartial && sessionStatus.log && (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-info text-white flex items-center gap-1">
-                            <span>Partially completed ({sessionStatus.executedCount}/{sessionStatus.totalExercises})</span>
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-xs text-green-ink font-medium flex items-center gap-0.5 group-hover:underline">
-                        <span>{hasLogged ? 'View Details' : 'Start Workout'}</span>
-                        <ChevronRight className="w-3.5 h-3.5" />
-                      </span>
-                    </div>
-
-                    {/* Main Routine Row with Hero Visual Thumbnail */}
-                    <div className="flex items-center gap-3.5">
-                      <div className="w-16 h-16 rounded-2xl overflow-hidden bg-app/60 border border-fg/[0.1] shrink-0 relative shadow-md group-hover:border-accent/40 transition-colors">
-                        {routine.exercises?.[0] ? (
-                          <ExerciseThumbnail
-                            exercise={routine.exercises[0]}
-                            aspectRatio="1/1"
-                            className="w-full h-full"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-elevated text-muted">
-                            <Dumbbell className="w-6 h-6" />
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-bold text-fg group-hover:text-green-ink transition-colors truncate">
-                          {isFinished
-                            ? `✓ ${cleanActivityTitle(routine.title).title}`
-                            : cleanActivityTitle(routine.title).title}
-                        </h4>
-                        <p className="text-[11px] text-muted mt-0.5">
-                          {hasLogged && sessionStatus.log
-                            ? `${sessionStatus.log.duration_minutes || 45} min · ${sessionStatus.log.calories_burned} kcal burned`
-                            : `${routine.exercises?.length || 0} movements · ${routine.focus || 'Training'}`}
-                        </p>
-                        {routine.days && routine.days.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-1.5">
-                            {routine.days.map((day) => (
-                              <span
-                                key={day}
-                                className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${
-                                  isRoutineScheduledForDay(routine, day) && day.toLowerCase() === todayDayName.toLowerCase()
-                                    ? 'bg-accent/20 text-green-ink border border-accent/30 font-semibold'
-                                    : 'bg-fg/[0.05] text-muted'
-                                }`}
-                              >
-                                {day}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Exercise Movements Strip with Individual Thumbnails */}
-                    {routine.exercises && routine.exercises.length > 0 && (
-                      <div className="flex items-center gap-2 overflow-x-auto pt-0.5 no-scrollbar scroll-smooth">
-                        {routine.exercises.map((ex, idx) => (
-                          <div
-                            key={ex.id || idx}
-                            className="w-10 h-10 rounded-xl overflow-hidden bg-app/40 border border-fg/[0.08] shrink-0 relative group-hover:border-accent/30 transition-colors"
-                            title={ex.name}
-                          >
-                            <ExerciseThumbnail exercise={ex} aspectRatio="1/1" className="w-full h-full" />
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+        const todays = routines.filter((r) => scheduledFor(r, todayDayName));
+        const routine = todays[0];
+        const isDone = (r: WorkoutRoutine) =>
+          recentExercises.some(
+            (e) =>
+              e.ai_analysis?.routine_id === r.id ||
+              e.exercise_type?.toLowerCase() === r.title.toLowerCase() ||
+              (e.source === 'routine' && (e.description || '').toLowerCase().includes(r.title.toLowerCase())),
           );
-        }
 
-        // If today has NO workout scheduled: Date-aware recovery day state
-        const ALL_WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        const currentDayIdx = today.getDay();
-        let nextScheduled: { routines: WorkoutRoutine[]; day: string } | null = null;
-        for (let offset = 1; offset <= 7; offset++) {
-          const checkDay = ALL_WEEKDAYS[(currentDayIdx + offset) % 7];
-          const found = routines.filter((r) => isRoutineScheduledForDay(r, checkDay));
-          if (found.length > 0) {
-            nextScheduled = { routines: found, day: checkDay };
-            break;
+        let next: { day: string; title: string } | null = null;
+        if (!routine) {
+          for (let i = 1; i <= 7 && !next; i++) {
+            const d = new Date(today);
+            d.setDate(d.getDate() + i);
+            const name = d.toLocaleDateString('en-US', { weekday: 'long' });
+            const r = routines.find((x) => scheduledFor(x, name));
+            if (r) next = { day: i === 1 ? 'Tomorrow' : name, title: cleanActivityTitle(r.title).title };
           }
         }
 
         return (
-          <div className="rounded-2xl p-4 bg-card border border-fg/[0.08] space-y-3.5">
-            {/* Header: Recovery Day */}
+          <Card as="section" aria-label="Today's workout" className="p-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-info/15 text-blue-ink flex items-center justify-center">
-                  <Moon className="w-3.5 h-3.5" />
-                </div>
-                <span className="text-xs font-bold uppercase tracking-wider text-fg">
-                  Today's Workout
-                </span>
-              </div>
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-fg/[0.06] text-muted">
-                Recovery day
-              </span>
+              <h2 className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted">Today&apos;s workout</h2>
+              <button
+                type="button"
+                onClick={() => onNavigateTab('exercise')}
+                className="inline-flex items-center gap-0.5 text-xs font-semibold text-muted hover:text-fg transition-colors cursor-pointer -my-2 py-2"
+              >
+                Workout
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
             </div>
 
-            <div>
-              <h4 className="text-sm font-semibold text-fg">No workout scheduled today</h4>
-              <p className="text-[11px] text-muted mt-0.5">
-                Today is a recovery/rest day. Focus on balanced nutrition, hydration, and muscle repair.
-              </p>
-            </div>
-
-            {/* UP NEXT ROUTINE PREVIEW (Handles multiple routines on the next scheduled day) */}
-            {nextScheduled ? (
-              <div className="pt-2 border-t border-fg/[0.06] space-y-2">
-                <div className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider text-muted">
-                  <span>Up Next</span>
-                  <span className="text-green-ink">{nextScheduled.day}</span>
-                </div>
-
-                <div className="space-y-2">
-                  {nextScheduled.routines.map((nextRoutine) => (
-                    <div
-                      key={nextRoutine.id}
-                      onClick={() => onNavigateTab('exercise')}
-                      className="flex items-center justify-between p-3 rounded-xl bg-fg/[0.03] border border-fg/[0.06] hover:border-fg/[0.15] transition-all cursor-pointer group"
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-12 h-12 rounded-xl overflow-hidden bg-app/50 border border-fg/[0.08] shrink-0">
-                          {nextRoutine.exercises?.[0] ? (
-                            <ExerciseThumbnail
-                              exercise={nextRoutine.exercises[0]}
-                              aspectRatio="1/1"
-                              className="w-full h-full"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-muted">
-                              <Dumbbell className="w-5 h-5" />
-                            </div>
-                          )}
-                        </div>
-                        <div className="min-w-0">
-                          <h5 className="text-xs font-bold text-fg group-hover:text-green-ink transition-colors truncate">
-                            {cleanActivityTitle(nextRoutine.title).title}
-                          </h5>
-                          <p className="text-[11px] text-muted mt-0.5">
-                            {nextRoutine.exercises?.length || 0} movements · {nextRoutine.focus || 'Training'}
-                          </p>
-                        </div>
-                      </div>
-
-                      <span className="text-xs text-muted group-hover:text-fg flex items-center gap-0.5 shrink-0 ml-2 font-medium transition-colors">
-                        <span>View workout</span>
-                        <ChevronRight className="w-3.5 h-3.5" />
-                      </span>
+            {routine ? (
+              <button
+                type="button"
+                onClick={() => onNavigateTab('exercise')}
+                className="mt-3 w-full flex items-center gap-3 text-left cursor-pointer group"
+              >
+                <div className="w-12 h-12 rounded-[var(--radius-control)] overflow-hidden bg-elevated shrink-0">
+                  {routine.exercises?.[0] ? (
+                    <ExerciseThumbnail exercise={routine.exercises[0]} aspectRatio="1/1" className="w-full h-full" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-muted">
+                      <Dumbbell className="w-5 h-5" />
                     </div>
-                  ))}
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[15px] font-extrabold text-fg truncate">{cleanActivityTitle(routine.title).title}</p>
+                  <p className="text-xs font-medium text-muted truncate">
+                    {routine.exercises?.length || 0} exercises{routine.focus ? ` · ${routine.focus}` : ''}
+                    {todays.length > 1 ? ` · +${todays.length - 1} more` : ''}
+                  </p>
+                </div>
+                {isDone(routine) ? (
+                  <span className="shrink-0 inline-flex items-center gap-1 h-9 px-3 rounded-full bg-tint-green text-green-ink text-xs font-extrabold">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    Done
+                  </span>
+                ) : (
+                  <span className="shrink-0 h-9 px-4 rounded-full bg-accent text-on-accent text-xs font-extrabold flex items-center group-hover:bg-accent-hover transition-colors">
+                    Start
+                  </span>
+                )}
+              </button>
+            ) : (
+              <div className="mt-3 flex items-center gap-3">
+                <div className="w-12 h-12 rounded-[var(--radius-control)] bg-elevated flex items-center justify-center text-muted shrink-0">
+                  <Moon className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[15px] font-extrabold text-fg">Rest day</p>
+                  <p className="text-xs font-medium text-muted truncate">
+                    {next ? `Next: ${next.day} · ${next.title}` : 'No routines scheduled yet'}
+                  </p>
                 </div>
               </div>
-            ) : routines.length > 0 ? (
-              <div className="pt-2 border-t border-fg/[0.06] flex items-center justify-between">
-                <span className="text-[11px] text-muted">Explore your training routines</span>
-                <button
-                  type="button"
-                  onClick={() => onNavigateTab('exercise')}
-                  className="text-xs text-green-ink hover:underline flex items-center gap-0.5 font-medium cursor-pointer"
-                >
-                  <span>See routines</span>
-                  <ChevronRight className="w-3 h-3" />
-                </button>
-              </div>
-            ) : null}
-          </div>
+            )}
+          </Card>
         );
       })()}
-
-      <div className="ios-divider" />
-
-      {/* Today's nutrition */}
-      <div className="pt-2 flex items-center justify-between">
-        <h2 className="text-lg font-extrabold tracking-tight text-fg">Nutrition today</h2>
-        <button
-          type="button"
-          onClick={() => onNavigateTab('meals')}
-          className="text-xs font-semibold text-muted hover:text-fg transition-colors cursor-pointer py-2"
-        >
-          All meals →
-        </button>
-      </div>
-
-      {/* SECTION 1: CALORIES (NET CALORIE BUDGETING MODEL) */}
-      <div onClick={() => onNavigateTab('summary')} className="cursor-pointer group">
-        <div className="flex items-center justify-between pb-1">
-          <span className="text-xs font-semibold text-muted uppercase tracking-wider">
-            Calories
-          </span>
-          <span className="text-xs text-muted group-hover:text-fg flex items-center gap-0.5 transition-colors">
-            <span>Summary</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-          </span>
-        </div>
-
-        {/* 1. How much did I eat? (Primary Number) */}
-        <div className="flex items-baseline gap-2 mt-1">
-          <span className="text-[40px] sm:text-[44px] font-semibold tracking-tight text-fg leading-none">
-            {foodCalories.toLocaleString()}
-          </span>
-          <span className="text-base text-muted font-normal">
-            kcal eaten
-          </span>
-        </div>
-
-        {/* 2 & 3. What is my net balance? & How much room do I have left? */}
-        <div className="flex items-center gap-2 mt-1.5 text-sm font-medium">
-          <span className="text-fg font-semibold">
-            {netCalories.toLocaleString()} kcal net
-          </span>
-          <span className="text-muted">·</span>
-          {isOverTarget ? (
-            <span className="text-orange-ink font-semibold">
-              {overCalories.toLocaleString()} kcal above target
-            </span>
-          ) : (
-            <span className="text-muted">
-              <span className="text-fg font-semibold">{remainingCalories.toLocaleString()} kcal</span> remaining
-            </span>
-          )}
-        </div>
-
-        {/* Subtractive / Overlay Calorie Lane (Total lane represents Daily Target; Blue overlays food offset) */}
-        <div className="w-full bg-elevated h-2 rounded-full overflow-hidden mt-3.5 relative">
-          <div
-            className="h-full flex rounded-full transition-all duration-500 overflow-hidden"
-            style={{
-              width: `${Math.min(100, Math.max(0, (foodCalories / calorieTarget) * 100))}%`,
-            }}
-          >
-            {/* Net calories consumed (Solid Nuvia Green) */}
-            <div
-              className="bg-accent h-full transition-all duration-500"
-              style={{
-                width: foodCalories > 0
-                  ? `${Math.min(100, Math.max(0, (netCalories / foodCalories) * 100))}%`
-                  : '0%',
-              }}
-            />
-            {/* Activity credit offset (Subtle Blue subtraction overlay) */}
-            {exerciseCalories > 0 && foodCalories > 0 && (
-              <div
-                className="bg-info h-full transition-all duration-500 opacity-90"
-                style={{
-                  width: `${Math.min(100, Math.max(0, (Math.min(exerciseCalories, foodCalories) / foodCalories) * 100))}%`,
-                }}
-                title={`-${exerciseCalories} kcal activity credit offset`}
-              />
-            )}
-          </div>
-        </div>
-
-        {/* Direct Supporting Equation */}
-        <p className="text-xs text-muted mt-2 font-normal">
-          {foodCalories.toLocaleString()} eaten
-          {exerciseCalories > 0 ? ` − ${exerciseCalories.toLocaleString()} activity` : ' − 0 activity'}
-          {' = '}
-          <span className="text-fg font-medium">{netCalories.toLocaleString()} net</span>
-        </p>
-
-        {/* 4. Why is my target this value? (Daily target & maintenance secondary context) */}
-        <div className="flex items-center justify-between text-xs text-muted mt-2 pt-2.5 border-t border-fg/[0.05]">
-          <span>
-            Daily target: <span className="text-fg font-medium">{calorieTarget.toLocaleString()} kcal</span>
-          </span>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onNavigateTab('goals');
-            }}
-            className="text-[11px] text-muted hover:text-fg flex items-center gap-0.5 transition-colors cursor-pointer"
-            title="Why this target?"
-          >
-            <span>Why this target?</span>
-            <ChevronRight className="w-3 h-3" />
-          </button>
-        </div>
-
-        <div className="pt-3">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onOpenAddMeal();
-            }}
-            className="w-full py-2.5 px-3.5 rounded-xl bg-gradient-to-r from-accent/15 to-elevated/60 hover:from-accent/25 border border-accent/30 hover:border-accent transition-all flex items-center justify-between group cursor-pointer"
-          >
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-lg bg-accent text-on-accent flex items-center justify-center">
-                <Camera className="w-3.5 h-3.5 stroke-[2.5]" />
-              </div>
-              <span className="text-xs font-bold text-fg">Snap Food Picture</span>
-            </div>
-            <span className="text-[11px] font-semibold text-green-ink flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform">
-              <span>AI Count Calories</span>
-              <ChevronRight className="w-3 h-3" />
-            </span>
-          </button>
-        </div>
-      </div>
-
-      <div className="ios-divider" />
-
-      {/* SECTION 2: MACRONUTRIENTS */}
-      <div onClick={() => onNavigateTab('goals')} className="cursor-pointer group">
-        <div className="flex items-center justify-between pb-2">
-          <span className="text-xs font-semibold text-muted uppercase tracking-wider">
-            Nutrition Targets
-          </span>
-          <span className="text-xs text-muted group-hover:text-fg flex items-center gap-0.5 transition-colors">
-            <span>Goals</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-          </span>
-        </div>
-
-        <div className="grid grid-cols-3 gap-4 pt-1">
-          {/* Protein */}
-          <div>
-            <p className="text-[11px] text-muted font-medium">Protein</p>
-            <p className="text-xl font-semibold text-fg tracking-tight mt-0.5">
-              {proteinConsumed}{' '}
-              <span className="text-xs text-muted font-normal">/ {proteinTarget}g</span>
-            </p>
-            <div className="w-full bg-elevated h-1 rounded-full overflow-hidden mt-1.5">
-              <div
-                className="bg-accent h-full rounded-full"
-                style={{ width: `${Math.min(100, (proteinConsumed / proteinTarget) * 100)}%` }}
-              />
-            </div>
-          </div>
-
-          {/* Carbs */}
-          <div>
-            <p className="text-[11px] text-muted font-medium">Carbohydrates</p>
-            <p className="text-xl font-semibold text-fg tracking-tight mt-0.5">
-              {carbsConsumed}{' '}
-              <span className="text-xs text-muted font-normal">/ {carbsTarget}g</span>
-            </p>
-            <div className="w-full bg-elevated h-1 rounded-full overflow-hidden mt-1.5">
-              <div
-                className="bg-[#8E8E93] h-full rounded-full"
-                style={{ width: `${Math.min(100, (carbsConsumed / carbsTarget) * 100)}%` }}
-              />
-            </div>
-          </div>
-
-          {/* Fat */}
-          <div>
-            <p className="text-[11px] text-muted font-medium">Fat</p>
-            <p className="text-xl font-semibold text-fg tracking-tight mt-0.5">
-              {fatConsumed}{' '}
-              <span className="text-xs text-muted font-normal">/ {fatTarget}g</span>
-            </p>
-            <div className="w-full bg-elevated h-1 rounded-full overflow-hidden mt-1.5">
-              <div
-                className="bg-[#8E8E93] h-full rounded-full"
-                style={{ width: `${Math.min(100, (fatConsumed / fatTarget) * 100)}%` }}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="ios-divider" />
-
-      {/* SECTION 3: ACTIVITY SUMMARY */}
-      <div onClick={() => onNavigateTab('exercise')} className="cursor-pointer group">
-        <div className="flex items-center justify-between pb-1">
-          <span className="text-xs font-semibold text-muted uppercase tracking-wider">
-            Activity
-          </span>
-          <span className="text-xs text-muted group-hover:text-fg flex items-center gap-0.5 transition-colors">
-            <span>Details</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-          </span>
-        </div>
-
-        <div className="flex items-baseline justify-between mt-1">
-          <div>
-            <span className="text-2xl font-semibold text-fg tracking-tight">
-              {exerciseCalories.toLocaleString()}{' '}
-              <span className="text-sm text-muted font-normal">kcal burned</span>
-            </span>
-          </div>
-          <span className="text-sm font-medium text-muted">{exerciseMinutes} min active</span>
-        </div>
-      </div>
-
-      {/* Fitness statistics */}
-      <section className="space-y-3" aria-label="Your stats">
-        <SectionHeader title="Your stats" action="Progress" onAction={() => onNavigateTab('progress')} />
-        <HomeStatsGrid
-          logs={overview.logs}
-          streak={overview.streak}
-          weightKg={profile?.weight_kg ?? null}
-          targetWeightKg={goals?.target_weight_kg ?? profile?.target_weight_kg ?? null}
-          onOpenProgress={() => onNavigateTab('progress')}
-          onOpenProfile={() => onNavigateTab('profile')}
-        />
-      </section>
 
       {/* SECTION 4: NUVIA QUICK INSIGHT & NATURAL LOGGER */}
       <div className="bg-card rounded-2xl p-4 border border-fg/[0.06] space-y-3">
@@ -1114,93 +744,6 @@ export function DashboardView({
         </form>
       </div>
 
-      {/* SECTION 5: TODAY'S LOGS */}
-      <div className="space-y-4 pt-1">
-        {/* Completed Workouts */}
-        {recentExercises.length > 0 && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted uppercase tracking-wider flex items-center gap-1.5">
-                <Flame className="w-3.5 h-3.5 text-red-ink" />
-                <span>Today's Completed Workouts</span>
-              </span>
-              <button
-                onClick={() => onNavigateTab('exercise')}
-                className="text-xs text-green-ink hover:underline font-medium"
-              >
-                View All
-              </button>
-            </div>
-
-            <div className="ios-card divide-y divide-fg/[0.06] overflow-hidden border border-accent/20">
-              {recentExercises.map((e) => (
-                <div
-                  key={e.id}
-                  onClick={() => onNavigateTab('exercise')}
-                  className="p-3.5 flex items-center justify-between hover:bg-fg/[0.02] transition-colors cursor-pointer"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-accent/15 text-green-ink flex items-center justify-center shrink-0">
-                      <Dumbbell className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-fg">{e.exercise_type}</p>
-                      <p className="text-xs text-muted mt-0.5">
-                        {e.duration_minutes} min active · {e.description || 'Completed workout'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <span className="text-sm font-extrabold text-green-ink flex items-center gap-0.5">
-                      +{e.calories_burned}{' '}
-                      <span className="text-xs font-medium text-muted">kcal</span>
-                    </span>
-                    <span className="text-[10px] text-muted font-medium block">burned</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Today's Meals */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-muted uppercase tracking-wider">
-              Today's Meals
-            </span>
-            <button
-              onClick={() => onNavigateTab('meals')}
-              className="text-xs text-green-ink hover:underline font-medium"
-            >
-              View All
-            </button>
-          </div>
-
-          {recentMeals.length === 0 ? (
-            <p className="text-xs text-muted py-2">No meals logged yet today.</p>
-          ) : (
-            <div className="ios-card divide-y divide-fg/[0.06] overflow-hidden">
-              {recentMeals.slice(0, 3).map((m) => (
-                <div
-                  key={m.id}
-                  className="p-3.5 flex items-center justify-between hover:bg-fg/[0.02] transition-colors"
-                >
-                  <div>
-                    <p className="text-sm font-medium text-fg">{m.description}</p>
-                    <p className="text-xs text-muted capitalize mt-0.5">
-                      {m.meal_type} · {m.protein_g}g protein
-                    </p>
-                  </div>
-                  <span className="text-sm font-semibold text-fg">
-                    {m.calories} <span className="text-xs text-muted font-normal">kcal</span>
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
     </div>
   );
 }

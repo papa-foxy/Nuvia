@@ -563,6 +563,63 @@ export const DataService = {
     return true;
   },
 
+  /**
+   * Moves a meal to another calendar day (e.g. logged today but eaten yesterday).
+   * Keeps the original time of day; only the local date changes. Daily summaries
+   * for both the old and the new day are re-synced.
+   */
+  async moveMeal(mealId: string, newDateStr: string, userId?: string): Promise<Meal | null> {
+    const parts = newDateStr.split('-').map(Number);
+    if (parts.length !== 3 || parts.some((n) => !Number.isFinite(n))) {
+      throw new Error(`Invalid date: ${newDateStr}`);
+    }
+    const [y, m, d] = parts;
+
+    const state = getLocalState();
+    const local = state.meals.find((x) => x.id === mealId);
+    const isRemoteUser = isSupabaseConfigured() && userId && userId !== DEMO_USER_ID;
+
+    // Resolve the current meal_time (remote users may not have the meal cached locally).
+    let currentIso = local?.meal_time ?? null;
+    if (!currentIso && isRemoteUser) {
+      const supabase = createClient();
+      const { data } = await supabase.from('meals').select('meal_time').eq('id', mealId).single();
+      currentIso = (data as { meal_time?: string } | null)?.meal_time ?? null;
+    }
+    const current = currentIso ? new Date(currentIso) : new Date();
+    const oldDateStr = getLocalDateString(current);
+    const moved = new Date(current);
+    moved.setFullYear(y, m - 1, d);
+    const newIso = moved.toISOString();
+
+    let updated: Meal | null = null;
+
+    if (isRemoteUser) {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from('meals')
+        .update({ meal_time: newIso })
+        .eq('id', mealId)
+        .select()
+        .single();
+      if (error) {
+        console.error('Supabase moveMeal error:', error);
+        throw new Error('Could not move this meal. Please try again.');
+      }
+      updated = data as Meal;
+      await this.syncDailySummaryToSupabase(userId, oldDateStr);
+      await this.syncDailySummaryToSupabase(userId, newDateStr);
+    }
+
+    if (local) {
+      local.meal_time = newIso;
+      saveLocalState(state);
+      updated = updated ?? local;
+    }
+
+    return updated;
+  },
+
   // =========================================================================
   // EXERCISE LOGS
   // =========================================================================

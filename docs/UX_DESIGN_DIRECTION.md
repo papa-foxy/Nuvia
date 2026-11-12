@@ -112,18 +112,27 @@ Existing components kept and restyled through tokens: `NuviaBottomSheet`,
 
 ## Screen plans
 
-**Home** (W1, W2, O4, F1)
-1. Header: date, "Good morning, {name}", streak pill, avatar.
-2. This week: workouts done vs weekly goal as a ring, one guidance sentence,
-   7-day bar strip of active minutes.
-3. Today's workout: routine name, target muscles, exercise count, estimated
-   minutes, **Start workout**. Rest-day and "up next" variants preserved.
-4. Schedule-adaptation card (existing) when action is needed.
-5. Today's nutrition: calories eaten / remaining with one bar, three macro
-   bars, "Snap food" shortcut.
-6. Stats: body weight, workouts (all time), training time, streak.
-7. Natural-language logger and suggestions (existing).
-8. Recent activity: today's workouts and meals (existing lists).
+**One home per piece of information** (owner decision, 12 Nov 2026). Nothing
+is repeated across screens; other screens link to the owner instead.
+
+| Information | Lives on |
+|---|---|
+| Calories eaten vs target, macros | Home (detail in Summary) |
+| Today's workout (compact) | Home → opens Workout |
+| Week schedule, adaptation card, today's activity | Workout |
+| Meals by day, moving a meal to another day | Nutrition |
+| Workouts per week, records, muscles, streak, body weight | Progress |
+| Weight goal, calorie and macro targets | Goals |
+| About you, AI personalisation, settings | Profile (links to Goals and Progress) |
+
+**Home** (W1, O4) — nutrition-first
+1. Header: date, greeting, streak pill, avatar.
+2. Calories today: ring with kcal left (or over), eaten vs target, protein /
+   carbs / fat bars, Log a meal, Today's meals. Intake only:
+   remaining = target − eaten; exercise is never subtracted.
+3. Today's workout: one compact card (routine, exercise count, Start / Done),
+   or Rest day with the next session.
+4. Nuvia quick logger and suggestions.
 
 **Workout** (H6, F1, F2): segmented Today · Routines · Library · History.
 Routine cards show name, muscles, exercise count, estimated time, last

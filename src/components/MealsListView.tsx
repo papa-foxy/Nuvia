@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Trash2, Utensils, ChevronRight, ChevronLeft, Camera, Plus } from 'lucide-react';
+import { Trash2, Utensils, ChevronRight, ChevronLeft, Camera, Plus, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { DataService } from '@/lib/data-service';
 import { Meal } from '@/types/database';
@@ -13,9 +13,11 @@ import { getLocalDateString } from '@/lib/data-service';
 interface MealsListViewProps {
   onOpenAddMeal: () => void;
   refreshKey?: number;
+  /** Called after a meal is moved or deleted so other screens (Home) can refresh. */
+  onMealsChanged?: () => void;
 }
 
-export function MealsListView({ onOpenAddMeal, refreshKey }: MealsListViewProps) {
+export function MealsListView({ onOpenAddMeal, refreshKey, onMealsChanged }: MealsListViewProps) {
   const { user } = useAuth();
   const [selectedDate, setSelectedDate] = useState(() => getLocalDateString());
   const [meals, setMeals] = useState<Meal[]>([]);
@@ -23,6 +25,7 @@ export function MealsListView({ onOpenAddMeal, refreshKey }: MealsListViewProps)
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [moveNotice, setMoveNotice] = useState<{ date: string; label: string } | null>(null);
 
   const prevRefreshKey = useRef<number | undefined>(refreshKey);
   const userId = user?.id;
@@ -75,6 +78,24 @@ export function MealsListView({ onOpenAddMeal, refreshKey }: MealsListViewProps)
     NuviaCache.invalidate(todayMealsKey(userId, selectedDate));
     NuviaCache.invalidate(todaySummaryKey(userId, selectedDate));
     await fetchAndCache(selectedDate, false);
+    onMealsChanged?.();
+  };
+
+  const handleMove = async (mealId: string, newDate: string) => {
+    await DataService.moveMeal(mealId, newDate, userId);
+    for (const d of [selectedDate, newDate]) {
+      NuviaCache.invalidate(todayMealsKey(userId, d));
+      NuviaCache.invalidate(todaySummaryKey(userId, d));
+    }
+    NuviaCache.invalidate(allMealsKey(userId));
+    await fetchAndCache(selectedDate, false);
+    const label = new Date(newDate + 'T00:00:00').toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+    });
+    setMoveNotice({ date: newDate, label });
+    onMealsChanged?.();
   };
 
   const filtered = filterType === 'all' ? meals : meals.filter((m) => m.meal_type === filterType);
@@ -270,7 +291,42 @@ export function MealsListView({ onOpenAddMeal, refreshKey }: MealsListViewProps)
         isOpen={isDetailsOpen}
         onClose={() => setIsDetailsOpen(false)}
         onDelete={handleDelete}
+        onMove={handleMove}
       />
+
+      {/* Confirmation after moving a meal, with a shortcut to the destination day */}
+      {moveNotice && (
+        <div
+          role="status"
+          className="fixed left-1/2 -translate-x-1/2 z-[60] w-[calc(100%-2rem)] max-w-sm rounded-[var(--radius-control)] bg-fg text-app shadow-xl px-4 py-3 flex items-center justify-between gap-3 animate-fadeIn"
+          style={{ bottom: 'calc(var(--bottom-nav-height, 56px) + env(safe-area-inset-bottom, 0px) + 12px)' }}
+        >
+          <span className="flex items-center gap-2 text-xs font-semibold">
+            <CheckCircle2 className="w-4 h-4 shrink-0" />
+            Moved to {moveNotice.label}
+          </span>
+          <span className="flex items-center gap-1 shrink-0">
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedDate(moveNotice.date);
+                setMoveNotice(null);
+              }}
+              className="h-8 px-3 rounded-lg text-xs font-extrabold underline cursor-pointer"
+            >
+              View
+            </button>
+            <button
+              type="button"
+              onClick={() => setMoveNotice(null)}
+              aria-label="Dismiss"
+              className="h-8 w-8 rounded-lg text-xs font-bold opacity-70 hover:opacity-100 cursor-pointer"
+            >
+              ✕
+            </button>
+          </span>
+        </div>
+      )}
     </div>
   );
 }

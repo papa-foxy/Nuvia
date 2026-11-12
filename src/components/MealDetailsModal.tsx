@@ -12,14 +12,24 @@ import {
   Clock,
   CheckCircle2,
   PieChart,
+  CalendarClock,
 } from 'lucide-react';
 import { Meal } from '@/types/database';
+import { getLocalDateString } from '@/lib/data-service';
+
+function localYesterday(): string {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  return getLocalDateString(d);
+}
 
 interface MealDetailsModalProps {
   meal: Meal | null;
   isOpen: boolean;
   onClose: () => void;
   onDelete?: (mealId: string) => Promise<void> | void;
+  /** Move the meal to another day (YYYY-MM-DD). Resolves when saved; throws on failure. */
+  onMove?: (mealId: string, newDate: string) => Promise<void>;
 }
 
 export function MealDetailsModal({
@@ -27,12 +37,17 @@ export function MealDetailsModal({
   isOpen,
   onClose,
   onDelete,
+  onMove,
 }: MealDetailsModalProps) {
   const [dragY, setDragY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [isEntering, setIsEntering] = useState(true);
   const [deleting, setDeleting] = useState(false);
+  const [isMoveOpen, setIsMoveOpen] = useState(false);
+  const [moveDate, setMoveDate] = useState('');
+  const [moving, setMoving] = useState(false);
+  const [moveError, setMoveError] = useState<string | null>(null);
   const startYRef = useRef(0);
   const currentDragYRef = useRef(0);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -224,6 +239,27 @@ export function MealDetailsModal({
     }
   };
 
+  const mealDateStr = getLocalDateString(new Date(meal.meal_time));
+  const todayStr = getLocalDateString();
+  const yesterdayStr = localYesterday();
+  const shortDate = (ds: string) =>
+    new Date(ds + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
+  const handleMove = async (target: string) => {
+    if (!onMove || !target || target === mealDateStr) return;
+    setMoving(true);
+    setMoveError(null);
+    try {
+      await onMove(meal.id, target);
+      setIsMoveOpen(false);
+      triggerClose();
+    } catch (e) {
+      setMoveError(e instanceof Error ? e.message : 'Could not move this meal.');
+    } finally {
+      setMoving(false);
+    }
+  };
+
   return (
     <>
       {/* Backdrop: bounded above bottom navigation */}
@@ -291,6 +327,24 @@ export function MealDetailsModal({
           </div>
 
           <div className="flex items-center gap-2">
+            {onMove && (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMoveOpen((v) => !v);
+                  setMoveDate(mealDateStr === todayStr ? yesterdayStr : todayStr);
+                  setMoveError(null);
+                }}
+                aria-expanded={isMoveOpen}
+                className={`h-8 px-3 rounded-full flex items-center gap-1.5 text-[11px] font-bold transition-colors cursor-pointer ${
+                  isMoveOpen ? 'bg-fg text-app' : 'bg-fg/5 hover:bg-fg/10 text-fg-soft'
+                }`}
+                title="Move to another day"
+              >
+                <CalendarClock className="w-3.5 h-3.5" />
+                Move
+              </button>
+            )}
             {onDelete && (
               <button
                 type="button"
@@ -320,6 +374,65 @@ export function MealDetailsModal({
           onTouchEnd={handleTouchEnd}
           className="flex-1 overflow-y-auto px-5 py-4 pb-6 sm:pb-8 space-y-4 overscroll-contain"
         >
+          {/* Move to another day */}
+          {onMove && isMoveOpen && (
+            <section
+              aria-label="Move meal to another day"
+              className="rounded-[var(--radius-control)] border border-line bg-elevated/50 p-3.5 space-y-3"
+            >
+              <div>
+                <p className="text-sm font-bold text-fg">Move to another day</p>
+                <p className="text-[11px] text-muted">
+                  Currently on {shortDate(mealDateStr)}. The time of day stays the same.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { label: 'Yesterday', value: yesterdayStr },
+                  { label: 'Today', value: todayStr },
+                ]
+                  .filter((o) => o.value !== mealDateStr)
+                  .map((o) => (
+                    <button
+                      key={o.value}
+                      type="button"
+                      disabled={moving}
+                      onClick={() => handleMove(o.value)}
+                      className="h-10 px-4 rounded-[var(--radius-control)] bg-accent text-on-accent text-xs font-extrabold hover:bg-accent-hover disabled:opacity-60 cursor-pointer"
+                    >
+                      Move to {o.label.toLowerCase()}
+                    </button>
+                  ))}
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="sr-only" htmlFor="move-meal-date">
+                  Choose a date
+                </label>
+                <input
+                  id="move-meal-date"
+                  type="date"
+                  value={moveDate}
+                  max={todayStr}
+                  onChange={(e) => setMoveDate(e.target.value)}
+                  className="flex-1 h-10 px-3 rounded-[var(--radius-control)] bg-card border border-line text-sm font-semibold text-fg [color-scheme:inherit] focus:outline-none focus:border-accent"
+                />
+                <button
+                  type="button"
+                  disabled={moving || !moveDate || moveDate === mealDateStr || moveDate > todayStr}
+                  onClick={() => handleMove(moveDate)}
+                  className="h-10 px-4 rounded-[var(--radius-control)] bg-fg text-app text-xs font-extrabold disabled:opacity-40 cursor-pointer"
+                >
+                  {moving ? 'Moving…' : 'Move to date'}
+                </button>
+              </div>
+              {moveError && (
+                <p role="alert" className="text-xs font-semibold text-red-ink">
+                  {moveError}
+                </p>
+              )}
+            </section>
+          )}
+
           {/* Meal Photo or Aesthetic Hero Header */}
           {meal.image_url ? (
             <div className="relative w-full h-52 rounded-2xl overflow-hidden border border-fg/10 shadow-lg group">
@@ -331,7 +444,7 @@ export function MealDetailsModal({
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
               <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between">
                 <div>
-                  <h3 className="text-base font-bold text-fg leading-tight drop-shadow-md">
+                  <h3 className="text-base font-bold text-white leading-tight drop-shadow-md">
                     {meal.description || 'Logged Meal'}
                   </h3>
                   <div className="flex items-center gap-1.5 mt-1 text-[11px] text-zinc-300">
