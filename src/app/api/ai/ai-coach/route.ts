@@ -1,13 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { calculateTargets, getUserCalculationContext } from '@/lib/calculator';
 import { AdaptiveTrainingEngine } from '@/lib/adaptive-training-engine';
-
-const GEMINI_MODELS = [
-  'gemini-3.5-flash',
-  'gemini-3-flash-preview',
-  'gemini-3.7-flash',
-  'gemini-3.5-flash-lite',
-];
+import { geminiGenerate } from '@/lib/server/gemini';
 
 function cleanJsonString(raw: string): string {
   let cleaned = raw.trim();
@@ -183,43 +177,26 @@ IMPORTANT NUTRITION RULE: Nuvia tracks calorie INTAKE against the daily target (
 IMPORTANT WORKOUT RULE: Never generate a generic workout. Always check the user's Weekly Training Structure, Available Equipment, Recovery Status, and Previous Performance. Follow the WORKOUT GENERATION & MODIFICATION RULES strictly.
 Respond warmly, directly, concisely, and practically in 2-4 focused sentences or bullet points.`;
 
-        for (const model of GEMINI_MODELS) {
-          try {
-            const res = await fetch(
-              `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-              {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  contents: [
-                    {
-                      parts: [
-                        { text: systemPrompt },
-                        { text: userContext + intentContext },
-                        { text: `User message: "${chatMessage}"` },
-                      ],
-                    },
-                  ],
-                  generationConfig: { temperature: 0.5 },
-                }),
-              }
-            );
-
-            if (res.ok) {
-              const data = await res.json();
-              const reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
-              if (reply) {
-                return NextResponse.json({
-                  success: true,
-                  mode: 'chat',
-                  reply,
-                  intentAnalysis: intentAnalysis.classification !== 'GENERAL_QUESTION' ? intentAnalysis : undefined,
-                });
-              }
-            }
-          } catch (modelErr) {
-            console.warn(`AI Coach chat model ${model} error:`, modelErr);
-          }
+        const reply = await geminiGenerate({
+          contents: [
+            {
+              parts: [
+                { text: systemPrompt },
+                { text: userContext + intentContext },
+                { text: `User message: "${chatMessage}"` },
+              ],
+            },
+          ],
+          generationConfig: { temperature: 0.5 },
+          task: 'ai-coach-chat',
+        });
+        if (reply) {
+          return NextResponse.json({
+            success: true,
+            mode: 'chat',
+            reply,
+            intentAnalysis: intentAnalysis.classification !== 'GENERAL_QUESTION' ? intentAnalysis : undefined,
+          });
         }
       } else {
         const systemPrompt = `You are Nuvia's AI Fitness & Nutrition Coach.
@@ -236,33 +213,16 @@ Generate prioritized, highly actionable guidance in strictly valid JSON format:
   ]
 }`;
 
-        for (const model of GEMINI_MODELS) {
+        const text = await geminiGenerate({
+          contents: [{ parts: [{ text: systemPrompt }, { text: userContext }] }],
+          generationConfig: { responseMimeType: 'application/json', temperature: 0.3 },
+          task: 'ai-coach-priorities',
+        });
+        if (text) {
           try {
-            const res = await fetch(
-              `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-              {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  contents: [{ parts: [{ text: systemPrompt }, { text: userContext }] }],
-                  generationConfig: {
-                    responseMimeType: 'application/json',
-                    temperature: 0.3,
-                  },
-                }),
-              }
-            );
-
-            if (res.ok) {
-              const data = await res.json();
-              const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-              if (text) {
-                const parsed = JSON.parse(cleanJsonString(text));
-                return NextResponse.json({ success: true, mode: 'priorities', data: parsed });
-              }
-            }
-          } catch (modelErr) {
-            console.warn(`AI Coach priorities model ${model} error:`, modelErr);
+            return NextResponse.json({ success: true, mode: 'priorities', data: JSON.parse(cleanJsonString(text)) });
+          } catch {
+            console.warn('[ai-coach-priorities] Gemini returned invalid JSON');
           }
         }
       }

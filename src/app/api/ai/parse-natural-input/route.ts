@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { geminiGenerate } from '@/lib/server/gemini';
 import {
   NaturalLanguageLoggingContext,
   NaturalLanguageParseResult,
@@ -7,13 +8,6 @@ import {
   cleanNaturalLanguageInput,
   parseNaturalLanguageLocally,
 } from '@/lib/natural-language-parser';
-
-const GEMINI_MODELS = [
-  'gemini-3.5-flash',
-  'gemini-3-flash-preview',
-  'gemini-3.7-flash',
-  'gemini-3.5-flash-lite',
-];
 
 function cleanJsonString(raw: string): string {
   let cleaned = raw.trim();
@@ -160,50 +154,25 @@ OUTPUT SCHEMA (Return strictly JSON):
   } | null
 }`;
 
-      for (const model of GEMINI_MODELS) {
+      const rawText = await geminiGenerate({
+        contents: [
+          {
+            parts: [{ text: systemPrompt }, { text: `User natural language input: "${cleanedText}"` }],
+          },
+        ],
+        generationConfig: { responseMimeType: 'application/json', temperature: 0.1 },
+        timeoutMs: 12_000,
+        task: 'parse-natural-input',
+      });
+      if (rawText) {
         try {
-          const res = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                contents: [
-                  {
-                    parts: [
-                      { text: systemPrompt },
-                      { text: `User natural language input: "${cleanedText}"` },
-                    ],
-                  },
-                ],
-                generationConfig: {
-                  responseMimeType: 'application/json',
-                  temperature: 0.1,
-                },
-              }),
-            }
-          );
-
-          if (res.ok) {
-            const data = await res.json();
-            const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (rawText) {
-              const cleaned = cleanJsonString(rawText);
-              const parsed: NaturalLanguageParseResult = JSON.parse(cleaned);
-
-              // Quick schema sanity check
-              if (parsed && parsed.intent) {
-                return NextResponse.json({
-                  success: true,
-                  source: 'gemini',
-                  model,
-                  data: parsed,
-                });
-              }
-            }
+          const parsed: NaturalLanguageParseResult = JSON.parse(cleanJsonString(rawText));
+          // Quick schema sanity check
+          if (parsed && parsed.intent) {
+            return NextResponse.json({ success: true, source: 'gemini', data: parsed });
           }
-        } catch (mErr) {
-          console.warn(`Gemini model ${model} parse error:`, mErr);
+        } catch {
+          console.warn('[parse-natural-input] Gemini returned invalid JSON');
         }
       }
     }

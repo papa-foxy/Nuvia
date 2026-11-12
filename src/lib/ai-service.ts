@@ -1,4 +1,3 @@
-import { createClient, isSupabaseConfigured } from './supabase/client';
 import type {
   NaturalLanguageLoggingContext,
   NaturalLanguageParseResult,
@@ -55,20 +54,6 @@ export const AiService = {
     mealType?: string;
   }): Promise<MealAnalysisResult> {
     try {
-      if (isSupabaseConfigured()) {
-        const supabase = createClient();
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          const { data, error } = await supabase.functions.invoke('analyze-meal', {
-            body: params,
-          });
-          if (!error && data?.success && data?.data) {
-            return data.data;
-          }
-        }
-      }
-
-      // Local API route fallback
       const res = await fetch('/api/ai/analyze-meal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -100,18 +85,6 @@ export const AiService = {
     };
   }): Promise<ExerciseAnalysisResult> {
     try {
-      if (isSupabaseConfigured()) {
-        const supabase = createClient();
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          const { data, error } = await supabase.functions.invoke('parse-exercise', {
-            body: params,
-          });
-          if (!error && data?.success && data?.data) {
-            return data.data;
-          }
-        }
-      }
 
       const res = await fetch('/api/ai/parse-exercise', {
         method: 'POST',
@@ -148,25 +121,6 @@ export const AiService = {
     proposal?: any;
   }> {
     try {
-      if (isSupabaseConfigured()) {
-        const supabase = createClient();
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          const { data, error } = await supabase.functions.invoke('ai-coach', {
-            body: params,
-          });
-          if (!error && data?.success) {
-            if (data.mode === 'chat') {
-              return {
-                reply: data.reply,
-                intentAnalysis: data.intentAnalysis,
-                proposal: data.intentAnalysis?.proposal,
-              };
-            }
-            return { advice: data.data };
-          }
-        }
-      }
 
       const res = await fetch('/api/ai/ai-coach', {
         method: 'POST',

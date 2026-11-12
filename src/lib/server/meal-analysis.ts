@@ -4,6 +4,7 @@
  */
 
 import type { MealAnalysisResult } from '@/lib/ai-service';
+import { geminiGenerate } from '@/lib/server/gemini';
 
 export interface MealAnalysisParams {
   imageBase64?: string;
@@ -11,13 +12,6 @@ export interface MealAnalysisParams {
   textPrompt?: string;
   mealType?: string;
 }
-
-const GEMINI_MODELS = [
-  'gemini-3.5-flash',
-  'gemini-3-flash-preview',
-  'gemini-3.7-flash',
-  'gemini-3.5-flash-lite',
-];
 
 function cleanJsonString(raw: string): string {
   let cleaned = raw.trim();
@@ -102,36 +96,17 @@ CRITICAL MALAYSIAN & REGIONAL NUTRITION RULES:
       contents.push({ parts });
 
       // Try each model in sequence for resilience
-      for (const model of GEMINI_MODELS) {
+      const text = await geminiGenerate({
+        contents,
+        generationConfig: { responseMimeType: 'application/json', temperature: 0.2 },
+        timeoutMs: 20_000, // photos take a little longer
+        task: 'meal-analysis',
+      });
+      if (text) {
         try {
-          const res = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                contents,
-                generationConfig: {
-                  responseMimeType: 'application/json',
-                  temperature: 0.2,
-                },
-              }),
-            }
-          );
-
-          if (res.ok) {
-            const data = await res.json();
-            const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (text) {
-              const cleaned = cleanJsonString(text);
-              const parsed = JSON.parse(cleaned);
-              return parsed;
-            }
-          } else {
-            console.warn(`Gemini model ${model} failed with status:`, res.status);
-          }
-        } catch (modelErr) {
-          console.warn(`Error trying model ${model}:`, modelErr);
+          return JSON.parse(cleanJsonString(text));
+        } catch {
+          console.warn('[meal-analysis] Gemini returned invalid JSON');
         }
       }
     }
