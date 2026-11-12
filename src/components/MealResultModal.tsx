@@ -150,7 +150,7 @@ export function MealResultModal({
       >
         <div
           onClick={(e) => e.stopPropagation()}
-          className="pointer-events-auto w-full max-w-md bg-card border-t border-x border-b-0 border-fg/[0.08] rounded-t-[28px] rounded-b-none max-h-[calc(100dvh-var(--bottom-nav-height,56px)-env(safe-area-inset-bottom,0px)-0.75rem)] flex flex-col overflow-hidden shadow-2xl animate-slideUp"
+          className="pointer-events-auto w-full max-w-md bg-card border-t border-x border-b-0 border-fg/[0.08] rounded-t-[28px] rounded-b-none max-h-[var(--sheet-max-h)] flex flex-col overflow-hidden shadow-2xl animate-slideUp"
         >
         {/* Header */}
         <div className="px-5 py-4 border-b border-fg/[0.08] flex items-center justify-between">

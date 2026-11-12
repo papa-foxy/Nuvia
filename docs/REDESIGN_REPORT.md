@@ -114,3 +114,15 @@ behaviour. No dependencies added. No backend changes.
 - **Fixes:** date picker no longer overlaps the bottom bar; meal photo title
   readable in light mode.
 
+### Sheets (12 November, later)
+
+- Sheets no longer reach under the iOS status bar: one shared height limit,
+  `--sheet-max-h` in globals.css, subtracts the bottom nav, home indicator,
+  status bar and a 12px gap (using 100vh in the installed app). Applied to all
+  15 bottom sheets and modals.
+- The meal details sheet now runs on NuviaBottomSheet. The calendar and the +
+  Log Entry sheet use the same full style (grab handle, header, close button,
+  drag down to dismiss).
+- Only one sheet can be open: opening a sheet closes the current one
+  instantly, so they never stack.
+

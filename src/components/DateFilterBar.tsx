@@ -133,8 +133,7 @@ export function DateFilterBar({
       <NuviaBottomSheet
         isOpen={isCalendarOpen}
         onClose={() => setIsCalendarOpen(false)}
-        variant="compact"
-        maxWidth="max-w-sm"
+        variant="standard"
         ariaLabel="Select date"
         title={
           <div className="flex items-center gap-2">

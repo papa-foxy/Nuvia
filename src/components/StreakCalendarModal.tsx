@@ -136,7 +136,7 @@ export function StreakCalendarModal({
       >
         <div
           onClick={(e) => e.stopPropagation()}
-          className="pointer-events-auto relative w-full max-w-md bg-surface border-t border-x border-b-0 border-fg/10 rounded-t-[28px] rounded-b-none max-h-[calc(100dvh-var(--bottom-nav-height,56px)-env(safe-area-inset-bottom,0px)-0.75rem)] flex flex-col overflow-hidden shadow-2xl z-10 animate-slideUp"
+          className="pointer-events-auto relative w-full max-w-md bg-surface border-t border-x border-b-0 border-fg/10 rounded-t-[28px] rounded-b-none max-h-[var(--sheet-max-h)] flex flex-col overflow-hidden shadow-2xl z-10 animate-slideUp"
         >
         {/* Grab Handle */}
         <div className="flex justify-center pt-3 pb-1">

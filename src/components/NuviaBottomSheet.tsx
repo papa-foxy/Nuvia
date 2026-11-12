@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
@@ -10,6 +10,9 @@ import { X } from 'lucide-react';
  * component renders them. Falls back to rendering in place if it is missing.
  */
 export const SHEET_ROOT_ID = 'nuvia-app-frame';
+
+/** Fired when any sheet opens; every other open sheet closes, so sheets never stack. */
+const SHEET_OPEN_EVENT = 'nuvia:sheet-open';
 
 export type BottomSheetVariant = 'compact' | 'standard' | 'full';
 
@@ -50,6 +53,34 @@ export function NuviaBottomSheet({
   const [dragY, setDragY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const sheetId = useId();
+  // True when this sheet was closed because another sheet opened.
+  const [replaced, setReplaced] = useState(false);
+  const onCloseRef = useRef(onClose);
+  const isOpenRef = useRef(isOpen);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+    isOpenRef.current = isOpen;
+  });
+
+  // Only one sheet at a time: announce when this one opens, and close this one
+  // when another opens (e.g. tapping + while a meal's details are showing).
+  useEffect(() => {
+    const onOtherOpen = (e: Event) => {
+      if ((e as CustomEvent<string>).detail !== sheetId && isOpenRef.current) {
+        // Replaced by another sheet: vanish immediately instead of sliding out,
+        // so the two never appear on screen together.
+        setReplaced(true);
+        onCloseRef.current();
+      }
+    };
+    window.addEventListener(SHEET_OPEN_EVENT, onOtherOpen);
+    return () => window.removeEventListener(SHEET_OPEN_EVENT, onOtherOpen);
+  }, [sheetId]);
+  useEffect(() => {
+    if (isOpen) window.dispatchEvent(new CustomEvent(SHEET_OPEN_EVENT, { detail: sheetId }));
+  }, [isOpen, sheetId]);
+
   // Stays true during the exit animation after isOpen turns false.
   const [rendered, setRendered] = useState(isOpen);
   const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
@@ -61,6 +92,7 @@ export function NuviaBottomSheet({
     setPrevIsOpen(isOpen);
     if (isOpen) {
       setRendered(true);
+      setReplaced(false);
       setIsClosing(false);
       setDragY(0);
       setIsDragging(false);
@@ -120,9 +152,9 @@ export function NuviaBottomSheet({
       setDragY(0);
       if (triggerRef?.current) triggerRef.current.focus();
       else lastFocusedElementRef.current?.focus();
-    }, 220);
+    }, replaced ? 0 : 220);
     return () => clearTimeout(t);
-  }, [isClosing, triggerRef]);
+  }, [isClosing, replaced, triggerRef]);
 
   // Ask the parent to close; the effect above plays the exit animation.
   const triggerClose = useCallback(() => {
@@ -223,14 +255,14 @@ export function NuviaBottomSheet({
     };
   }, [isDragging, triggerClose]);
 
-  if (!rendered) return null;
+  if (!rendered || (isClosing && replaced)) return null;
 
   // Compute height styling based on variant
   const cardHeightStyle = isCompact
     ? 'h-auto max-h-[60vh]'
     : isFull
-    ? 'h-[calc(100dvh-var(--bottom-nav-height,56px)-env(safe-area-inset-bottom,0px)-0.75rem)] flex flex-col'
-    : 'h-auto max-h-[calc(100dvh-var(--bottom-nav-height,56px)-env(safe-area-inset-bottom,0px)-1.5rem)] flex flex-col';
+    ? 'h-[var(--sheet-max-h)] flex flex-col'
+    : 'h-auto max-h-[var(--sheet-max-h)] flex flex-col';
 
   // Compute border and corner rounding based on variant
   const cardShapeStyle = isCompact

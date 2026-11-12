@@ -259,7 +259,7 @@ export function DayDetailsModal({
               : `translateY(${dragY}px)`,
             transition: isDragging ? 'none' : 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
           }}
-          className="pointer-events-auto relative z-10 w-full max-w-md bg-card border-t border-x border-b-0 border-fg/10 rounded-t-[28px] rounded-b-none max-h-[calc(100dvh-var(--bottom-nav-height,56px)-env(safe-area-inset-bottom,0px)-1rem)] flex flex-col shadow-2xl overflow-hidden will-change-transform"
+          className="pointer-events-auto relative z-10 w-full max-w-md bg-card border-t border-x border-b-0 border-fg/10 rounded-t-[28px] rounded-b-none max-h-[var(--sheet-max-h)] flex flex-col shadow-2xl overflow-hidden will-change-transform"
         >
         {/* iOS Drag Handle */}
         <div

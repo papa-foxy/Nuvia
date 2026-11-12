@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import {
-  X,
   Trash2,
   Utensils,
   Camera,
@@ -15,6 +14,7 @@ import {
   CalendarClock,
 } from 'lucide-react';
 import { Meal } from '@/types/database';
+import { NuviaBottomSheet } from './NuviaBottomSheet';
 import { getLocalDateString } from '@/lib/data-service';
 
 function localYesterday(): string {
@@ -39,140 +39,24 @@ export function MealDetailsModal({
   onDelete,
   onMove,
 }: MealDetailsModalProps) {
-  const [dragY, setDragY] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-  const [isClosing, setIsClosing] = useState(false);
-  const [isEntering, setIsEntering] = useState(true);
   const [deleting, setDeleting] = useState(false);
   const [isMoveOpen, setIsMoveOpen] = useState(false);
   const [moveDate, setMoveDate] = useState('');
   const [moving, setMoving] = useState(false);
   const [moveError, setMoveError] = useState<string | null>(null);
-  const startYRef = useRef(0);
-  const currentDragYRef = useRef(0);
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  currentDragYRef.current = dragY;
-  // Use a ref alongside isDragging state so touch handlers always read the live value
-  // (state updates are async and can cause the over-scroll jump bug)
-  const isDraggingRef = useRef(false);
-
-
-  // Lock body scroll while modal is open to prevent background page from scrolling
-  useEffect(() => {
+  // Reset per-open UI when the sheet opens (adjusting state during render on prop change).
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+  if (isOpen !== prevIsOpen) {
+    setPrevIsOpen(isOpen);
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none';
-    }
-    return () => {
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
-    };
-  }, [isOpen]);
-
-  // Trigger smooth entrance slide-up animation when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      setIsEntering(true);
-      setIsClosing(false);
-      setDragY(0);
-      setIsDragging(false);
       setDeleting(false);
-
-      const timer = setTimeout(() => {
-        setIsEntering(false);
-      }, 20);
-      return () => clearTimeout(timer);
+      setIsMoveOpen(false);
+      setMoveError(null);
     }
-  }, [isOpen]);
+  }
 
-
-  const triggerClose = () => {
-    setIsClosing(true);
-    setIsDragging(false);
-    setTimeout(() => {
-      onClose();
-      setIsClosing(false);
-      setDragY(0);
-    }, 220);
-  };
-
-  const handleTouchStart = (e: React.TouchEvent, fromHeader = false) => {
-    if (!fromHeader && scrollRef.current && scrollRef.current.scrollTop > 5) return;
-    startYRef.current = e.touches[0].clientY;
-    isDraggingRef.current = true;
-    setIsDragging(true);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent, fromHeader = false) => {
-    if (!isDraggingRef.current) return;
-    const currentY = e.touches[0].clientY;
-    const delta = currentY - startYRef.current;
-
-    if (delta > 0) {
-      setDragY(delta);
-    } else {
-      // Swiping up inside scrollable area — cancel sheet drag, let native scroll work
-      if (!fromHeader) {
-        isDraggingRef.current = false;
-        setIsDragging(false);
-        setDragY(0);
-      } else {
-        setDragY(0);
-      }
-    }
-  };
-
-  const handleTouchEnd = () => {
-    if (!isDraggingRef.current) return;
-    isDraggingRef.current = false;
-    setIsDragging(false);
-    if (currentDragYRef.current > 80) {
-      triggerClose();
-    } else {
-      setDragY(0);
-    }
-  };
-
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    startYRef.current = e.clientY;
-    setIsDragging(true);
-  };
-
-  // Window-level mouse move & up listeners for smooth desktop drag-down
-  useEffect(() => {
-    if (!isDragging) return;
-
-    const onMouseMove = (e: MouseEvent) => {
-      const delta = e.clientY - startYRef.current;
-      if (delta > 0) {
-        setDragY(delta);
-      } else {
-        setDragY(0);
-      }
-    };
-
-    const onMouseUp = () => {
-      isDraggingRef.current = false;
-      setIsDragging(false);
-      if (currentDragYRef.current > 80) {
-        triggerClose();
-      } else {
-        setDragY(0);
-      }
-    };
-
-    window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('mouseup', onMouseUp);
-    return () => {
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('mouseup', onMouseUp);
-    };
-  }, [isDragging]);
-
-
-  if (!isOpen || !meal) return null;
+  // Keep rendering while closing so the shared sheet can slide out.
+  if (!meal) return null;
 
   const mealDate = new Date(meal.meal_time);
   const formattedDate = mealDate.toLocaleDateString('en-US', {
@@ -235,7 +119,7 @@ export function MealDetailsModal({
       setDeleting(true);
       await onDelete(meal.id);
       setDeleting(false);
-      triggerClose();
+      onClose();
     }
   };
 
@@ -252,7 +136,7 @@ export function MealDetailsModal({
     try {
       await onMove(meal.id, target);
       setIsMoveOpen(false);
-      triggerClose();
+      onClose();
     } catch (e) {
       setMoveError(e instanceof Error ? e.message : 'Could not move this meal.');
     } finally {
@@ -261,73 +145,28 @@ export function MealDetailsModal({
   };
 
   return (
-    <>
-      {/* Backdrop: bounded above bottom navigation */}
-      <div
-        className="fixed md:absolute top-0 left-0 right-0 z-40 bg-black/75 backdrop-blur-sm transition-opacity"
-        style={{
-          bottom: 'calc(var(--bottom-nav-height, 56px) + env(safe-area-inset-bottom, 0px))',
-          opacity: isClosing || isEntering ? 0 : Math.max(0.1, 1 - dragY / 300),
-          transitionDuration: isDragging ? '0ms' : isEntering ? '320ms' : '220ms',
-        }}
-        onClick={triggerClose}
-        aria-hidden="true"
-      />
-
-      {/* Sheet / Modal Container: sits above backdrop (z-45) directly on top of nav */}
-      <div
-        className="fixed md:absolute left-0 right-0 z-45 flex items-end justify-center p-0 pointer-events-none"
-        style={{
-          bottom: 'calc(var(--bottom-nav-height, 56px) + env(safe-area-inset-bottom, 0px))',
-        }}
-      >
-        <div
-          onClick={(e) => e.stopPropagation()}
-          style={{
-            transform: isClosing || isEntering
-              ? 'translateY(100%)'
-              : `translateY(${dragY}px)`,
-            transition: isDragging
-              ? 'none'
-              : isEntering
-              ? 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)'
-              : 'transform 0.24s cubic-bezier(0.2, 0.9, 0.3, 1)',
-          }}
-          className="pointer-events-auto relative w-full max-w-md bg-surface border-t border-x border-b-0 border-fg/10 rounded-t-[28px] rounded-b-none max-h-[calc(100dvh-var(--bottom-nav-height,56px)-env(safe-area-inset-bottom,0px)-1rem)] flex flex-col overflow-hidden shadow-2xl z-10 select-none sm:select-auto will-change-transform"
-        >
-        {/* Grab Handle */}
-        <div
-          onTouchStart={(e) => handleTouchStart(e, true)}
-          onTouchMove={(e) => handleTouchMove(e, true)}
-          onTouchEnd={handleTouchEnd}
-          onMouseDown={handleMouseDown}
-          className="flex flex-col items-center justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing w-full touch-none select-none hover:bg-fg/[0.02] transition-colors"
-        >
-          <div className="w-12 h-1.5 rounded-full bg-fg/30 hover:bg-fg/50 transition-colors" />
-        </div>
-
-        {/* Modal Top Header */}
-        <div
-          onTouchStart={(e) => handleTouchStart(e, true)}
-          onTouchMove={(e) => handleTouchMove(e, true)}
-          onTouchEnd={handleTouchEnd}
-          onMouseDown={handleMouseDown}
-          className="flex items-center justify-between px-5 py-2.5 border-b border-fg/5 cursor-grab active:cursor-grabbing touch-none select-none"
-        >
-          <div className="flex items-center gap-2">
-            <span
-              className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider border ${mealTypeColor}`}
-            >
-              {meal.meal_type}
-            </span>
-            <div className="flex items-center gap-1 text-[11px] text-muted">
-              <Clock className="w-3 h-3" />
-              <span>{formattedTime}</span>
-            </div>
+    <NuviaBottomSheet
+      isOpen={isOpen}
+      onClose={onClose}
+      variant="standard"
+      ariaLabel="Meal details"
+      contentClassName="space-y-4 pb-6 sm:pb-8"
+      title={
+        <div className="flex items-center gap-2">
+          <span
+            className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider border ${mealTypeColor}`}
+          >
+            {meal.meal_type}
+          </span>
+          <div className="flex items-center gap-1 text-[11px] text-muted">
+            <Clock className="w-3 h-3" />
+            <span>{formattedTime}</span>
           </div>
-
-          <div className="flex items-center gap-2">
-            {onMove && (
+        </div>
+      }
+      headerAction={
+        <>
+          {onMove && (
               <button
                 type="button"
                 onClick={() => {
@@ -356,24 +195,9 @@ export function MealDetailsModal({
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
             )}
-            <button
-              onClick={triggerClose}
-              className="w-8 h-8 rounded-full bg-fg/10 hover:bg-fg/15 flex items-center justify-center text-zinc-300 hover:text-fg transition-colors cursor-pointer"
-              aria-label="Close"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-
-        {/* Scrollable Content Body */}
-        <div
-          ref={scrollRef}
-          onTouchStart={(e) => handleTouchStart(e, false)}
-          onTouchMove={(e) => handleTouchMove(e, false)}
-          onTouchEnd={handleTouchEnd}
-          className="flex-1 overflow-y-auto px-5 py-4 pb-6 sm:pb-8 space-y-4 overscroll-contain"
-        >
+        </>
+      }
+    >
           {/* Move to another day */}
           {onMove && isMoveOpen && (
             <section
@@ -652,9 +476,6 @@ export function MealDetailsModal({
               </p>
             </div>
           )}
-        </div>
-      </div>
-    </div>
-    </>
+    </NuviaBottomSheet>
   );
 }

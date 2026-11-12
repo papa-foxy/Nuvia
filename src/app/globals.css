@@ -146,6 +146,15 @@
 
     /* Bottom Navigation Tokens */
     --bottom-nav-height: 56px;
+
+    /* Tallest a bottom sheet may be: viewport minus bottom nav, home indicator,
+       status bar (safe-area-inset-top) and a 12px gap. Keeps sheet headers
+       below the iOS status bar, where taps would otherwise be swallowed. */
+    --sheet-viewport-h: 100dvh;
+    --sheet-max-h: calc(
+      var(--sheet-viewport-h) - var(--bottom-nav-height) - env(safe-area-inset-bottom, 0px) -
+        env(safe-area-inset-top, 0px) - 12px
+    );
   }
 
   html {
@@ -251,6 +260,11 @@
  * than the visible area) keep using 100%.
  */
 @media (display-mode: standalone) {
+  :root {
+    /* Installed iOS app: 100vh is the true screen height (see chin-gap fix below). */
+    --sheet-viewport-h: 100vh;
+  }
+
   html,
   body {
     height: 100vh;

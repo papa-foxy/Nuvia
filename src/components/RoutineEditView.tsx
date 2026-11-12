@@ -180,7 +180,7 @@ export function RoutineEditView({
       >
         <div
           onClick={(e) => e.stopPropagation()}
-          className="pointer-events-auto w-full max-w-lg bg-card border-t border-x border-b-0 border-fg/10 rounded-t-[28px] rounded-b-none p-5 sm:p-6 shadow-2xl animate-slideUp max-h-[calc(100dvh-var(--bottom-nav-height,56px)-env(safe-area-inset-bottom,0px)-0.75rem)] flex flex-col"
+          className="pointer-events-auto w-full max-w-lg bg-card border-t border-x border-b-0 border-fg/10 rounded-t-[28px] rounded-b-none p-5 sm:p-6 shadow-2xl animate-slideUp max-h-[var(--sheet-max-h)] flex flex-col"
         >
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-fg/10 shrink-0">

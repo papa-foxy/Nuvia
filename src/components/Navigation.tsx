@@ -155,8 +155,9 @@ export function BottomNav({
       <NuviaBottomSheet
         isOpen={showLogSheet}
         onClose={() => setShowLogSheet(false)}
-        variant="compact"
+        variant="standard"
         title="Log Entry"
+        subtitle="What would you like to log?"
         maxWidth="max-w-md"
       >
         <div className="space-y-2.5">
