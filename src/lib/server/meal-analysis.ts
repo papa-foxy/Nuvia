@@ -4,6 +4,7 @@
  */
 
 import type { MealAnalysisResult } from '@/lib/ai-service';
+import { foodReferenceForPrompt, referenceMealFromText } from '@/lib/malaysian-food-reference';
 import { geminiGenerate } from '@/lib/server/gemini';
 
 export interface MealAnalysisParams {
@@ -28,19 +29,29 @@ export async function analyzeMeal({ imageBase64, mimeType, textPrompt, mealType 
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (apiKey) {
-      const systemPrompt = `You are a world-class nutrition estimation AI expert for Nuvia, specifically specialized in Malaysian, Indonesian, and Southeast Asian cuisine, local hawker stalls, mamak restaurants, night markets (pasar malam), and popular regional franchises (e.g. Ayam Gepuk Top Global, Pak Gembus, Nasi Kandar Pelita/Kayu, Marrybrown, OldTown, etc.), as well as international dishes.
+      const systemPrompt = `You are Nuvia's nutrition estimator, an expert in Malaysian food: mamak, kopitiam, hawker, Malay, Chinese, Indian, Peranakan and East Malaysian dishes, local chains (e.g. Ayam Gepuk Top Global, Nasi Kandar Pelita, Marrybrown, OldTown, ZUS, Tealive) and international food.
 
-CRITICAL MALAYSIAN & REGIONAL NUTRITION RULES:
-1. When a Malaysian/Indonesian dish, stall, or franchise is identified (e.g. 'ayam gepuk top global', 'pak gembus', 'nasi lemak ayam goreng', 'roti canai dhal', 'nasi kandar', 'char kway teow', 'laksa', 'nasi ayam', 'mee goreng mamak'):
-   - Break down the REAL components accurately:
-     * Ayam Gepuk / Ayam Penyet: Smashed deep-fried chicken (crisp skin, palm oil), signature garlic-chili peanut sambal gepuk (heavy in palm oil and crushed peanuts!), steamed white rice (nasi putih), fried tofu (tahu), fried tempeh (tempe), and cucumber/cabbage.
-     * Nasi Lemak: Coconut milk rice (santan), sweet-savory sambal, crispy anchovies (ikan bilis), roasted peanuts, hard-boiled/fried egg, plus protein like spiced fried chicken (ayam goreng berempah) or beef rendang.
-     * Nasi Kandar: White rice flooded with mixed curries (kuah campur / banjir: fish curry, chicken curry, beef curry, dalcha), spiced fried chicken (ayam goreng berempah), and vegetables (bendi / lady's fingers, cabbage).
-     * Roti Canai: Flaky griddled flatbread (made with ghee/margarine), yellow dhal curry or sambal.
-     * Hainanese Chicken Rice (Nasi Ayam): Fragrant ginger-broth rice, steamed or roasted chicken, cucumber slices, chili-ginger-garlic dip, clear chicken soup.
-     * Char Kway Teow / Mee Goreng: Wok-fried noodles with soy sauce, chili paste, egg, cockles/prawns, bean sprouts, palm oil/lard.
-   - Caloric accuracy: Account for the caloric reality of Southeast Asian cooking methods: deep frying with palm oil, coconut santan, peanut-infused chili sambals, gravies/kuah, and condensed milk in drinks.
-2. Return strictly structured JSON matching this schema:
+STEP 1: IDENTIFY THE DISH. Use the user's words first; otherwise look closely at the photo. Name it the way Malaysians do (e.g. "Nasi Lemak Ayam Goreng", "Roti Canai Kosong + Dhal", "Teh Tarik"). Cues for look-alikes:
+- Nasi lemak: rice in a mound or banana-leaf bungkus, red sambal, ikan bilis + peanuts, cucumber, egg.
+- Nasi kandar / nasi campur: rice covered in mixed curry gravies with several separate dishes; count the dishes.
+- Ayam penyet / gepuk: flattened fried chicken, sambal on the side, tauhu + tempe, cabbage/cucumber.
+- Char kuey teow: flat wide rice noodles, dark and glossy, bean sprouts, cockles/prawns, egg.
+- Mee goreng mamak: yellow noodles, red-orange, tofu cubes, potato, egg, lime. Maggi goreng: thin wavy instant noodles.
+- Curry laksa: orange coconut-curry soup with noodles, tofu puffs. Asam laksa: thick, dark, sour fish broth, no coconut.
+- Roti canai: flaky round flatbread. Roti telur: thicker with egg inside. Thosai: thin, crispy, pale rice crepe.
+- Teh tarik: frothy light brown. Teh O: dark, clear. Kopi: dark brown with milk. Milo: chocolate brown. Bandung: pink.
+
+STEP 2: ESTIMATE FROM THE REFERENCE TABLE. Each line is ONE typical serving as sold in Malaysia/Singapore, and ALREADY includes the cooking oil, santan and gravy (values from lab analysis, the Malaysian Food Composition Database (MyFCD) and Singapore HPB; "est." lines are typical estimates):
+${foodReferenceForPrompt()}
+
+Rules:
+- Start from the matching reference line and scale it to the portion you see (plate and bowl size, amount of rice, number of pieces). Typical servings: 1 bowl rice ~160 g ~210 kcal; a "bungkus" is smaller than a plate.
+- Do NOT add extra oil, santan or sugar on top of a reference value. Adjust upward only for things you can see or the user says: extra rice ("nasi tambah"), "banjir" (gravy flooded), extra sambal, extra pieces, add-ons (telur, ayam, sotong). Adjust downward for half portions, "kurang manis" (about -30% sugar), "kosong" (no sugar), "kurang minyak", skin removed.
+- For a dish not in the table, build it from its parts using the closest lines.
+- Itemise each visible component in "foods" (e.g. rice, chicken, sambal, egg, drink). The items must add up to "total".
+- If the photo is unclear, still give the best estimate, set "confidence": "low", and say what you assumed.
+
+STEP 3: Return strictly structured JSON matching this schema:
 {
   "meal_type": "${mealType || 'lunch'}",
   "meal_name": "Authentic dish name (e.g. Ayam Gepuk Top Global with Rice & Sambal)",
@@ -64,7 +75,7 @@ CRITICAL MALAYSIAN & REGIONAL NUTRITION RULES:
   },
   "confidence": "high",
   "assumptions": ["List of realistic culinary assumptions (e.g. includes oil in sambal gepuk, standard portion of white rice)"],
-  "notes": "Actionable, friendly nutrition advice for this meal (e.g. asking for 'kurang minyak' in sambal or removing chicken skin to save 150-200 kcal)"
+  "notes": "One short, friendly, practical tip for this meal (e.g. ask for 'kuah sikit', 'kurang manis' or skip the skin)"
 }`;
 
       const contents: any[] = [];
@@ -119,6 +130,20 @@ CRITICAL MALAYSIAN & REGIONAL NUTRITION RULES:
     }
 
     // Heuristic intelligent fallback specialized in Malaysian & popular foods when offline
+    // Known Malaysian dishes: use the reference values (MyFCD / HPB / lab).
+    const reference = textPrompt ? referenceMealFromText(textPrompt) : null;
+    if (reference) {
+      return {
+        meal_type: (mealType || 'lunch') as MealAnalysisResult['meal_type'],
+        meal_name: reference.meal_name,
+        foods: reference.foods,
+        total: reference.total,
+        confidence: 'medium',
+        assumptions: reference.assumptions,
+        notes: 'Estimated from standard Malaysian servings. Tap an item to adjust your portion.',
+      };
+    }
+
     const prompt = (textPrompt || '').toLowerCase();
     let mealName = 'Healthy Meal';
     let foods: any[] = [];

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { geminiGenerate } from '@/lib/server/gemini';
+import { foodReferenceForPrompt } from '@/lib/malaysian-food-reference';
 import {
   NaturalLanguageLoggingContext,
   NaturalLanguageParseResult,
@@ -88,6 +89,8 @@ CRITICAL INTERPRETATION RULES:
    - If user says something completely vague like "Had something nice", do NOT guess; set requires_clarification=true.
 4. OVERRIDE RULE: Explicit user text ALWAYS overrides historical patterns. (If user usually eats chicken rice but says "I had a burger today", the food is burger!).
 5. INDEPENDENCE: Calorie targets must NEVER distort estimated calories.
+6. MALAYSIAN FOOD ESTIMATES: The user is in Malaysia and logs mamak, hawker, kopitiam and home food in English, Malay or Manglish (e.g. "2 roti kosong + teh tarik kurang manis", "nasi lemak ayam", "makan nasi kandar banjir"). For meals, start from the matching line below (ONE typical serving as sold; cooking oil, santan and gravy ALREADY included; from lab analysis, MyFCD and HPB) and scale by the quantity and portion the user states. Do NOT add extra oil or sugar on top. Adjust only for what the user says: extra rice, banjir, extra pieces, add-ons, half portion, "kurang manis" (about -30% sugar), "kosong" (no sugar), "kurang minyak". Itemise each food and drink in meal_data.foods; the items must add up to total. A food or drink is ALWAYS intent "meal", never "activity".
+${foodReferenceForPrompt()}
 
 OUTPUT SCHEMA (Return strictly JSON):
 {

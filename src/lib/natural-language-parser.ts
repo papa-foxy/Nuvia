@@ -14,6 +14,7 @@ import {
 } from '@/types/natural-language';
 import { AdaptiveTrainingEngine } from './adaptive-training-engine';
 import { cleanActivityTitle } from './activity-utils';
+import { referenceMealFromText } from './malaysian-food-reference';
 
 /**
  * Normalizes input by removing generic prefixes and excessive whitespace
@@ -134,6 +135,35 @@ export function parseNaturalLanguageLocally(
       requires_clarification: false,
       question_data: { reply },
     };
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 2b. KNOWN MALAYSIAN FOOD (e.g. "2 roti canai and teh tarik")
+  // Checked before activities: words like "roti canai" used to be read as a
+  // workout by the keyword rules below.
+  // ──────────────────────────────────────────────────────────────────────────
+  const referenceMeal = referenceMealFromText(text);
+  if (referenceMeal && !/\b(\d+(\.\d+)?\s?(km|min|mins|minutes)|ran|run|jog|walk|gym|workout|swim|cycle)\b/.test(lower)) {
+    const hour = new Date().getHours();
+    const mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack' =
+      /breakfast|sarapan|pagi/.test(lower) ? 'breakfast'
+      : /lunch|tengah hari|makan tengah/.test(lower) ? 'lunch'
+      : /dinner|makan malam|supper/.test(lower) ? 'dinner'
+      : /snack|minum petang|tea time/.test(lower) ? 'snack'
+      : hour < 11 ? 'breakfast' : hour < 16 ? 'lunch' : hour < 22 ? 'dinner' : 'snack';
+    return {
+      intent: 'meal',
+      confidence: 'medium',
+      requires_clarification: false,
+      meal_data: {
+        meal_type: mealType,
+        meal_name: referenceMeal.meal_name,
+        foods: referenceMeal.foods,
+        total: referenceMeal.total,
+        assumptions: referenceMeal.assumptions,
+        notes: 'Estimated from standard Malaysian servings. Tap an item to adjust your portion.',
+      },
+    } as NaturalLanguageParseResult;
   }
 
   // ──────────────────────────────────────────────────────────────────────────
