@@ -5,6 +5,7 @@ import { Profile, Goal } from '@/types/database';
 import { createClient, isSupabaseConfigured } from './supabase/client';
 import { DataService } from './data-service';
 import { NuviaCache } from './nuvia-cache';
+import type { User as SupabaseAuthUser } from '@supabase/supabase-js';
 
 interface User {
   id: string;
@@ -37,6 +38,42 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+/* ── Saved session snapshot (this device only) ───────────────────────────── */
+
+const SNAPSHOT_KEY = 'nuvia_auth_snapshot';
+
+interface AuthSnapshot {
+  user: User;
+  profile: Profile | null;
+  goals: Goal | null;
+}
+
+function readAuthSnapshot(): AuthSnapshot | null {
+  try {
+    const raw = localStorage.getItem(SNAPSHOT_KEY);
+    const snap = raw ? (JSON.parse(raw) as AuthSnapshot) : null;
+    return snap?.user?.id ? snap : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeAuthSnapshot(snap: AuthSnapshot) {
+  try {
+    localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(snap));
+  } catch {
+    /* storage full or unavailable */
+  }
+}
+
+function clearAuthSnapshot() {
+  try {
+    localStorage.removeItem(SNAPSHOT_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -56,94 +93,129 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setGoals(g);
   };
 
+  // Remember who was signed in, so a relaunch (iOS often discards a PWA in the
+  // background) can show the app right away instead of the splash screen.
+  useEffect(() => {
+    if (isLoading) return;
+    if (user) writeAuthSnapshot({ user, profile, goals });
+    else clearAuthSnapshot();
+  }, [isLoading, user, profile, goals]);
+
   useEffect(() => {
     let authListener: { subscription: { unsubscribe: () => void } } | null = null;
+    let currentUserId: string | null = null;
+    let cancelled = false;
+
+    const toUser = (u: SupabaseAuthUser): User => ({
+      id: u.id,
+      email: u.email || '',
+      avatar_url: u.user_metadata?.avatar_url || u.user_metadata?.picture || null,
+      full_name: u.user_metadata?.full_name || u.user_metadata?.name || null,
+    });
+
+    // Keep the same object when nothing changed, so screens that depend on
+    // `user` don't refetch everything after a silent token refresh.
+    const applyUser = (next: User) =>
+      setUser((prev) =>
+        prev &&
+        prev.id === next.id &&
+        prev.email === next.email &&
+        prev.avatar_url === next.avatar_url &&
+        prev.full_name === next.full_name
+          ? prev
+          : next,
+      );
+
+    const loadProfileAndGoals = async (userId: string) => {
+      const [p, g] = await Promise.all([DataService.getProfile(userId), DataService.getGoals(userId)]);
+      if (cancelled || currentUserId !== userId) return;
+      setProfile(p);
+      setGoals(g);
+    };
+
+    const signedOut = () => {
+      currentUserId = null;
+      setUser(null);
+      setProfile(null);
+      setGoals(null);
+    };
 
     async function initAuth() {
-      setIsLoading(true);
       if (typeof window !== 'undefined') {
         localStorage.removeItem('nuvia_is_demo');
       }
 
+      // 1. Instant start from the last session on this device.
+      const snapshot = readAuthSnapshot();
+      if (snapshot && isSupabaseConfigured()) {
+        currentUserId = snapshot.user.id;
+        setUser(snapshot.user);
+        setProfile(snapshot.profile);
+        setGoals(snapshot.goals);
+        setIsLoading(false);
+      } else {
+        setIsLoading(true);
+      }
+
+      // 2. Confirm the session (and refresh profile/goals) in the background.
       try {
         if (isSupabaseConfigured()) {
           const supabase = createClient();
 
-          // Race Supabase getSession against a 5s timeout so the app never hangs
+          // Race getSession against a timeout so the app never hangs. A
+          // timeout with a saved session keeps the user signed in.
+          const TIMEOUT = Symbol('timeout');
           const sessionResult = await Promise.race([
             supabase.auth.getSession(),
-            new Promise<{ data: { session: null } }>((resolve) =>
-              setTimeout(() => resolve({ data: { session: null } }), 5000)
-            ),
+            new Promise<typeof TIMEOUT>((resolve) => setTimeout(() => resolve(TIMEOUT), 5000)),
           ]);
+          if (cancelled) return;
 
-          const session = sessionResult.data.session;
-
-          if (session?.user) {
-            const avatar = session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture || null;
-            const fullName = session.user.user_metadata?.full_name || session.user.user_metadata?.name || null;
-            setUser({
-              id: session.user.id,
-              email: session.user.email || '',
-              avatar_url: avatar,
-              full_name: fullName,
-            });
-            const [p, g] = await Promise.all([
-              DataService.getProfile(session.user.id),
-              DataService.getGoals(session.user.id),
-            ]);
-            setProfile(p);
-            setGoals(g);
+          if (sessionResult === TIMEOUT) {
+            if (!snapshot) signedOut();
+          } else if (sessionResult.data.session?.user) {
+            const sessionUser = sessionResult.data.session.user;
+            currentUserId = sessionUser.id;
+            applyUser(toUser(sessionUser));
+            if (snapshot && snapshot.user.id === sessionUser.id) {
+              void loadProfileAndGoals(sessionUser.id); // refresh without blocking
+            } else {
+              await loadProfileAndGoals(sessionUser.id);
+            }
           } else {
-            setUser(null);
-            setProfile(null);
-            setGoals(null);
+            signedOut();
           }
 
-          // Listen to real-time auth changes
-          const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+          // Auth changes. Token refreshes (common when the app returns from
+          // the background) keep the same user, so nothing is refetched.
+          const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
             if (session?.user) {
-              const avatar = session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture || null;
-              const fullName = session.user.user_metadata?.full_name || session.user.user_metadata?.name || null;
-              setUser({
-                id: session.user.id,
-                email: session.user.email || '',
-                avatar_url: avatar,
-                full_name: fullName,
-              });
-              const [p, g] = await Promise.all([
-                DataService.getProfile(session.user.id),
-                DataService.getGoals(session.user.id),
-              ]);
-              setProfile(p);
-              setGoals(g);
+              const sameUser = session.user.id === currentUserId;
+              currentUserId = session.user.id;
+              applyUser(toUser(session.user));
+              if (!sameUser) void loadProfileAndGoals(session.user.id);
             } else {
-              setUser(null);
-              setProfile(null);
-              setGoals(null);
+              signedOut();
             }
           });
 
           authListener = listener;
         } else {
-          setUser(null);
-          setProfile(null);
-          setGoals(null);
+          signedOut();
         }
       } catch (err) {
         // If anything throws (network error, etc.), still clear the loader
         console.warn('[Auth] initAuth error:', err);
-        setUser(null);
-        setProfile(null);
-        setGoals(null);
+        if (!snapshot) signedOut();
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     }
 
     initAuth();
 
     return () => {
+      cancelled = true;
       authListener?.subscription.unsubscribe();
     };
   }, []);
@@ -396,6 +468,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     // Clear all cached data so a new login doesn't see stale user data
     NuviaCache.clear();
+    clearAuthSnapshot();
     setUser(null);
     setProfile(null);
     setGoals(null);

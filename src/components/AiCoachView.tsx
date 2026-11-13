@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Send, Utensils, Flame, Activity, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
-import { DataService } from '@/lib/data-service';
+import { DataService, getLocalDateString } from '@/lib/data-service';
 import { AiService, CoachAdviceResult } from '@/lib/ai-service';
 import { FitnessContextService } from '@/lib/fitness-context-service';
 import { IntentProposalCard } from '@/components/adaptive/IntentProposalCard';
@@ -23,7 +23,9 @@ export function AiCoachView() {
 
   useEffect(() => {
     async function loadInsights() {
-      // Load any existing stored recommendations first for instant display
+      // Load any existing stored recommendations first for instant display.
+      // Advice already generated today is reused: asking the AI on every
+      // launch used up the free daily AI limit that photo analysis needs.
       try {
         const storedRecs = await DataService.getRecommendations(user?.id);
         if (storedRecs && storedRecs.length > 0 && storedRecs[0].recommendation) {
@@ -31,6 +33,10 @@ export function AiCoachView() {
             const parsed = JSON.parse(storedRecs[0].recommendation);
             if (parsed.headline && Array.isArray(parsed.priorities)) {
               setAdvice(parsed);
+              if (storedRecs[0].date === getLocalDateString()) {
+                setLoadingAdvice(false);
+                return;
+              }
             }
           } catch {
             // Recommendation was raw text
@@ -60,7 +66,7 @@ export function AiCoachView() {
           if (user?.id) {
             await DataService.addRecommendation({
               user_id: user.id,
-              date: new Date().toISOString().split('T')[0],
+              date: getLocalDateString(),
               recommendation: JSON.stringify(res.advice),
               priority: 1,
             });
@@ -74,7 +80,9 @@ export function AiCoachView() {
     }
 
     loadInsights();
-  }, [user, profile, goals]);
+    // Once per user: profile/goals arriving again (e.g. a background refresh)
+    // must not trigger another AI request.
+  }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleAsk = async (e?: React.FormEvent, customQuery?: string) => {
     if (e) e.preventDefault();

@@ -22,11 +22,10 @@ interface AddMealModalProps {
 }
 
 // Client-side image compressor for mobile camera photos
-function compressImage(fileOrDataUrl: File | string): Promise<string> {
+function compressImage(fileOrDataUrl: File | string, maxDim = 1280, quality = 0.85): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
-      const maxDim = 1280;
       let width = img.width;
       let height = img.height;
       if (width > maxDim || height > maxDim) {
@@ -47,7 +46,7 @@ function compressImage(fileOrDataUrl: File | string): Promise<string> {
         return;
       }
       ctx.drawImage(img, 0, 0, width, height);
-      resolve(canvas.toDataURL('image/jpeg', 0.85));
+      resolve(canvas.toDataURL('image/jpeg', quality));
     };
     img.onerror = reject;
     if (typeof fileOrDataUrl === 'string') {
@@ -347,9 +346,11 @@ export function AddMealModal({
                           <Sparkles className="w-3.5 h-3.5 animate-spin" />
                           <span>Nuvia AI is calculating calories...</span>
                         </div>
-                        {backgroundBusy && (
+                        {backgroundBusy && analysis.mode && (
                           <p className="mt-2 px-3 py-1 rounded-full bg-black/70 text-[11px] font-medium text-white/90">
-                            You can close Nuvia. We&apos;ll finish in the background.
+                            {analysis.mode === 'server'
+                              ? 'You can close Nuvia. We’ll finish in the background.'
+                              : 'Keep Nuvia open until this finishes.'}
                           </p>
                         )}
                       </div>
@@ -518,7 +519,8 @@ export function AddMealModal({
           onSave={async (mealData) => {
             await onSaveMeal({
               ...mealData,
-              image_url: shownImage,
+              // The AI saw the full photo; the meal keeps a smaller copy so lists load fast.
+              image_url: shownImage ? await compressImage(shownImage, 640, 0.75).catch(() => shownImage) : null,
               source: resultSource,
               ai_analysis: shownResult,
             });

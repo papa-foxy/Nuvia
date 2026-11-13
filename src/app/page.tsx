@@ -1,20 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { useAuth } from '@/lib/auth-context';
 import { BottomNav, TabType } from '@/components/Navigation';
-import { LandingView } from '@/components/LandingView';
-import { OnboardingWizard } from '@/components/OnboardingWizard';
 import { DashboardView } from '@/components/DashboardView';
-import { MealsListView } from '@/components/MealsListView';
-import { ExerciseListView } from '@/components/ExerciseListView';
-import { AiCoachView } from '@/components/AiCoachView';
-import { DailySummaryView } from '@/components/DailySummaryView';
-import { GoalsView } from '@/components/GoalsView';
-import { ProfileView } from '@/components/ProfileView';
-import { ProgressView } from '@/components/ProgressView';
-import { AddMealModal } from '@/components/AddMealModal';
-import { AddExerciseModal } from '@/components/AddExerciseModal';
 import { PwaInstallBanner } from '@/components/PwaInstallBanner';
 import { MealAnalysisPill } from '@/components/MealAnalysisPill';
 import { DataService } from '@/lib/data-service';
@@ -31,6 +21,41 @@ import { Flame } from 'lucide-react';
 import { FitnessContextService } from '@/lib/fitness-context-service';
 import { AiService } from '@/lib/ai-service';
 import { NaturalLanguageParseResult } from '@/types/natural-language';
+
+/*
+ * Every tab except Home is its own code chunk, so the first launch only
+ * downloads and runs Home. The chunks are fetched in the background once Home
+ * is on screen (see preloadTabs), so switching tabs stays instant.
+ */
+const loadMeals = () => import('@/components/MealsListView').then((m) => m.MealsListView);
+const loadExercise = () => import('@/components/ExerciseListView').then((m) => m.ExerciseListView);
+const loadProgress = () => import('@/components/ProgressView').then((m) => m.ProgressView);
+const loadCoach = () => import('@/components/AiCoachView').then((m) => m.AiCoachView);
+const loadSummary = () => import('@/components/DailySummaryView').then((m) => m.DailySummaryView);
+const loadGoals = () => import('@/components/GoalsView').then((m) => m.GoalsView);
+const loadProfile = () => import('@/components/ProfileView').then((m) => m.ProfileView);
+
+// Only needed when signed out / onboarding, or once a log sheet is opened.
+const LandingView = dynamic(() => import('@/components/LandingView').then((m) => m.LandingView), { ssr: false });
+const OnboardingWizard = dynamic(() => import('@/components/OnboardingWizard').then((m) => m.OnboardingWizard), { ssr: false });
+const loadAddMeal = () => import('@/components/AddMealModal').then((m) => m.AddMealModal);
+const loadAddExercise = () => import('@/components/AddExerciseModal').then((m) => m.AddExerciseModal);
+const AddMealModal = dynamic(() => import('@/components/AddMealModal').then((m) => m.AddMealModal), { ssr: false });
+const AddExerciseModal = dynamic(() => import('@/components/AddExerciseModal').then((m) => m.AddExerciseModal), { ssr: false });
+
+const MealsListView = dynamic(() => import('@/components/MealsListView').then((m) => m.MealsListView), { ssr: false });
+const ExerciseListView = dynamic(() => import('@/components/ExerciseListView').then((m) => m.ExerciseListView), { ssr: false });
+const ProgressView = dynamic(() => import('@/components/ProgressView').then((m) => m.ProgressView), { ssr: false });
+const AiCoachView = dynamic(() => import('@/components/AiCoachView').then((m) => m.AiCoachView), { ssr: false });
+const DailySummaryView = dynamic(() => import('@/components/DailySummaryView').then((m) => m.DailySummaryView), { ssr: false });
+const GoalsView = dynamic(() => import('@/components/GoalsView').then((m) => m.GoalsView), { ssr: false });
+const ProfileView = dynamic(() => import('@/components/ProfileView').then((m) => m.ProfileView), { ssr: false });
+
+function preloadTabs() {
+  for (const load of [loadAddMeal, loadAddExercise, loadMeals, loadExercise, loadProgress, loadProfile, loadCoach, loadSummary, loadGoals]) {
+    load().catch(() => undefined);
+  }
+}
 
 export default function HomePage() {
   const { user, profile, goals, isLoading, hasCompletedOnboarding, refreshProfileAndGoals } =
@@ -57,6 +82,30 @@ export default function HomePage() {
   const [prefilledExerciseBadge, setPrefilledExerciseBadge] = useState<string | undefined>(undefined);
   const [prefilledExerciseNote, setPrefilledExerciseNote] = useState<string | undefined>(undefined);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  // Tabs mount the first time they're opened (then stay mounted to keep
+  // their state). Before, all eight mounted at launch and each fetched its
+  // own history, and the coach called the AI, before Home could settle.
+  const [visitedTabs, setVisitedTabs] = useState<ReadonlySet<TabType>>(() => new Set([activeTab]));
+  if (!visitedTabs.has(activeTab)) setVisitedTabs(new Set(visitedTabs).add(activeTab));
+  const visited = (tab: TabType) => visitedTabs.has(tab);
+
+  // Log sheets mount when first opened (then stay, keeping their state).
+  const [mealSheetUsed, setMealSheetUsed] = useState(false);
+  const [exerciseSheetUsed, setExerciseSheetUsed] = useState(false);
+  if (isAddMealOpen && !mealSheetUsed) setMealSheetUsed(true);
+  if (isAddExerciseOpen && !exerciseSheetUsed) setExerciseSheetUsed(true);
+
+  // Fetch the other tabs' code once the app has settled.
+  const appReady = !isLoading && !!user;
+  useEffect(() => {
+    if (!appReady) return;
+    const w = window as Window & { requestIdleCallback?: (cb: () => void) => number };
+    const id = w.requestIdleCallback ? w.requestIdleCallback(preloadTabs) : window.setTimeout(preloadTabs, 1500);
+    return () => {
+      if (!w.requestIdleCallback) window.clearTimeout(id);
+    };
+  }, [appReady]);
 
   if (isLoading) {
     return (
@@ -291,49 +340,63 @@ export default function HomePage() {
             </div>
 
             <div style={{ display: activeTab === 'meals' ? 'contents' : 'none' }}>
+              {visited('meals') && (
               <MealsListView
-                onOpenAddMeal={() => setIsAddMealOpen(true)}
-                refreshKey={refreshKey}
-                onMealsChanged={() => {
-                  NuviaCache.invalidatePrefix('today-');
-                  setRefreshKey((k) => k + 1);
-                }}
-              />
+                  onOpenAddMeal={() => setIsAddMealOpen(true)}
+                  refreshKey={refreshKey}
+                  onMealsChanged={() => {
+                    NuviaCache.invalidatePrefix('today-');
+                    setRefreshKey((k) => k + 1);
+                  }}
+                />
+            )}
             </div>
 
             <div style={{ display: activeTab === 'exercise' ? 'contents' : 'none' }}>
+              {visited('exercise') && (
               <ExerciseListView
-                onOpenAddExercise={() => setIsAddExerciseOpen(true)}
-                onOpenAddMeal={() => setIsAddMealOpen(true)}
-                onNavigateTab={setActiveTab}
-                refreshKey={refreshKey}
-                onWorkoutFinished={() => setRefreshKey((k) => k + 1)}
-              />
+                  onOpenAddExercise={() => setIsAddExerciseOpen(true)}
+                  onOpenAddMeal={() => setIsAddMealOpen(true)}
+                  onNavigateTab={setActiveTab}
+                  refreshKey={refreshKey}
+                  onWorkoutFinished={() => setRefreshKey((k) => k + 1)}
+                />
+            )}
             </div>
 
             <div style={{ display: activeTab === 'progress' ? 'contents' : 'none' }}>
+              {visited('progress') && (
               <ProgressView onNavigateTab={setActiveTab} refreshKey={refreshKey} />
+            )}
             </div>
 
             <div style={{ display: activeTab === 'coach' ? 'contents' : 'none' }}>
+              {visited('coach') && (
               <AiCoachView />
+            )}
             </div>
 
             <div style={{ display: activeTab === 'summary' ? 'contents' : 'none' }}>
+              {visited('summary') && (
               <DailySummaryView refreshKey={refreshKey} />
+            )}
             </div>
 
             <div style={{ display: activeTab === 'goals' ? 'contents' : 'none' }}>
+              {visited('goals') && (
               <GoalsView onNavigateTab={setActiveTab} />
+            )}
             </div>
 
             <div style={{ display: activeTab === 'profile' ? 'contents' : 'none' }}>
+              {visited('profile') && (
               <ProfileView
-                onReplayOnboarding={() => setShowOnboarding(true)}
-                onOpenAddMeal={() => setIsAddMealOpen(true)}
-                onOpenAddExercise={() => setIsAddExerciseOpen(true)}
-                onNavigateTab={(tab) => setActiveTab(tab as any)}
-              />
+                  onReplayOnboarding={() => setShowOnboarding(true)}
+                  onOpenAddMeal={() => setIsAddMealOpen(true)}
+                  onOpenAddExercise={() => setIsAddExerciseOpen(true)}
+                  onNavigateTab={(tab) => setActiveTab(tab as any)}
+                />
+            )}
             </div>
         </main>
 
@@ -349,37 +412,41 @@ export default function HomePage() {
         />
 
         {/* MODALS */}
-        <AddMealModal
-          isOpen={isAddMealOpen}
-          initialMealPrompt={prefilledMealPrompt}
-          initialAnalysisResult={prefilledMealResult}
-          initialContextBadge={prefilledMealBadge}
-          initialContextNote={prefilledMealNote}
-          onClose={() => {
-            setIsAddMealOpen(false);
-            setPrefilledMealPrompt('');
-            setPrefilledMealResult(null);
-            setPrefilledMealBadge(undefined);
-            setPrefilledMealNote(undefined);
-          }}
-          onSaveMeal={handleSaveMeal}
-        />
+        {mealSheetUsed && (
+          <AddMealModal
+            isOpen={isAddMealOpen}
+            initialMealPrompt={prefilledMealPrompt}
+            initialAnalysisResult={prefilledMealResult}
+            initialContextBadge={prefilledMealBadge}
+            initialContextNote={prefilledMealNote}
+            onClose={() => {
+              setIsAddMealOpen(false);
+              setPrefilledMealPrompt('');
+              setPrefilledMealResult(null);
+              setPrefilledMealBadge(undefined);
+              setPrefilledMealNote(undefined);
+            }}
+            onSaveMeal={handleSaveMeal}
+          />
+        )}
 
-        <AddExerciseModal
-          isOpen={isAddExerciseOpen}
-          prefilledExercisePrompt={prefilledExercisePrompt}
-          initialParsedResult={prefilledExerciseResult}
-          initialContextBadge={prefilledExerciseBadge}
-          initialContextNote={prefilledExerciseNote}
-          onClose={() => {
-            setIsAddExerciseOpen(false);
-            setPrefilledExercisePrompt('');
-            setPrefilledExerciseResult(null);
-            setPrefilledExerciseBadge(undefined);
-            setPrefilledExerciseNote(undefined);
-          }}
-          onSaveExercise={handleSaveExercise}
-        />
+        {exerciseSheetUsed && (
+          <AddExerciseModal
+            isOpen={isAddExerciseOpen}
+            prefilledExercisePrompt={prefilledExercisePrompt}
+            initialParsedResult={prefilledExerciseResult}
+            initialContextBadge={prefilledExerciseBadge}
+            initialContextNote={prefilledExerciseNote}
+            onClose={() => {
+              setIsAddExerciseOpen(false);
+              setPrefilledExercisePrompt('');
+              setPrefilledExerciseResult(null);
+              setPrefilledExerciseBadge(undefined);
+              setPrefilledExerciseNote(undefined);
+            }}
+            onSaveExercise={handleSaveExercise}
+          />
+        )}
       </div>
     </div>
   );

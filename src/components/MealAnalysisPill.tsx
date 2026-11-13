@@ -50,7 +50,13 @@ export function MealAnalysisPill({ hidden, onReview }: { hidden: boolean; onRevi
           <>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-fg">Analyzing your meal…</p>
-              <p className="text-xs text-muted truncate">You can leave the app. We&apos;ll keep going.</p>
+              <p className="text-xs text-muted truncate">
+                {analysis.mode === 'server'
+                  ? 'You can leave the app. We’ll keep going.'
+                  : analysis.mode === 'browser'
+                    ? 'Keep Nuvia open until this finishes.'
+                    : 'Sending your photo…'}
+              </p>
             </div>
             <RefreshCw className="w-4 h-4 text-green-ink animate-spin shrink-0" aria-hidden="true" />
           </>

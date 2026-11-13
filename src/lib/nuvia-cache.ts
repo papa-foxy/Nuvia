@@ -46,6 +46,76 @@ if (typeof window !== 'undefined') {
   setInterval(gc, 120_000);
 }
 
+/* ── Persistence ───────────────────────────────────────────────────────────
+ * The screens' main data is also saved to localStorage, so reopening the app
+ * (iOS often discards a PWA in the background) shows the last data instantly
+ * and refreshes it in the background, instead of a loading state.
+ * Restored entries are always stale, so they are refetched straight away.
+ */
+const PERSIST_KEY = 'nuvia_cache_v1';
+const PERSIST_PREFIXES = ['today-summary:', 'today-meals:', 'today-activity:', 'workout-routines:', 'exercise-logs:'];
+const PERSIST_MAX_AGE = 3 * 86_400_000; // keep restored data for up to 3 days
+const RESTORED_GC = 30 * 60_000;
+/** Inline photos (base64) would fill localStorage; restored meals show them after the refresh. */
+const MAX_PERSISTED_STRING = 4_000;
+
+const shouldPersist = (key: string) => PERSIST_PREFIXES.some((p) => key.startsWith(p));
+
+function slim(value: unknown): unknown {
+  if (typeof value === 'string') return value.length > MAX_PERSISTED_STRING ? null : value;
+  if (Array.isArray(value)) return value.map(slim);
+  if (value && typeof value === 'object') {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value)) out[k] = slim(v);
+    return out;
+  }
+  return value;
+}
+
+let saveTimer: ReturnType<typeof setTimeout> | null = null;
+
+function saveNow() {
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = null;
+  try {
+    const entries: [string, { data: unknown; storedAt: number }][] = [];
+    for (const [key, entry] of store) {
+      if (shouldPersist(key)) entries.push([key, { data: slim(entry.data), storedAt: entry.storedAt }]);
+    }
+    localStorage.setItem(PERSIST_KEY, JSON.stringify(entries));
+  } catch {
+    /* storage full or unavailable: the in-memory cache still works */
+  }
+}
+
+function scheduleSave() {
+  if (typeof window === 'undefined' || saveTimer) return;
+  saveTimer = setTimeout(saveNow, 800);
+}
+
+function restore() {
+  try {
+    const raw = localStorage.getItem(PERSIST_KEY);
+    if (!raw) return;
+    const now = Date.now();
+    for (const [key, { data, storedAt }] of JSON.parse(raw) as [string, { data: unknown; storedAt: number }][]) {
+      if (store.has(key) || now - storedAt > PERSIST_MAX_AGE) continue;
+      store.set(key, { data, storedAt, staleAt: 0, expiresAt: now + RESTORED_GC });
+    }
+  } catch {
+    /* corrupt or unavailable: start empty */
+  }
+}
+
+if (typeof window !== 'undefined') {
+  restore();
+  // Save before iOS suspends or discards the app.
+  window.addEventListener('pagehide', saveNow);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') saveNow();
+  });
+}
+
 export const NuviaCache = {
   /**
    * Retrieve a cached entry.
@@ -75,6 +145,7 @@ export const NuviaCache = {
       staleAt:   now + staleTime,
       expiresAt: now + gcTime,
     });
+    if (shouldPersist(key)) scheduleSave();
   },
 
   /**
@@ -83,6 +154,7 @@ export const NuviaCache = {
    */
   invalidate(key: string): void {
     store.delete(key);
+    if (shouldPersist(key)) scheduleSave();
   },
 
   /**
@@ -95,6 +167,7 @@ export const NuviaCache = {
     for (const key of store.keys()) {
       if (key.startsWith(prefix)) store.delete(key);
     }
+    scheduleSave();
   },
 
   /**
@@ -109,6 +182,11 @@ export const NuviaCache = {
   /** Clear the entire cache (use only on sign-out). */
   clear(): void {
     store.clear();
+    try {
+      localStorage.removeItem(PERSIST_KEY);
+    } catch {
+      /* ignore */
+    }
   },
 
   /** Expose the store size for debugging. */

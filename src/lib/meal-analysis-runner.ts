@@ -3,24 +3,30 @@
 /**
  * Runs meal-photo analysis so it survives closing the sheet or the whole app.
  *
- * Signed in: the server runs the analysis as a background job
- * (/api/ai/meal-jobs) and keeps going after the app is closed; we only poll
- * for the result. The pending job (and the photo, for the result screen) is
- * kept in localStorage, so reopening Nuvia picks it up again.
+ * Background mode (signed in, meal_analysis_jobs table set up): the job id is
+ * created here and saved before anything is sent, then the server analyzes
+ * the photo in the background (/api/ai/meal-jobs) and keeps going after the
+ * app is closed. Reopening Nuvia polls that same id; if the upload never
+ * reached the server, it is sent again with the same id (never analyzed twice).
  *
- * Demo / no server jobs: the analysis runs from the browser, and if the app is
- * closed mid-way it simply restarts on the next launch.
+ * Fallback mode (demo, or background jobs unavailable): the analysis runs from
+ * the browser, so Nuvia must stay open; the UI says so. If iOS cuts the
+ * request off, it is retried when the app comes back instead of failing.
  */
 import { useSyncExternalStore } from 'react';
-import { AiService, type MealAnalysisResult } from './ai-service';
+import type { MealAnalysisResult } from './ai-service';
 import { createClient, isSupabaseConfigured } from './supabase/client';
 
 export type MealAnalysisStatus = 'idle' | 'analyzing' | 'done' | 'failed';
 
 export interface MealAnalysisState {
   status: MealAnalysisStatus;
-  /** Server job id; null when the analysis runs from the browser. */
+  /** Job id (created on this device). */
   jobId: string | null;
+  /** 'server' = keeps running when the app closes; 'browser' = Nuvia must stay open. */
+  mode: 'server' | 'browser' | null;
+  /** True once the server has accepted the job. */
+  submitted: boolean;
   mealType: string;
   textPrompt?: string;
   image: string | null;
@@ -31,16 +37,29 @@ export interface MealAnalysisState {
 
 const STORAGE_KEY = 'nuvia_meal_analysis';
 const POLL_MS = 2500;
-/** Give up polling a job after this long (the server itself stops at ~60 s). */
-const GIVE_UP_MS = 3 * 60_000;
+/** Give up only after this long without any answer from the server while the app is open. */
+const GIVE_UP_MS = 10 * 60_000;
 const FAILED_MSG = "We couldn't analyze this right now. Please try again.";
 
-const IDLE: MealAnalysisState = { status: 'idle', jobId: null, mealType: 'lunch', image: null, startedAt: 0 };
+const IDLE: MealAnalysisState = {
+  status: 'idle',
+  jobId: null,
+  mode: null,
+  submitted: false,
+  mealType: 'lunch',
+  image: null,
+  startedAt: 0,
+};
 
 let state: MealAnalysisState = IDLE;
 let loaded = false;
-let running = false;
+let busySince = 0; // when a submit / browser request started (0 = none)
+let browserAttempts = 0;
+/** iOS can leave a request hanging forever after suspending the app. */
+const BUSY_STALE_MS = 45_000;
+const isBusy = () => busySince > 0 && Date.now() - busySince < BUSY_STALE_MS;
 let pollTimer: ReturnType<typeof setTimeout> | null = null;
+let lastAnswerAt = 0;
 const listeners = new Set<() => void>();
 
 function load() {
@@ -71,21 +90,38 @@ function persist() {
   }
 }
 
-function set(next: MealAnalysisState) {
-  state = next;
+function set(patch: Partial<MealAnalysisState>) {
+  state = { ...state, ...patch };
   persist();
   listeners.forEach((l) => l());
 }
 
-async function accessToken(): Promise<string | null> {
+const fail = (error = FAILED_MSG) => set({ status: 'failed', error });
+
+function newId(): string {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+  });
+}
+
+async function accessToken(forceRefresh = false): Promise<string | null> {
   if (!isSupabaseConfigured()) return null;
   try {
-    const { data } = await createClient().auth.getSession();
+    const auth = createClient().auth;
+    if (forceRefresh) {
+      const { data } = await auth.refreshSession();
+      return data.session?.access_token ?? null;
+    }
+    const { data } = await auth.getSession();
     return data.session?.access_token ?? null;
   } catch {
     return null;
   }
 }
+
+const isVisible = () => typeof document === 'undefined' || document.visibilityState === 'visible';
 
 function stopPolling() {
   if (pollTimer) clearTimeout(pollTimer);
@@ -97,24 +133,81 @@ function schedulePoll(delay = POLL_MS) {
   pollTimer = setTimeout(() => void poll(), delay);
 }
 
-async function poll() {
-  const { jobId, startedAt } = state;
-  if (state.status !== 'analyzing' || !jobId) return;
-  const token = await accessToken();
+const body = () =>
+  JSON.stringify({
+    id: state.jobId,
+    imageBase64: state.image || undefined,
+    mimeType: 'image/jpeg',
+    textPrompt: state.textPrompt,
+    mealType: state.mealType,
+  });
+
+/** Sends the job to the server (again, if a previous upload was cut off). */
+async function submit() {
+  if (isBusy() || state.status !== 'analyzing') return;
+  const { jobId } = state;
+  busySince = Date.now();
   try {
-    const res = await fetch(`/api/ai/meal-jobs?id=${encodeURIComponent(jobId)}`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-      cache: 'no-store',
-    });
-    if (state.jobId !== jobId) return; // a newer analysis replaced this one
-    if (res.status === 404) {
-      set({ ...state, status: 'failed', error: FAILED_MSG });
+    let token = await accessToken();
+    if (!token) {
+      await runInBrowser();
       return;
     }
+    let res = await fetch('/api/ai/meal-jobs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: body(),
+    });
+    if (res.status === 401 && (token = await accessToken(true))) {
+      res = await fetch('/api/ai/meal-jobs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: body(),
+      });
+    }
+    if (state.jobId !== jobId) return; // replaced by a newer analysis
     if (res.ok) {
+      lastAnswerAt = Date.now();
+      set({ mode: 'server', submitted: true });
+      schedulePoll();
+      return;
+    }
+    if (res.status === 503 || res.status === 401) {
+      // Background jobs aren't available (e.g. table not set up): analyze here.
+      busySince = 0;
+      await runInBrowser();
+      return;
+    }
+    const err = (await res.json().catch(() => null)) as { error?: string } | null;
+    fail(err?.error);
+  } catch {
+    // Upload cut off (app closed or offline). It's sent again on resume.
+    if (state.jobId === jobId && isVisible()) schedulePoll(4000);
+  } finally {
+    busySince = 0;
+  }
+}
+
+async function poll() {
+  const { jobId } = state;
+  if (state.status !== 'analyzing' || !jobId || state.mode === 'browser') return;
+  if (!state.submitted) {
+    void submit();
+    return;
+  }
+  let token = await accessToken();
+  try {
+    const url = `/api/ai/meal-jobs?id=${encodeURIComponent(jobId)}`;
+    let res = await fetch(url, { headers: token ? { Authorization: `Bearer ${token}` } : {}, cache: 'no-store' });
+    if (res.status === 401 && (token = await accessToken(true))) {
+      res = await fetch(url, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' });
+    }
+    if (state.jobId !== jobId) return;
+    if (res.ok) {
+      lastAnswerAt = Date.now();
       const job = (await res.json()) as { status: string; result?: MealAnalysisResult; error?: string };
       if (job.status === 'done' && job.result) {
-        set({ ...state, status: 'done', result: job.result });
+        set({ status: 'done', result: job.result });
         void fetch(`/api/ai/meal-jobs?id=${encodeURIComponent(jobId)}`, {
           method: 'DELETE',
           headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -122,96 +215,88 @@ async function poll() {
         return;
       }
       if (job.status === 'failed') {
-        set({ ...state, status: 'failed', error: job.error || FAILED_MSG });
+        fail(job.error);
         return;
       }
+    } else if (res.status === 404) {
+      // The server has no such job (upload lost): send it again with the same id.
+      if (state.image || state.textPrompt) {
+        set({ submitted: false });
+        void submit();
+      } else {
+        fail();
+      }
+      return;
     }
   } catch {
     /* offline or app suspended: try again */
   }
-  if (Date.now() - startedAt > GIVE_UP_MS) {
-    set({ ...state, status: 'failed', error: FAILED_MSG });
+  if (isVisible() && lastAnswerAt && Date.now() - lastAnswerAt > GIVE_UP_MS) {
+    fail();
     return;
   }
-  schedulePoll();
+  if (isVisible()) schedulePoll();
 }
 
-/** Browser-side analysis (demo mode, or when background jobs are unavailable). */
-async function runLocally() {
-  if (running) return;
-  running = true;
-  const startedAt = state.startedAt;
+/** Browser-side analysis: only while Nuvia stays open. */
+async function runInBrowser() {
+  if (isBusy() && state.mode === 'browser') return;
+  const { jobId } = state;
+  busySince = Date.now();
+  browserAttempts++;
+  set({ mode: 'browser' });
   try {
-    const result = await AiService.analyzeMeal({
-      imageBase64: state.image || undefined,
-      mimeType: 'image/jpeg',
-      textPrompt: state.textPrompt,
-      mealType: state.mealType,
+    const res = await fetch('/api/ai/analyze-meal', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: body(),
     });
-    if (state.startedAt === startedAt && state.status === 'analyzing') set({ ...state, status: 'done', result });
-  } catch (err) {
-    if (state.startedAt === startedAt && state.status === 'analyzing') {
-      set({ ...state, status: 'failed', error: err instanceof Error ? err.message : FAILED_MSG });
+    const json = (await res.json().catch(() => null)) as { success?: boolean; data?: MealAnalysisResult; error?: string } | null;
+    if (state.jobId !== jobId || state.status !== 'analyzing') return;
+    if (res.ok && json?.success && json.data) set({ status: 'done', result: json.data });
+    else fail(json?.error);
+  } catch {
+    // iOS cut the request off when the app was closed: try once more (now if
+    // the app is open, otherwise when it comes back) before showing an error.
+    if (state.jobId === jobId) {
+      if (browserAttempts >= 3) fail();
+      else if (isVisible()) setTimeout(() => void runInBrowser(), 1500);
     }
   } finally {
-    running = false;
+    busySince = 0;
   }
-}
-
-async function begin() {
-  const token = await accessToken();
-  const startedAt = state.startedAt;
-  if (token) {
-    try {
-      const res = await fetch('/api/ai/meal-jobs', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          imageBase64: state.image || undefined,
-          mimeType: 'image/jpeg',
-          textPrompt: state.textPrompt,
-          mealType: state.mealType,
-        }),
-      });
-      if (state.startedAt !== startedAt) return;
-      if (res.ok) {
-        const { id } = (await res.json()) as { id: string };
-        set({ ...state, jobId: id });
-        schedulePoll();
-        return;
-      }
-    } catch {
-      /* fall through to browser-side analysis */
-    }
-    if (state.startedAt !== startedAt) return;
-  }
-  await runLocally();
 }
 
 export const MealAnalysisRunner = {
   start(params: { image: string | null; textPrompt?: string; mealType: string }) {
     load();
     stopPolling();
-    set({
+    busySince = 0;
+    browserAttempts = 0;
+    lastAnswerAt = Date.now();
+    // Saved (with its id) before anything is sent, so a closed app can resume it.
+    state = {
+      ...IDLE,
       status: 'analyzing',
-      jobId: null,
+      jobId: newId(),
       mealType: params.mealType,
       textPrompt: params.textPrompt,
       image: params.image,
       startedAt: Date.now(),
-    });
-    void begin();
+    };
+    persist();
+    listeners.forEach((l) => l());
+    void submit();
   },
 
   /** Picks up an analysis left running when the app was closed or backgrounded. */
   resume() {
     load();
-    if (state.status !== 'analyzing') {
-      listeners.forEach((l) => l());
-      return;
-    }
-    if (state.jobId) void poll();
-    else void runLocally();
+    listeners.forEach((l) => l());
+    if (state.status !== 'analyzing' || isBusy()) return;
+    lastAnswerAt = lastAnswerAt || Date.now();
+    if (state.mode === 'browser') void runInBrowser();
+    else void poll();
   },
 
   retry() {
@@ -221,7 +306,10 @@ export const MealAnalysisRunner = {
 
   clear() {
     stopPolling();
-    set(IDLE);
+    busySince = 0;
+    state = IDLE;
+    persist();
+    listeners.forEach((l) => l());
   },
 };
 

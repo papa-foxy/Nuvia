@@ -95,14 +95,23 @@ export function DashboardView({
       if (background) {
         setIsFetching(true);
       }
+      // The AI contexts read the whole history; load them after the screen
+      // is up instead of making Home wait for them.
+      void Promise.all([
+        FitnessContextService.getFitnessContext(userId),
+        FitnessContextService.getNaturalLanguageLoggingContext(userId),
+      ])
+        .then(([fitCtx, nlCtx]) => {
+          setFitnessContext(fitCtx);
+          setNlContext(nlCtx);
+        })
+        .catch((err) => console.warn('[Home] context load failed:', err));
       try {
-        const [s, m, e, r, fitCtx, nlCtx] = await Promise.all([
+        const [s, m, e, r] = await Promise.all([
           DataService.getDailySummary(userId, todayStr),
           DataService.getMeals(userId, todayStr),
           DataService.getExerciseLogs(userId, todayStr),
           DataService.getWorkoutRoutines(userId),
-          FitnessContextService.getFitnessContext(userId),
-          FitnessContextService.getNaturalLanguageLoggingContext(userId),
         ]);
 
         // Write each result to the cache with a 90-second stale window
@@ -113,8 +122,6 @@ export function DashboardView({
         NuviaCache.set(workoutRoutinesKey(userId), r, opts);
 
         applyData(s, m, e, r);
-        setFitnessContext(fitCtx);
-        setNlContext(nlCtx);
       } finally {
         setIsInitialLoading(false);
         setIsFetching(false);

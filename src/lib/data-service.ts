@@ -198,6 +198,10 @@ function saveLocalState(state: LocalState) {
   }
 }
 
+/** Every meal column except the inline photo (image_url). */
+const MEAL_HISTORY_COLUMNS =
+  'id, user_id, meal_type, meal_time, source, description, calories, protein_g, carbs_g, fat_g, confidence, ai_analysis, created_at, meal_items(*)';
+
 export const DataService = {
   // =========================================================================
   // PROFILES
@@ -408,7 +412,9 @@ export const DataService = {
         const supabase = createClient();
         let query = supabase
           .from('meals')
-          .select('*, meal_items(*)')
+          // A day's meals include photos; full history leaves them out (they
+          // are stored inline and would download megabytes on every load).
+          .select(dateStr ? '*, meal_items(*)' : MEAL_HISTORY_COLUMNS)
           .eq('user_id', userId)
           .order('meal_time', { ascending: false });
 
@@ -793,8 +799,10 @@ export const DataService = {
     const date = dateStr || getLocalDateString();
 
     // Compute live from verified meals and exercise logs
-    const meals = await this.getMeals(userId, date);
-    const exercises = await this.getExerciseLogs(userId, date);
+    const [meals, exercises] = await Promise.all([
+      this.getMeals(userId, date),
+      this.getExerciseLogs(userId, date),
+    ]);
 
     const calories_consumed = Math.round(meals.reduce((acc, m) => acc + (Number(m.calories) || 0), 0));
     const protein_consumed = Math.round(meals.reduce((acc, m) => acc + (Number(m.protein_g) || 0), 0));
@@ -1692,3 +1700,28 @@ export const DataService = {
     NuviaCache.invalidate(`fitness-context:${effectiveUserId}`);
   },
 };
+
+const DEDUPED_READS = [
+  'getProfile',
+  'getGoals',
+  'getMeals',
+  'getExerciseLogs',
+  'getDailySummary',
+  'getWorkoutRoutines',
+  'getStreakData',
+  'getActivityMap',
+  'getCustomExercises',
+] as const;
+
+const inFlight = new Map<string, Promise<unknown>>();
+for (const name of DEDUPED_READS) {
+  const original = DataService[name] as (...args: unknown[]) => Promise<unknown>;
+  (DataService as Record<string, unknown>)[name] = function (...args: unknown[]) {
+    const key = `${name}:${JSON.stringify(args)}`;
+    const pending = inFlight.get(key);
+    if (pending) return pending;
+    const promise = original.apply(DataService, args).finally(() => inFlight.delete(key));
+    inFlight.set(key, promise);
+    return promise;
+  };
+}

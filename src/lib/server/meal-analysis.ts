@@ -99,7 +99,9 @@ CRITICAL MALAYSIAN & REGIONAL NUTRITION RULES:
       const text = await geminiGenerate({
         contents,
         generationConfig: { responseMimeType: 'application/json', temperature: 0.2 },
-        timeoutMs: 20_000, // photos take a little longer
+        // Photos take a little longer. All attempts together stay under the
+        // 60 s function limit (7 + 14 + 14 + 7 s).
+        timeoutMs: 14_000,
         task: 'meal-analysis',
       });
       if (text) {
@@ -108,6 +110,11 @@ CRITICAL MALAYSIAN & REGIONAL NUTRITION RULES:
         } catch {
           console.warn('[meal-analysis] Gemini returned invalid JSON');
         }
+      }
+      // A photo can't be estimated without the AI: say so instead of
+      // inventing a generic meal.
+      if (cleanBase64) {
+        throw new Error('Nuvia AI is busy right now (the daily AI limit may be used up). Please try again in a while.');
       }
     }
 

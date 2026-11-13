@@ -8,12 +8,15 @@ export const maxDuration = 60;
 /** A job still "pending" after this long died with its function; report it as failed. */
 const STALE_MS = 2 * 60_000;
 const FAILED_MSG = "We couldn't analyze this right now. Please try again.";
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * POST — start analyzing a meal in the background. Returns { id } right away;
  *        the analysis keeps running on the server even if the app is closed.
  *        503 { fallback: true } means background jobs aren't available (no
  *        service role or table missing): the client analyzes directly instead.
+ *        The client sends its own job id, so a re-sent upload (the app was
+ *        closed mid-upload) never starts a second analysis.
  */
 export async function POST(request: NextRequest) {
   const userId = await userIdFromRequest(request);
@@ -32,28 +35,48 @@ export async function POST(request: NextRequest) {
     mealType: typeof body.mealType === 'string' ? body.mealType : undefined,
   };
 
+  const clientId = typeof body.id === 'string' && UUID_RE.test(body.id) ? body.id : undefined;
+  if (clientId) {
+    const { data: existing, error: lookupError } = await supabase
+      .from('meal_analysis_jobs')
+      .select('id, user_id')
+      .eq('id', clientId)
+      .maybeSingle();
+    if (lookupError) {
+      console.warn('[meal-jobs] jobs table unavailable:', lookupError.message);
+      return NextResponse.json({ fallback: true, reason: 'jobs-unavailable' }, { status: 503 });
+    }
+    if (existing) {
+      // Already running or finished (re-sent upload): don't analyze twice.
+      return existing.user_id === userId
+        ? NextResponse.json({ id: existing.id })
+        : NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
+  }
+
   const { data: job, error } = await supabase
     .from('meal_analysis_jobs')
-    .insert({ user_id: userId })
+    .insert(clientId ? { id: clientId, user_id: userId } : { user_id: userId })
     .select('id')
     .single();
   if (error || !job) {
     console.warn('[meal-jobs] could not create job:', error?.message);
-    return NextResponse.json({ fallback: true }, { status: 503 });
+    return NextResponse.json({ fallback: true, reason: 'jobs-unavailable' }, { status: 503 });
   }
 
   after(async () => {
-    let update: Record<string, unknown>;
+    let update: Record<string, unknown> = { status: 'failed', error: FAILED_MSG };
     try {
       update = { status: 'done', result: await analyzeMeal(params) };
     } catch (err) {
       console.warn('[meal-jobs] analysis failed:', err);
-      update = { status: 'failed', error: FAILED_MSG };
+      update = { status: 'failed', error: err instanceof Error && err.message ? err.message : FAILED_MSG };
+    } finally {
+      await supabase
+        .from('meal_analysis_jobs')
+        .update({ ...update, updated_at: new Date().toISOString() })
+        .eq('id', job.id);
     }
-    await supabase
-      .from('meal_analysis_jobs')
-      .update({ ...update, updated_at: new Date().toISOString() })
-      .eq('id', job.id);
     // Housekeeping: drop this user's jobs older than a day.
     await supabase
       .from('meal_analysis_jobs')

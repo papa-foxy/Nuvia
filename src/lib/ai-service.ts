@@ -122,10 +122,18 @@ export const AiService = {
   }> {
     try {
 
+      // The coach only reads each meal's type and description; sending whole
+      // meal objects uploaded every past meal on each request.
+      const recentMeals = (params.recentMeals || [])
+        .slice(0, 30)
+        .map((m: { meal_type?: string; description?: string | null }) => ({
+          meal_type: m.meal_type,
+          description: m.description,
+        }));
       const res = await fetch('/api/ai/ai-coach', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(params),
+        body: JSON.stringify({ ...params, recentMeals }),
       });
 
       if (!res.ok) {
