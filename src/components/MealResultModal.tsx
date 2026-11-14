@@ -47,6 +47,8 @@ export function MealResultModal({
 }: MealResultModalProps) {
   const [mealType, setMealType] = useState<MealType>(initialData.meal_type || 'lunch');
   const [mealName, setMealName] = useState(initialData.meal_name || 'Logged Meal');
+  // Set by the AI when it recognised one of the user's usual items.
+  const matchedUsual = (initialData.assumptions || []).some((a) => /matched your usual/i.test(a));
   const [foods, setFoods] = useState(initialData.foods || []);
   const [saving, setSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
@@ -194,12 +196,22 @@ export function MealResultModal({
 
           {/* Meal Title */}
           <div>
+            {matchedUsual && (
+              <span className="inline-flex items-center gap-1 mb-1.5 px-2 py-0.5 rounded-full bg-accent/15 text-green-ink text-[11px] font-semibold">
+                <Sparkles className="w-3 h-3" />
+                Your usual
+              </span>
+            )}
             <input
               type="text"
               value={mealName}
               onChange={(e) => setMealName(e.target.value)}
+              aria-label="Meal name"
               className="bg-transparent text-fg font-bold text-2xl tracking-tight focus:outline-none w-full"
             />
+            <p className="text-[11px] text-subtle mt-0.5">
+              Not right? Tap the name to fix it. Nuvia remembers for next time.
+            </p>
           </div>
 
           {/* Primary Nutrition Stats (Typography Hierarchy) */}

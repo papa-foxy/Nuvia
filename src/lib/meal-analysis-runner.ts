@@ -133,6 +133,11 @@ function schedulePoll(delay = POLL_MS) {
   pollTimer = setTimeout(() => void poll(), delay);
 }
 
+/** "Fri 8:12am": lets the AI match items to the user's usual time of day. */
+function localTimeLabel(d = new Date()): string {
+  return d.toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' }).replace(/[  ]/g, ' ').toLowerCase();
+}
+
 const body = () =>
   JSON.stringify({
     id: state.jobId,
@@ -140,6 +145,8 @@ const body = () =>
     mimeType: 'image/jpeg',
     textPrompt: state.textPrompt,
     mealType: state.mealType,
+    localTime: localTimeLabel(new Date(state.startedAt || Date.now())),
+    tzOffset: -new Date().getTimezoneOffset(),
   });
 
 /** Sends the job to the server (again, if a previous upload was cut off). */
@@ -246,9 +253,11 @@ async function runInBrowser() {
   browserAttempts++;
   set({ mode: 'browser' });
   try {
+    // Signed in: the server adds this user's usual items and corrections.
+    const token = await accessToken();
     const res = await fetch('/api/ai/analyze-meal', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
       body: body(),
     });
     const json = (await res.json().catch(() => null)) as { success?: boolean; data?: MealAnalysisResult; error?: string } | null;

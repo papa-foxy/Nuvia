@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { geminiGenerate } from '@/lib/server/gemini';
 import { foodReferenceForPrompt } from '@/lib/malaysian-food-reference';
+import { supabaseAdmin, userIdFromRequest } from '@/lib/server/supabase-admin';
+import { loadPersonalContext, personalOptionsFromBody } from '@/lib/server/meal-personalization-request';
 import {
   NaturalLanguageLoggingContext,
   NaturalLanguageParseResult,
@@ -22,10 +24,12 @@ function cleanJsonString(raw: string): string {
 
 export async function POST(req: NextRequest) {
   try {
-    const { text, context } = (await req.json()) as {
+    const body = (await req.json()) as {
       text: string;
       context?: NaturalLanguageLoggingContext;
+      tzOffset?: number;
     };
+    const { text, context } = body;
 
     if (!text || typeof text !== 'string' || !text.trim()) {
       return NextResponse.json(
@@ -38,6 +42,11 @@ export async function POST(req: NextRequest) {
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (apiKey) {
+      // Signed in: add the user's usual items and past corrections.
+      const userId = await userIdFromRequest(req);
+      const admin = userId ? supabaseAdmin() : null;
+      const personalContext =
+        userId && admin ? await loadPersonalContext(admin, userId, personalOptionsFromBody(body)) : '';
       // Build compact context representations
       const frequentMealsContext = (context?.frequent_meals || [])
         .slice(0, 6)
@@ -160,7 +169,14 @@ OUTPUT SCHEMA (Return strictly JSON):
       const rawText = await geminiGenerate({
         contents: [
           {
-            parts: [{ text: systemPrompt }, { text: `User natural language input: "${cleanedText}"` }],
+            parts: [
+              { text: systemPrompt },
+              ...(personalContext
+                ? [{ text: `${personalContext}
+If the input names or plainly means one of these usual items (e.g. "my latte", "the usual coffee"), use that item's name and usual values.` }]
+                : []),
+              { text: `User natural language input: "${cleanedText}"` },
+            ],
           },
         ],
         generationConfig: { responseMimeType: 'application/json', temperature: 0.1 },

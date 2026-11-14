@@ -1,3 +1,4 @@
+import { createClient, isSupabaseConfigured } from './supabase/client';
 import type {
   NaturalLanguageLoggingContext,
   NaturalLanguageParseResult,
@@ -44,6 +45,17 @@ export interface CoachAdviceResult {
     priority: number;
     message: string;
   }[];
+}
+
+/** The signed-in user's token, so AI routes can use their own history. */
+async function authHeaders(): Promise<Record<string, string>> {
+  if (!isSupabaseConfigured()) return {};
+  try {
+    const { data } = await createClient().auth.getSession();
+    return data.session ? { Authorization: `Bearer ${data.session.access_token}` } : {};
+  } catch {
+    return {};
+  }
 }
 
 export const AiService = {
@@ -165,8 +177,8 @@ export const AiService = {
     try {
       const res = await fetch('/api/ai/parse-natural-input', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(params),
+        headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
+        body: JSON.stringify({ ...params, tzOffset: -new Date().getTimezoneOffset() }),
       });
 
       if (!res.ok) {

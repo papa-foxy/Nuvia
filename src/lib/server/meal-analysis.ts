@@ -12,7 +12,15 @@ export interface MealAnalysisParams {
   mimeType?: string;
   textPrompt?: string;
   mealType?: string;
+  /** What this user usually logs and past corrections (from meal-personalization). */
+  personalContext?: string;
 }
+
+const PERSONAL_RULES = `
+PERSONALISATION (most important when it applies):
+- The block below is THIS user's own history. If the photo or description plausibly shows one of their usual items (same kind of food or drink, similar look, typical time of day), identify it AS that item: use their exact name (keep qualifiers like "no stevia", "less ice", "oat milk"), their usual portion and their usual calories and macros. Add the assumption "Matched your usual <name>".
+- Past corrections show what the AI got wrong before. Never repeat a corrected guess for the same kind of photo: e.g. if "Kopi Ais" was corrected to "Latte (no stevia)", an iced milky coffee is their latte, not kopi ais.
+- Only identify something else when it is clearly a different food or drink.`;
 
 function cleanJsonString(raw: string): string {
   let cleaned = raw.trim();
@@ -24,7 +32,7 @@ function cleanJsonString(raw: string): string {
   return cleaned.trim();
 }
 
-export async function analyzeMeal({ imageBase64, mimeType, textPrompt, mealType }: MealAnalysisParams): Promise<MealAnalysisResult> {
+export async function analyzeMeal({ imageBase64, mimeType, textPrompt, mealType, personalContext }: MealAnalysisParams): Promise<MealAnalysisResult> {
   {
     const apiKey = process.env.GEMINI_API_KEY;
 
@@ -80,6 +88,11 @@ STEP 3: Return strictly structured JSON matching this schema:
 
       const contents: any[] = [];
       const parts: any[] = [{ text: systemPrompt }];
+      if (personalContext) {
+        parts.push({ text: `${PERSONAL_RULES}
+
+${personalContext}` });
+      }
 
       if (textPrompt) {
         parts.push({ text: `User meal description: "${textPrompt}"` });

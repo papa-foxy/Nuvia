@@ -1,6 +1,7 @@
 import { after, NextRequest, NextResponse } from 'next/server';
 import { analyzeMeal } from '@/lib/server/meal-analysis';
 import { supabaseAdmin, userIdFromRequest } from '@/lib/server/supabase-admin';
+import { loadPersonalContext, personalOptionsFromBody } from '@/lib/server/meal-personalization-request';
 
 /** Gemini can take a while on big photos; after() runs within this limit. */
 export const maxDuration = 60;
@@ -67,7 +68,9 @@ export async function POST(request: NextRequest) {
   after(async () => {
     let update: Record<string, unknown> = { status: 'failed', error: FAILED_MSG };
     try {
-      update = { status: 'done', result: await analyzeMeal(params) };
+      // The user's usual items and past corrections (e.g. their daily latte).
+      const personalContext = await loadPersonalContext(supabase, userId, personalOptionsFromBody(body));
+      update = { status: 'done', result: await analyzeMeal({ ...params, personalContext }) };
     } catch (err) {
       console.warn('[meal-jobs] analysis failed:', err);
       update = { status: 'failed', error: err instanceof Error && err.message ? err.message : FAILED_MSG };
