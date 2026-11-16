@@ -24,7 +24,12 @@ import type {
   AdaptiveScheduleChange,
   UserIntentAnalysis,
   UserIntentClassification,
+  RescheduleDayOption,
+  RoutineReadiness,
 } from '../types/adaptive-training';
+
+/** Muscles at or above this are treated as recovered. */
+const READY_AT = 90;
 
 function getLocalDateString(d: Date = new Date()): string {
   const year = d.getFullYear();
@@ -265,8 +270,10 @@ export class AdaptiveTrainingEngine {
     logs: ExerciseLog[];
     adaptations?: AdaptiveScheduleChange[];
     trainedMusclesLast48h?: string[];
+    /** Muscle recovery model; when given, days are picked by real recovery. */
+    readinessFor?: RoutineReadiness;
   }): RescheduleProposal[] {
-    const { routines, logs, adaptations = [], trainedMusclesLast48h = [] } = params;
+    const { routines, logs, adaptations = [], trainedMusclesLast48h = [], readinessFor } = params;
     const proposals: RescheduleProposal[] = [];
 
     const now = new Date();
@@ -307,6 +314,7 @@ export class AdaptiveTrainingEngine {
             logs,
             adaptations,
             trainedMusclesLast48h,
+            readinessFor,
           });
 
           proposals.push({
@@ -318,6 +326,7 @@ export class AdaptiveTrainingEngine {
             reason: `You missed ${comparison.dayName}'s ${cleanActivityTitle(routine.title).title} session.`,
             recovery_analysis: candidate.recoveryNote,
             conflict_warning: candidate.warning,
+            day_options: candidate.dayOptions,
             options: [
               {
                 label: `Move to ${candidate.targetDayName}`,
@@ -354,11 +363,58 @@ export class AdaptiveTrainingEngine {
     logs: ExerciseLog[];
     adaptations: AdaptiveScheduleChange[];
     trainedMusclesLast48h: string[];
-  }): { targetDate: string; targetDayName: string; recoveryNote: string; warning?: string } {
-    const { routine, fromDate, routines, logs, adaptations, trainedMusclesLast48h } = params;
+    readinessFor?: RoutineReadiness;
+  }): {
+    targetDate: string;
+    targetDayName: string;
+    recoveryNote: string;
+    warning?: string;
+    dayOptions?: RescheduleDayOption[];
+  } {
+    const { routine, fromDate, routines, logs, adaptations, trainedMusclesLast48h, readinessFor } = params;
 
     const now = new Date();
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] as const;
+
+    // With the recovery model: look at the next 7 days, prefer a free day on
+    // which this routine's muscles are recovered. The user can still pick any day.
+    if (readinessFor) {
+      const options: RescheduleDayOption[] = [];
+      for (let offset = 0; offset < 7; offset++) {
+        const d = new Date(now);
+        d.setDate(now.getDate() + offset);
+        const at = offset === 0 ? now : new Date(d.getFullYear(), d.getMonth(), d.getDate(), 8, 0, 0);
+        const date = getLocalDateString(d);
+        const state = this.determineDailyTrainingState({ targetDate: date, routines, logs, adaptations });
+        const plannedRoutine =
+          state === 'scheduled_workout'
+            ? routines.find((r) => (r.days || []).some((x) => x.toLowerCase() === dayNames[d.getDay()].toLowerCase()))
+            : undefined;
+        options.push({
+          date,
+          label: offset === 0 ? 'Today' : offset === 1 ? 'Tomorrow' : dayNames[d.getDay()],
+          planned: state === 'completed_workout' ? 'Already trained' : plannedRoutine ? cleanActivityTitle(plannedRoutine.title).title : undefined,
+          isRestDay: state === 'rest_day' || state === 'optional_activity',
+          readiness: Math.max(0, Math.min(100, Math.round(readinessFor(routine, at)))),
+          recommended: false,
+        });
+      }
+      const pick =
+        options.find((o) => o.isRestDay && o.readiness >= READY_AT) ||
+        options.find((o) => o.readiness >= READY_AT && !o.planned) ||
+        options.reduce((best, o) => (o.readiness > best.readiness ? o : best), options[0]);
+      pick.recommended = true;
+      const ready = pick.readiness >= READY_AT;
+      return {
+        targetDate: pick.date,
+        targetDayName: pick.label,
+        recoveryNote: ready
+          ? `Its muscles are recovered by ${pick.label === 'Today' || pick.label === 'Tomorrow' ? pick.label.toLowerCase() : pick.label}.`
+          : `Its muscles are about ${pick.readiness}% recovered by then. Fine if you feel good; go a bit lighter.`,
+        warning: pick.planned ? `${pick.label} already has ${pick.planned}.` : undefined,
+        dayOptions: options,
+      };
+    }
 
     // Scan next 4 days
     for (let offset = 0; offset <= 4; offset++) {
@@ -427,6 +483,9 @@ export class AdaptiveTrainingEngine {
     } | null;
     trainedMusclesLast48h?: string[];
     cardioHabitDays?: string[];
+      readinessFor?: RoutineReadiness;
+    /** Leave missed sessions out (the app shows them separately) and answer for today only. */
+    ignoreMissed?: boolean;
   }): NextTrainingAction {
     const {
       routines,
@@ -464,9 +523,10 @@ export class AdaptiveTrainingEngine {
       logs,
       adaptations,
       trainedMusclesLast48h,
+      readinessFor: params.readinessFor,
     });
 
-    if (missedProposals.length > 0) {
+    if (missedProposals.length > 0 && !params.ignoreMissed) {
       return {
         type: 'reschedule',
         proposal: missedProposals[0],

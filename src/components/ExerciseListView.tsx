@@ -45,6 +45,8 @@ import { cleanActivityTitle, getActivityDisplayData } from '@/lib/activity-utils
 import { FitnessContextService } from '@/lib/fitness-context-service';
 import { NuviaFitnessContext } from '@/types/fitness-context';
 import { NuviaNextActionCard } from './adaptive/NuviaNextActionCard';
+import { MissedSessionNotice } from './adaptive/MissedSessionNotice';
+import type { RescheduleProposal } from '@/types/adaptive-training';
 import { WeeklyAdaptationStrip } from './adaptive/WeeklyAdaptationStrip';
 import { WeeklyReportModal } from './adaptive/WeeklyReportModal';
 import { NuviaBottomSheet } from './NuviaBottomSheet';
@@ -383,6 +385,13 @@ export function ExerciseListView({
     }
   };
 
+  // A missed session is shown as a small note under today's activity.
+  const missedProposal: RescheduleProposal | null = (() => {
+    const next = fitnessContext?.adaptive?.next_action;
+    if (next && next.type === 'reschedule') return next.proposal;
+    return fitnessContext?.adaptive?.pending_proposals?.[0] ?? null;
+  })();
+
   const handleNextActionClick = (action: any) => {
     if (action.type === 'start_workout') {
       const routine = routines.find((r) => r.id === action.routineId);
@@ -628,16 +637,6 @@ export function ExerciseListView({
             onOpenWeeklyReport={() => setIsWeeklyReportOpen(true)}
           />
 
-          {/* ── NUVIA NEXT ACTION CARD ──────────────────────────────────── */}
-          {fitnessContext?.adaptive?.next_action && (
-            <NuviaNextActionCard
-              action={fitnessContext.adaptive.next_action}
-              onActionClick={handleNextActionClick}
-              onAcceptProposal={handleAcceptAdaptiveProposal}
-              onUndoProposal={handleUndoAdaptation}
-            />
-          )}
-
           {/* ── ACTIVITY SUMMARY HERO (Large Typography) ─────────────────── */}
           <div className="space-y-1">
             <span className="text-[11px] font-bold tracking-wider text-muted uppercase block">
@@ -687,6 +686,21 @@ export function ExerciseListView({
               )}
             </div>
           </div>
+
+          {/* ── MISSED SESSION: a quiet note under today, not the main card ── */}
+          {missedProposal && (
+            <MissedSessionNotice proposal={missedProposal} onChoose={handleAcceptAdaptiveProposal} />
+          )}
+
+          {/* ── NUVIA NEXT ACTION CARD (what to do today) ───────────────── */}
+          {fitnessContext?.adaptive?.next_action && fitnessContext.adaptive.next_action.type !== 'reschedule' && (
+            <NuviaNextActionCard
+              action={fitnessContext.adaptive.next_action}
+              onActionClick={handleNextActionClick}
+              onAcceptProposal={handleAcceptAdaptiveProposal}
+              onUndoProposal={handleUndoAdaptation}
+            />
+          )}
 
           <div className="h-px bg-fg/[0.06] w-full" />
 

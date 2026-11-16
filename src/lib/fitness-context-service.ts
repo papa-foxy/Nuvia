@@ -26,7 +26,8 @@ import {
   ExercisePerformanceRecord,
   RecoveryState,
 } from '@/types/fitness-context';
-import { ExercisePerformance, LoggedSet } from '@/types/routine';
+import { ExercisePerformance, LoggedSet, WorkoutRoutine } from '@/types/routine';
+import { muscleStatus, plannedMuscles } from './muscle-recovery';
 import {
   NaturalLanguageLoggingContext,
   FrequentMealSummary,
@@ -474,6 +475,15 @@ export class FitnessContextService {
       cardioHabitDays,
     });
 
+    // Same recovery model as the Workout tab's muscle map: how recovered the
+    // routine's main muscles are at a given time (the least recovered one counts).
+    const readinessFor = (routine: WorkoutRoutine, at: Date) => {
+      const targets = plannedMuscles(routine.exercises || []).map((m) => m.id);
+      if (targets.length === 0) return 100;
+      const status = new Map(muscleStatus(allLogs, at).map((m) => [m.id, m.percent]));
+      return Math.min(...targets.map((id) => status.get(id) ?? 100));
+    };
+
     const nextAction = AdaptiveTrainingEngine.calculateNextTrainingAction({
       routines,
       logs: allLogs,
@@ -481,6 +491,9 @@ export class FitnessContextService {
       activeSession,
       trainedMusclesLast48h,
       cardioHabitDays,
+      readinessFor,
+      // Today's action; missed sessions are offered separately (pending_proposals).
+      ignoreMissed: true,
     });
 
     const missedProposals = AdaptiveTrainingEngine.detectMissedWorkouts({
@@ -488,6 +501,7 @@ export class FitnessContextService {
       logs: allLogs,
       adaptations,
       trainedMusclesLast48h,
+      readinessFor,
     });
 
     const weeklyView = AdaptiveTrainingEngine.generateWeeklyAdaptationView({

@@ -103,7 +103,23 @@ export interface RescheduleProposal {
   recovery_analysis: string;
   conflict_warning?: string;
   options: RescheduleOption[];
+  /** The next 7 days with how recovered this routine's muscles will be (when known). */
+  day_options?: RescheduleDayOption[];
 }
+
+export interface RescheduleDayOption {
+  date: string; // YYYY-MM-DD
+  label: string; // 'Today' | 'Tomorrow' | weekday
+  /** What is already planned that day, if anything. */
+  planned?: string;
+  isRestDay: boolean;
+  /** 0–100: least-recovered muscle of the routine on that day. */
+  readiness: number;
+  recommended: boolean;
+}
+
+/** How recovered a routine's muscles are at a given moment (0–100). */
+export type RoutineReadiness = (routine: import('./routine').WorkoutRoutine, at: Date) => number;
 
 export interface PlannedVsActualComparison {
   date: string; // YYYY-MM-DD
