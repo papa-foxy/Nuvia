@@ -95,7 +95,7 @@ export function DateFilterBar({
     <>
       {/* Date Filter Bar Pill */}
       <div
-        className={`flex items-center gap-1.5 bg-card px-2 py-1.5 rounded-full border border-fg/[0.08] shadow-sm ${className}`}
+        className={`w-full flex items-center justify-between gap-1.5 bg-card px-2 py-1.5 rounded-full border border-line/60 ${className}`}
       >
         {/* Previous Day */}
         <button
@@ -110,7 +110,7 @@ export function DateFilterBar({
         {/* Date / Calendar Trigger Button */}
         <button
           onClick={() => setIsCalendarOpen(true)}
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold text-fg hover:bg-fg/[0.08] transition-colors group cursor-pointer"
+          className="flex-1 flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-full text-sm font-semibold text-fg hover:bg-fg/[0.08] transition-colors group cursor-pointer"
           title="Open calendar to pick a date"
           type="button"
         >
