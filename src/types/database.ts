@@ -50,6 +50,19 @@ export interface Goal {
   updated_at?: string;
 }
 
+/** A weight check-in (one per day). */
+export interface BodyCheckin {
+  id: string;
+  user_id: string;
+  date: string; // YYYY-MM-DD
+  weight_kg: number;
+  waist_cm: number | null;
+  /** How you feel, 1 (drained) to 5 (great). */
+  energy: number | null;
+  note: string | null;
+  created_at?: string;
+}
+
 export interface Meal {
   id: string;
   user_id: string;

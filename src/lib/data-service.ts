@@ -1,4 +1,5 @@
 import {
+  BodyCheckin,
   Profile,
   Goal,
   Meal,
@@ -142,6 +143,7 @@ interface LocalState {
   recommendations: AiRecommendation[];
   customExercises: CustomExercise[];
   scheduleAdaptations?: AdaptiveScheduleChange[];
+  bodyCheckins?: BodyCheckin[];
 }
 
 function getLocalState(): LocalState {
@@ -202,7 +204,87 @@ function saveLocalState(state: LocalState) {
 const MEAL_HISTORY_COLUMNS =
   'id, user_id, meal_type, meal_time, source, description, calories, protein_g, carbs_g, fat_g, confidence, ai_analysis, created_at, meal_items(*)';
 
+const sortCheckins = (list: BodyCheckin[]) => [...list].sort((a, b) => a.date.localeCompare(b.date));
+
 export const DataService = {
+  // =========================================================================
+  // BODY CHECK-INS (weight over time). Supabase table body_checkins, with a
+  // copy on the device so it works offline and before the table exists.
+  // =========================================================================
+  async getCheckins(userId?: string): Promise<BodyCheckin[]> {
+    const state = getLocalState();
+    const local = (state.bodyCheckins || []).filter((c) => !userId || c.user_id === userId);
+    if (isSupabaseConfigured() && userId && userId !== DEMO_USER_ID) {
+      try {
+        const { data, error } = await createClient()
+          .from('body_checkins')
+          .select('id, user_id, date, weight_kg, waist_cm, energy, note, created_at')
+          .eq('user_id', userId)
+          .order('date', { ascending: true })
+          .limit(400);
+        if (!error && data) {
+          const remote = (data as BodyCheckin[]).map((c) => ({
+            ...c,
+            weight_kg: Number(c.weight_kg),
+            waist_cm: c.waist_cm === null ? null : Number(c.waist_cm),
+          }));
+          // Keep any check-ins saved on this device while offline.
+          const byDate = new Map(local.map((c) => [c.date, c]));
+          for (const c of remote) byDate.set(c.date, c);
+          return sortCheckins([...byDate.values()]);
+        }
+      } catch (err) {
+        console.warn('Supabase getCheckins error:', err);
+      }
+    }
+    return sortCheckins(local);
+  },
+
+  /** Saves a check-in (replacing one on the same day) and updates the profile weight. */
+  async saveCheckin(input: Omit<BodyCheckin, 'id' | 'created_at'>): Promise<BodyCheckin> {
+    let saved: BodyCheckin = { ...input, id: `checkin-${input.date}`, created_at: new Date().toISOString() };
+    if (isSupabaseConfigured() && input.user_id && input.user_id !== DEMO_USER_ID) {
+      try {
+        const { data, error } = await createClient()
+          .from('body_checkins')
+          .upsert(input, { onConflict: 'user_id,date' })
+          .select('id, user_id, date, weight_kg, waist_cm, energy, note, created_at')
+          .single();
+        if (!error && data) saved = { ...(data as BodyCheckin), weight_kg: Number(data.weight_kg) };
+        else if (error) console.warn('Supabase saveCheckin error:', error.message);
+      } catch (err) {
+        console.warn('Supabase saveCheckin error:', err);
+      }
+    }
+    const state = getLocalState();
+    state.bodyCheckins = [...(state.bodyCheckins || []).filter((c) => !(c.user_id === input.user_id && c.date === input.date)), saved];
+    saveLocalState(state);
+
+    // The latest check-in is the current weight (used for targets).
+    const all = await this.getCheckins(input.user_id);
+    const latest = all[all.length - 1];
+    if (latest && latest.date === input.date) {
+      const profile = await this.getProfile(input.user_id);
+      if (profile && Number(profile.weight_kg) !== input.weight_kg) {
+        await this.saveProfile({ ...profile, weight_kg: input.weight_kg });
+      }
+    }
+    return saved;
+  },
+
+  async deleteCheckin(userId: string, date: string): Promise<void> {
+    if (isSupabaseConfigured() && userId && userId !== DEMO_USER_ID) {
+      try {
+        await createClient().from('body_checkins').delete().eq('user_id', userId).eq('date', date);
+      } catch (err) {
+        console.warn('Supabase deleteCheckin error:', err);
+      }
+    }
+    const state = getLocalState();
+    state.bodyCheckins = (state.bodyCheckins || []).filter((c) => !(c.user_id === userId && c.date === date));
+    saveLocalState(state);
+  },
+
   // =========================================================================
   // PROFILES
   // =========================================================================

@@ -17,6 +17,12 @@ export interface CalculationInput {
   goal: UserGoal;
   target_weight_kg?: number | null;
   weekly_pace_kg?: number; // 0.25 | 0.5 | 0.75 | 1.0 kg/week (default 0.5)
+  /**
+   * Correction from progress check-ins (kcal/day, + or -): the user's real
+   * energy burn differs from the formula. Applied on top of the goal, so the
+   * planned pace stays the same. Stored per user on the device.
+   */
+  calorie_adjustment_kcal?: number;
 }
 
 /** Why the calorie target could not follow the requested pace exactly. */
@@ -189,8 +195,12 @@ export function calculateTargets(input: CalculationInput): CalculationResult {
   }
 
   calorieTarget = Math.round(calorieTarget);
+  // The pace follows the planned gap; a check-in correction only moves the
+  // target to match the user's real energy burn.
+  const expectedPace = dailyKcalToPace(calorieTarget - tdee);
+  const correction = Math.round(input.calorie_adjustment_kcal || 0);
+  if (correction) calorieTarget = Math.max(minCalories, calorieTarget + correction);
   const adjustment = calorieTarget - tdee;
-  const expectedPace = dailyKcalToPace(adjustment);
   // A limit that only trims a few kcal does not change the pace, so do not report it.
   if ((goal === 'lose_weight' || goal === 'gain_weight') && expectedPace >= pace) {
     limitedBy = 'none';
@@ -279,6 +289,33 @@ export function getStoredWeeklyPace(
   return DEFAULT_WEEKLY_PACE_KG;
 }
 
+// ── Calorie correction from progress check-ins ────────────────────────────────
+
+const CORRECTION_STORAGE_PREFIX = 'nuvia_calorie_correction_';
+export const MAX_CALORIE_CORRECTION = 600;
+
+/** kcal/day added to (or taken from) the formula target after check-ins; 0 when none. */
+export function getCalorieCorrection(userId?: string | null): number {
+  if (!userId || typeof localStorage === 'undefined') return 0;
+  try {
+    const v = Number(localStorage.getItem(CORRECTION_STORAGE_PREFIX + userId));
+    return Number.isFinite(v) ? Math.max(-MAX_CALORIE_CORRECTION, Math.min(MAX_CALORIE_CORRECTION, Math.round(v))) : 0;
+  } catch {
+    return 0;
+  }
+}
+
+export function storeCalorieCorrection(userId: string | null | undefined, kcal: number): void {
+  if (!userId || typeof localStorage === 'undefined') return;
+  try {
+    const v = Math.max(-MAX_CALORIE_CORRECTION, Math.min(MAX_CALORIE_CORRECTION, Math.round(kcal)));
+    if (v === 0) localStorage.removeItem(CORRECTION_STORAGE_PREFIX + userId);
+    else localStorage.setItem(CORRECTION_STORAGE_PREFIX + userId, String(v));
+  } catch {
+    /* storage unavailable */
+  }
+}
+
 export function storeWeeklyPace(userId: string | null | undefined, pace: number): void {
   if (!userId || !isValidPace(pace) || typeof localStorage === 'undefined') return;
   try {
@@ -362,6 +399,7 @@ export function getUserCalculationContext(
     goal: profile?.goal || ESTIMATE_FALLBACKS.goal,
     target_weight_kg: targetWeight,
     weekly_pace_kg: paceOverride ?? getStoredWeeklyPace(profile),
+    calorie_adjustment_kcal: getCalorieCorrection(profile?.id),
     missing_fields: getMissingProfileFields(profile),
   };
 }

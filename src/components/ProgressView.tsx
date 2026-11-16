@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Dumbbell, Trophy, Scale, Activity } from 'lucide-react';
+import { Dumbbell, Trophy, Activity } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { DataService } from '@/lib/data-service';
 import { NuviaCache, exerciseLogsKey, workoutRoutinesKey } from '@/lib/nuvia-cache';
@@ -10,6 +10,7 @@ import type { WorkoutRoutine } from '@/types/routine';
 import type { StreakData } from '@/types/streak';
 import type { TabType } from '@/components/Navigation';
 import { ScreenHeader } from '@/components/ScreenHeader';
+import { BodyProgressSection } from '@/components/progress/BodyProgressSection';
 import {
   BarChart,
   Card,
@@ -51,7 +52,7 @@ export function ProgressView({
   onNavigateTab: (tab: TabType) => void;
   refreshKey?: number;
 }) {
-  const { user, profile, goals } = useAuth();
+  const { user, profile, goals, refreshProfileAndGoals } = useAuth();
   const userId = user?.id;
 
   const [logs, setLogs] = useState<ExerciseLog[] | null>(
@@ -129,8 +130,6 @@ export function ProgressView({
   const hasAny = (logs?.length ?? 0) > 0;
   const maxMuscle = muscles[0]?.sets ?? 1;
 
-  const weight = profile?.weight_kg ?? null;
-  const target = goals?.target_weight_kg ?? profile?.target_weight_kg ?? null;
 
   return (
     <div className="flex-1 flex flex-col gap-6 pb-6 pt-4 w-full max-w-md mx-auto">
@@ -291,48 +290,15 @@ export function ProgressView({
         </Card>
       </section>
 
-      {/* Body weight */}
-      <section className="px-5 space-y-3">
-        <SectionHeader title="Body weight" action="Edit" onAction={() => onNavigateTab('profile')} />
-        <Card className="p-4">
-          {weight ? (
-            <div className="flex items-end justify-between gap-4">
-              <div>
-                <p className="text-xs font-semibold text-muted">Current</p>
-                <p className="mt-1 text-[28px] leading-none font-extrabold tabular-nums text-fg">
-                  {weight}
-                  <span className="ml-1 text-sm font-semibold text-muted">kg</span>
-                </p>
-              </div>
-              {target ? (
-                <div className="text-right">
-                  <p className="text-xs font-semibold text-muted">Target</p>
-                  <p className="mt-1 text-lg font-extrabold tabular-nums text-fg">{target} kg</p>
-                  <p className="text-[11px] font-semibold text-subtle tabular-nums">
-                    {Math.abs(weight - target) < 0.05
-                      ? 'At target'
-                      : `${Math.abs(weight - target).toFixed(1)} kg to ${weight > target ? 'lose' : 'gain'}`}
-                  </p>
-                </div>
-              ) : null}
-            </div>
-          ) : (
-            <EmptyState
-              compact
-              icon={Scale}
-              title="No weight recorded"
-              body="Add your current weight in Profile."
-              actionLabel="Open profile"
-              onAction={() => onNavigateTab('profile')}
-            />
-          )}
-          {weight ? (
-            <p className="mt-4 pt-3 border-t border-line text-[11px] text-subtle leading-relaxed">
-              Nuvia stores your current weight only, so there is no history chart yet. Update it in Profile when it changes.
-            </p>
-          ) : null}
-        </Card>
-      </section>
+      {/* Weight check-ins and the on-track assessment */}
+      <BodyProgressSection
+        userId={userId}
+        profile={profile}
+        goals={goals}
+        routines={routines}
+        logs={logs}
+        onChanged={refreshProfileAndGoals}
+      />
     </div>
   );
 }
