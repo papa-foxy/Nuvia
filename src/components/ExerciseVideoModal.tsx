@@ -31,8 +31,12 @@ export function ExerciseVideoModal({
   const youtubeWatchUrl = `https://www.youtube.com/watch?v=${targetVideoId}`;
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
-      <div className="w-full max-w-lg bg-card border border-fg/[0.12] rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl animate-slideUp flex flex-col max-h-[92vh]">
+    // Same placement as the shared bottom sheet: above the nav, below the status bar.
+    <div
+      className="fixed inset-x-0 top-0 z-[45] bg-black/75 backdrop-blur-sm flex items-end justify-center animate-fadeIn"
+      style={{ bottom: 'calc(var(--bottom-nav-height, 56px) + env(safe-area-inset-bottom, 0px))' }}
+    >
+      <div className="w-full max-w-lg bg-card border-t border-x border-fg/[0.12] rounded-t-[28px] overflow-hidden shadow-2xl animate-slideUp flex flex-col max-h-[var(--sheet-max-h)]">
         {/* Modal Header */}
         <div className="p-4 sm:p-5 flex items-start justify-between border-b border-fg/[0.08] bg-surface">
           <div className="flex items-center gap-3 pr-2">

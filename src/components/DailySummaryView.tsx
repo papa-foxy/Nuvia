@@ -7,6 +7,7 @@ import { DailySummary, Meal, ExerciseLog } from '@/types/database';
 import { MacroDonutChart } from './MacroDonutChart';
 import { DateFilterBar } from './DateFilterBar';
 import { ScreenHeader } from './ScreenHeader';
+import { DayItemsSummary } from './summary/DayItemsSummary';
 import {
   NuviaCache,
   todaySummaryKey,
@@ -207,32 +208,8 @@ export function DailySummaryView({ refreshKey }: { refreshKey?: number } = {}) {
         </p>
       </div>
 
-      {/* Day Logged Items List */}
-      <div className="space-y-2">
-        <p className="text-xs font-semibold text-muted uppercase tracking-wider">
-          Items Logged ({meals.length + exercises.length})
-        </p>
-        <div className="ios-card divide-y divide-fg/[0.06] overflow-hidden">
-          {meals.map((m) => (
-            <div key={m.id} className="p-3.5 flex justify-between items-center text-xs">
-              <div>
-                <p className="font-semibold text-fg">{m.description}</p>
-                <p className="text-[11px] text-muted capitalize">{m.meal_type} · {m.protein_g}g protein</p>
-              </div>
-              <span className="font-semibold text-fg">{m.calories} kcal</span>
-            </div>
-          ))}
-          {exercises.map((e) => (
-            <div key={e.id} className="p-3.5 flex justify-between items-center text-xs">
-              <div>
-                <p className="font-semibold text-fg">{e.exercise_type}</p>
-                <p className="text-[11px] text-muted">{e.duration_minutes} min</p>
-              </div>
-              <span className="font-semibold text-orange-ink">~{e.calories_burned} kcal</span>
-            </div>
-          ))}
-        </div>
-      </div>
+      {/* What was eaten (by meal, with every item) and activity */}
+      <DayItemsSummary meals={meals} exercises={exercises} />
     </div>
   );
 }

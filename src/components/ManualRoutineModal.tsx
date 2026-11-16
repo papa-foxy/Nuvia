@@ -177,8 +177,12 @@ export function ManualRoutineModal({
   );
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
-      <div className="w-full max-w-lg bg-card border border-fg/[0.12] rounded-t-3xl sm:rounded-3xl p-5 sm:p-6 shadow-2xl animate-slideUp max-h-[92vh] flex flex-col">
+    // Same placement as the shared bottom sheet: above the nav, below the status bar.
+    <div
+      className="fixed inset-x-0 top-0 z-[45] bg-black/75 backdrop-blur-sm flex items-end justify-center animate-fadeIn"
+      style={{ bottom: 'calc(var(--bottom-nav-height, 56px) + env(safe-area-inset-bottom, 0px))' }}
+    >
+      <div className="w-full max-w-lg bg-card border-t border-x border-fg/[0.12] rounded-t-[28px] p-5 sm:p-6 shadow-2xl animate-slideUp max-h-[var(--sheet-max-h)] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-fg/[0.08]">
           <div>
@@ -384,8 +388,11 @@ export function ManualRoutineModal({
 
         {/* ── Exercise Picker Drawer ── */}
         {showPicker && (
-          <div className="fixed inset-0 z-[110] bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
-            <div className="w-full max-w-md bg-card border border-fg/[0.12] rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl max-h-[85vh] flex flex-col animate-slideUp">
+          <div
+            className="fixed inset-x-0 top-0 z-[46] bg-black/75 backdrop-blur-sm flex items-end justify-center animate-fadeIn"
+            style={{ bottom: 'calc(var(--bottom-nav-height, 56px) + env(safe-area-inset-bottom, 0px))' }}
+          >
+            <div className="w-full max-w-md bg-card border-t border-x border-fg/[0.12] rounded-t-[28px] p-5 shadow-2xl max-h-[var(--sheet-max-h)] flex flex-col animate-slideUp">
               <div className="flex items-center justify-between pb-3 border-b border-fg/[0.08]">
                 <h4 className="text-sm font-bold text-fg">Choose Exercise</h4>
                 <button

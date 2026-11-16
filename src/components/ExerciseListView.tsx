@@ -47,6 +47,7 @@ import { NuviaFitnessContext } from '@/types/fitness-context';
 import { NuviaNextActionCard } from './adaptive/NuviaNextActionCard';
 import { WeeklyAdaptationStrip } from './adaptive/WeeklyAdaptationStrip';
 import { WeeklyReportModal } from './adaptive/WeeklyReportModal';
+import { NuviaBottomSheet } from './NuviaBottomSheet';
 
 interface ExerciseListViewProps {
   onOpenAddExercise: () => void;
@@ -1326,51 +1327,43 @@ export function ExerciseListView({
       {/* ══════════════════════════════════════════════════════════════════ */}
       {/* ── RECOVERY GUIDANCE BOTTOM SHEET ──────────────────────────────── */}
       {/* ══════════════════════════════════════════════════════════════════ */}
-      {showRecoverySheet && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
-          <div className="w-full max-w-md bg-card border-t sm:border border-fg/10 rounded-t-3xl sm:rounded-3xl p-5 space-y-4 max-h-[85vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-2 border-b border-fg/10">
-              <div>
-                <h3 className="text-base font-bold text-fg">Why is Recovery Crucial?</h3>
-                <p className="text-[11px] text-muted">The science of muscle adaptation</p>
-              </div>
-              <button
-                onClick={() => setShowRecoverySheet(false)}
-                className="w-8 h-8 rounded-full bg-fg/5 hover:bg-fg/10 flex items-center justify-center text-zinc-400 cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="space-y-3 text-xs text-zinc-300 leading-relaxed">
+      <NuviaBottomSheet
+        isOpen={showRecoverySheet}
+        onClose={() => setShowRecoverySheet(false)}
+        title="Why recovery matters"
+        subtitle="How muscles grow"
+        variant="standard"
+      >
+          <div className="space-y-4">
+            <div className="space-y-3 text-sm text-fg-soft leading-relaxed">
               <p>
                 Muscles don&apos;t grow during your workouts—they grow <strong className="text-fg">afterward</strong> while recovering. Strength training creates microscopic micro-tears in muscle fibers. Your body repairs and thickens these fibers during rest periods through muscle protein synthesis.
               </p>
 
-              <div className="p-3.5 rounded-2xl bg-fg/[0.03] border border-fg/[0.06] space-y-2">
-                <span className="font-bold text-fg block">Key Recovery Pillars</span>
-                <div className="space-y-1.5 text-[11px] text-muted">
+              <div className="p-4 rounded-2xl bg-card border border-line/60 space-y-2">
+                <span className="font-bold text-fg block">What helps you recover</span>
+                <div className="space-y-2 text-[13px] text-muted">
                   <div className="flex items-center gap-2">
                     <Droplets className="w-3.5 h-3.5 text-blue-ink shrink-0" />
-                    <span className="text-zinc-300">
+                    <span className="text-fg-soft">
                       <strong className="text-fg">Hydration:</strong> 2.5L+ restores cell volume and transports nutrients.
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Flame className="w-3.5 h-3.5 text-orange-ink shrink-0" />
-                    <span className="text-zinc-300">
+                    <span className="text-fg-soft">
                       <strong className="text-fg">Protein:</strong> Hit your daily macro target to provide amino acid building blocks.
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Heart className="w-3.5 h-3.5 text-pink-400 shrink-0" />
-                    <span className="text-zinc-300">
+                    <Heart className="w-3.5 h-3.5 text-pink-ink shrink-0" />
+                    <span className="text-fg-soft">
                       <strong className="text-fg">Active Mobility:</strong> 15-20 min light walking promotes blood flow without fatigue.
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Moon className="w-3.5 h-3.5 text-purple-400 shrink-0" />
-                    <span className="text-zinc-300">
+                    <Moon className="w-3.5 h-3.5 text-blue-ink shrink-0" />
+                    <span className="text-fg-soft">
                       <strong className="text-fg">Deep Sleep:</strong> 7–8 hours triggers growth hormone release.
                     </span>
                   </div>
@@ -1380,13 +1373,12 @@ export function ExerciseListView({
 
             <button
               onClick={() => setShowRecoverySheet(false)}
-              className="w-full py-3 rounded-xl bg-fg text-app font-bold text-xs hover:bg-fg/85 transition-colors cursor-pointer"
+              className="w-full h-12 rounded-2xl bg-accent hover:bg-accent-hover text-on-accent font-bold text-sm transition-colors cursor-pointer"
             >
               Got it
             </button>
           </div>
-        </div>
-      )}
+      </NuviaBottomSheet>
 
       {/* ══════════════════════════════════════════════════════════════════ */}
       {/* ── MODALS (100% Preserved) ─────────────────────────────────────── */}

@@ -387,7 +387,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
       case 'build_muscle':
         return { label, tag: 'Muscle Growth', color: 'text-green-ink bg-accent/15 border-accent/30' };
       case 'gain_weight':
-        return { label, tag: 'Weight Gain', color: 'text-sky-400 bg-sky-400/15 border-sky-400/30' };
+        return { label, tag: 'Weight Gain', color: 'text-green-ink bg-sky-400/15 border-sky-400/30' };
       case 'maintain_weight':
       default:
         return { label, tag: 'Maintenance', color: 'text-fg bg-fg/10 border-fg/20' };
@@ -418,55 +418,70 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
         height: 'var(--sheet-viewport-h, 100dvh)',
       }}
     >
-      {/* Ambient glowing emerald wave background */}
-      <div
-        className="fixed inset-0 pointer-events-none z-0 bg-cover bg-center bg-no-repeat"
-        style={{
-          backgroundImage: "url('/onboarding-bg.webp'), url('/onboarding-bg.png')",
-        }}
-      >
-        {/* Subtle dark gradient overlay for optimal readability & contrast */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70 backdrop-blur-[1px]" />
+      {/* Background: soft lime glow at the top fading into the app colour (no photo to load). */}
+      <div aria-hidden="true" className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              'radial-gradient(120% 60% at 50% -10%, color-mix(in srgb, var(--theme-accent) 22%, transparent) 0%, transparent 60%),' +
+              'radial-gradient(80% 50% at 100% 100%, color-mix(in srgb, var(--theme-accent) 8%, transparent) 0%, transparent 70%),' +
+              'var(--theme-app)',
+          }}
+        />
+        <div
+          className="absolute inset-0 opacity-[0.05]"
+          style={{
+            backgroundImage:
+              'linear-gradient(var(--theme-fg) 1px, transparent 1px), linear-gradient(90deg, var(--theme-fg) 1px, transparent 1px)',
+            backgroundSize: '32px 32px',
+            maskImage: 'linear-gradient(to bottom, black, transparent 45%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, black, transparent 45%)',
+          }}
+        />
       </div>
 
       {/* ── TOP NAVIGATION & STEP PROGRESS ─────────────────────────────────── */}
       <div
-        className="shrink-0 px-5 pb-3 border-b border-fg/[0.08] bg-app z-10"
-        style={{ paddingTop: 'var(--screen-top)' }}
+        className="relative shrink-0 px-5 pb-2 z-10"
+        style={{ paddingTop: 'calc(var(--screen-top) + 16px)' }}
       >
         <div className="flex items-center justify-between">
           {step > 1 ? (
             <button
               onClick={() => setStep((s) => s - 1)}
-              className="p-1.5 -ml-1 text-muted hover:text-fg transition-colors rounded-xl bg-fg/[0.05]"
+              className="w-10 h-10 -ml-1 flex items-center justify-center text-fg rounded-full bg-card border border-line/60 hover:border-fg/30 transition-colors"
               aria-label="Back"
             >
               <ArrowLeft className="w-4 h-4" />
             </button>
           ) : onCancel ? (
-            <button onClick={onCancel} className="text-xs text-muted hover:text-fg transition-colors">
+            <button onClick={onCancel} className="h-10 px-3 -ml-1 rounded-full text-sm font-semibold text-muted hover:text-fg transition-colors">
               Cancel
             </button>
           ) : (
-            <div className="w-5" />
+            <div className="w-10 h-10" />
           )}
 
-          <div className="flex items-center gap-1.5">
+          <div
+            className="flex-1 mx-4 flex items-center gap-1"
+            role="progressbar"
+            aria-valuemin={1}
+            aria-valuemax={totalSteps}
+            aria-valuenow={step}
+            aria-label={`Step ${step} of ${totalSteps}`}
+          >
             {Array.from({ length: totalSteps }).map((_, i) => (
               <div
                 key={i}
-                className={`h-1.5 rounded-full transition-all ${
-                  i + 1 === step
-                    ? 'w-6 bg-accent'
-                    : i + 1 < step
-                    ? 'w-2 bg-accent/50'
-                    : 'w-2 bg-fg/10'
+                className={`h-1.5 flex-1 rounded-full transition-colors duration-300 ${
+                  i + 1 <= step ? 'bg-accent' : 'bg-fg/10'
                 }`}
               />
             ))}
           </div>
 
-          <span className="text-[11px] font-mono font-semibold text-muted">
+          <span className="w-10 text-right text-xs font-semibold text-muted tabular-nums">
             {step}/{totalSteps}
           </span>
         </div>
@@ -474,28 +489,28 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
 
       {/* ── SCROLLABLE CONTENT BODY ─────────────────────────────────────────── */}
       <div
-        className="relative z-10 flex-1 overflow-y-auto px-5 py-4 overscroll-contain"
+        className="relative z-10 flex-1 overflow-y-auto px-5 pt-4 pb-8 overscroll-contain"
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         {/* ===================================================================== */}
         {/* STEP 1: BIOMETRICS (Deterministic Calorie Anchor)                      */}
         {/* ===================================================================== */}
         {step === 1 && (
-          <div className="space-y-4 py-1 animate-fadeIn">
+          <div className="space-y-6 py-1 animate-fadeIn">
           <div>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-accent/15 text-green-ink border border-accent/30 uppercase">
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-green-ink">
               <Sparkles className="w-3 h-3" />
               Biometrics
             </span>
-            <h2 className="text-2xl font-bold tracking-tight text-fg mt-2">About You</h2>
-            <p className="text-xs text-muted mt-1">
-              Authoritative physical data used to calculate metabolic resting burn (BMR).
+            <h2 className="text-[28px] leading-tight font-extrabold tracking-tight text-fg mt-1.5">About You</h2>
+            <p className="text-sm text-muted mt-1.5 leading-relaxed">
+              We use this to work out how many calories your body burns each day.
             </p>
           </div>
 
           <div className="space-y-3.5">
             <div>
-              <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-1.5">
+              <label className="block text-sm font-semibold text-fg-soft mb-1.5">
                 Biological Sex
               </label>
               <div className="grid grid-cols-2 gap-2.5">
@@ -505,7 +520,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                     type="button"
                     onClick={() => setSex(opt)}
                     className={`py-2.5 rounded-xl text-xs font-semibold capitalize transition-all ${
-                      sex === opt ? 'bg-fg text-app font-bold shadow-md' : 'bg-card text-muted hover:text-fg border border-fg/[0.04]'
+                      sex === opt ? 'bg-accent/15 text-fg font-bold border border-accent ring-1 ring-accent/30' : 'bg-card text-fg-soft hover:text-fg border border-line/60 hover:border-fg/25'
                     }`}
                   >
                     {opt}
@@ -516,7 +531,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-1.5">
+                <label className="block text-sm font-semibold text-fg-soft mb-1.5">
                   Height
                 </label>
                 <div className="relative">
@@ -528,14 +543,14 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                     placeholder="e.g. 170"
                     value={heightCm}
                     onChange={(e) => setHeightCm(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-card border border-fg/[0.08] text-sm text-fg font-semibold focus:outline-none focus:border-accent"
+                    className="w-full h-12 px-4 rounded-2xl bg-card border border-line/60 text-base text-fg font-semibold placeholder:text-subtle placeholder:font-normal focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/25 transition-shadow"
                   />
-                  <span className="absolute right-3.5 top-2.5 text-xs text-muted pointer-events-none">cm</span>
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-muted pointer-events-none">cm</span>
                 </div>
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-1.5">
+                <label className="block text-sm font-semibold text-fg-soft mb-1.5">
                   Weight
                 </label>
                 <div className="relative">
@@ -548,15 +563,15 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                     placeholder="e.g. 70"
                     value={weightKg}
                     onChange={(e) => setWeightKg(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-card border border-fg/[0.08] text-sm text-fg font-semibold focus:outline-none focus:border-accent"
+                    className="w-full h-12 px-4 rounded-2xl bg-card border border-line/60 text-base text-fg font-semibold placeholder:text-subtle placeholder:font-normal focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/25 transition-shadow"
                   />
-                  <span className="absolute right-3.5 top-2.5 text-xs text-muted pointer-events-none">kg</span>
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-muted pointer-events-none">kg</span>
                 </div>
               </div>
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-1.5">
+              <label className="block text-sm font-semibold text-fg-soft mb-1.5">
                 Date of Birth
               </label>
               <input
@@ -564,7 +579,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                 max={new Date().toISOString().slice(0, 10)}
                 value={dob}
                 onChange={(e) => setDob(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-card border border-fg/[0.08] text-sm text-fg font-semibold focus:outline-none focus:border-accent"
+                className="w-full h-12 px-4 rounded-2xl bg-card border border-line/60 text-base text-fg font-semibold placeholder:text-subtle placeholder:font-normal focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/25 transition-shadow"
               />
             </div>
           </div>
@@ -575,21 +590,21 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
       {/* STEP 2: ACTIVITY & WEIGHT TARGET (Deterministic Calorie Multiplier)   */}
       {/* ===================================================================== */}
       {step === 2 && (
-        <div className="space-y-4 py-1 animate-fadeIn">
+        <div className="space-y-6 py-1 animate-fadeIn">
           <div>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-accent/15 text-green-ink border border-accent/30 uppercase">
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-green-ink">
               <Target className="w-3 h-3" />
               Metabolism &amp; Target
             </span>
-            <h2 className="text-2xl font-bold tracking-tight text-fg mt-2">Goals &amp; Energy</h2>
-            <p className="text-xs text-muted mt-1">
-              Determines daily maintenance energy expenditure (TDEE) and caloric balance.
+            <h2 className="text-[28px] leading-tight font-extrabold tracking-tight text-fg mt-1.5">Goals &amp; Energy</h2>
+            <p className="text-sm text-muted mt-1.5 leading-relaxed">
+              Your daily activity and goal set your calorie target.
             </p>
           </div>
 
           <div className="space-y-3.5">
             <div>
-              <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-2">
+              <label className="block text-sm font-semibold text-fg-soft mb-2">
                 Primary Goal
               </label>
 
@@ -599,8 +614,8 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                 onClick={() => setGoal('recomposition')}
                 className={`w-full mb-2 p-3 rounded-2xl text-left transition-all flex items-center justify-between border cursor-pointer active:scale-[0.98] ${
                   goal === 'recomposition'
-                    ? 'bg-fg text-app font-bold shadow-md border-fg'
-                    : 'bg-card text-muted hover:text-fg border-fg/[0.04]'
+                    ? 'bg-accent/15 text-fg font-bold border-accent ring-1 ring-accent/30'
+                    : 'bg-card text-fg-soft hover:text-fg border-line/60 hover:border-fg/25'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
@@ -639,7 +654,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                     type="button"
                     onClick={() => setGoal(g.id)}
                     className={`p-2.5 rounded-xl text-xs font-semibold transition-all ${
-                      goal === g.id ? 'bg-fg text-app font-bold shadow-md' : 'bg-card text-muted hover:text-fg border border-fg/[0.04]'
+                      goal === g.id ? 'bg-accent/15 text-fg font-bold border border-accent ring-1 ring-accent/30' : 'bg-card text-fg-soft hover:text-fg border border-line/60 hover:border-fg/25'
                     }`}
                   >
                     {g.label}
@@ -649,7 +664,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-1.5">
+              <label className="block text-sm font-semibold text-fg-soft mb-1.5">
                 Target Weight
               </label>
               <div className="relative">
@@ -662,14 +677,14 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                   placeholder={needsTargetWeight ? 'e.g. 65' : 'Optional'}
                   value={targetWeightKg}
                   onChange={(e) => setTargetWeightKg(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-card border border-fg/[0.08] text-sm text-fg font-semibold focus:outline-none focus:border-accent"
+                  className="w-full h-12 px-4 rounded-2xl bg-card border border-line/60 text-base text-fg font-semibold placeholder:text-subtle placeholder:font-normal focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/25 transition-shadow"
                 />
-                <span className="absolute right-3.5 top-2.5 text-xs text-muted pointer-events-none">kg</span>
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-muted pointer-events-none">kg</span>
               </div>
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-2">
+              <label className="block text-sm font-semibold text-fg-soft mb-2">
                 Activity Level
               </label>
               <div className="grid grid-cols-2 gap-2">
@@ -684,7 +699,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                     type="button"
                     onClick={() => setActivityLevel(act.id)}
                     className={`p-2.5 rounded-xl text-xs font-semibold transition-all ${
-                      activityLevel === act.id ? 'bg-fg text-app font-bold shadow-md' : 'bg-card text-muted hover:text-fg border border-fg/[0.04]'
+                      activityLevel === act.id ? 'bg-accent/15 text-fg font-bold border border-accent ring-1 ring-accent/30' : 'bg-card text-fg-soft hover:text-fg border border-line/60 hover:border-fg/25'
                     }`}
                   >
                     {act.label}
@@ -703,21 +718,21 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
       {/* STEP 3: UNDERSTAND YOUR BODY (Current Physique Assessment)            */}
       {/* ===================================================================== */}
       {step === 3 && (
-        <div className="space-y-4 py-1 animate-fadeIn">
+        <div className="space-y-6 py-1 animate-fadeIn">
           <div>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-amber-500/15 text-orange-ink border border-warn/30 uppercase">
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-green-ink">
               <User className="w-3 h-3" />
               Understand Your Body
             </span>
-            <h2 className="text-2xl font-bold tracking-tight text-fg mt-1.5">Where You Are Starting</h2>
-            <p className="text-xs text-muted mt-0.5 leading-snug">
-              A qualitative self-description to tailor training strategy. (Never used to guess fake body fat numbers).
+            <h2 className="text-[28px] leading-tight font-extrabold tracking-tight text-fg mt-1.5">Where You Are Starting</h2>
+            <p className="text-sm text-muted mt-1.5 leading-relaxed">
+              Pick the build closest to yours today. It shapes your training, and we never guess a body-fat number from it.
             </p>
           </div>
 
           <div className="space-y-3">
             <div>
-              <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-2">
+              <label className="block text-sm font-semibold text-fg-soft mb-2">
                 How would you describe your current physique?
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
@@ -760,13 +775,13 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
             <div className="rounded-xl bg-fg/[0.02] border border-fg/[0.05] p-2.5 flex items-start gap-2">
               <Info className="w-3.5 h-3.5 text-muted shrink-0 mt-0.5" />
               <div className="text-[10px] text-muted leading-relaxed">
-                <span className="font-semibold text-zinc-300">Why we ask: </span>
+                <span className="font-semibold text-muted">Why we ask: </span>
                 This helps Nuvia understand the starting shape and structure to personalize your training strategy. It does not estimate your exact body-fat percentage.
               </div>
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-1.5">
+              <label className="block text-sm font-semibold text-fg-soft mb-1.5">
                 What would you most like to improve?
               </label>
               <div className="flex flex-wrap gap-1.5">
@@ -779,8 +794,8 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                       onClick={() => toggleArrayItem(priorityAreas, area, setPriorityAreas)}
                       className={`px-3 py-1.5 rounded-xl text-[11px] font-medium transition-all flex items-center gap-1 cursor-pointer border ${
                         isSelected
-                          ? 'bg-accent/20 border-accent text-fg font-semibold'
-                          : 'bg-card border-fg/[0.06] text-muted hover:text-fg'
+                          ? 'bg-accent/15 border-accent text-fg font-semibold'
+                          : 'bg-card border-line/60 text-fg-soft hover:text-fg hover:border-fg/25'
                       }`}
                     >
                       {isSelected && <Check className="w-3 h-3 text-green-ink" />}
@@ -801,21 +816,21 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
       {/* STEP 4: DESIRED PHYSIQUE & VISION                                     */}
       {/* ===================================================================== */}
       {step === 4 && (
-        <div className="space-y-4 py-1 animate-fadeIn">
+        <div className="space-y-6 py-1 animate-fadeIn">
           <div>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-sky-500/15 text-sky-400 border border-sky-500/30 uppercase">
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-green-ink">
               <Compass className="w-3 h-3" />
               Your Vision
             </span>
-            <h2 className="text-2xl font-bold tracking-tight text-fg mt-1.5">Desired Physique</h2>
-            <p className="text-xs text-muted mt-0.5">
-              Shapes workout selection, volume bias, and aesthetic coaching.
+            <h2 className="text-[28px] leading-tight font-extrabold tracking-tight text-fg mt-1.5">Desired Physique</h2>
+            <p className="text-sm text-muted mt-1.5 leading-relaxed">
+              Choose the look you are working towards. Your workouts are built around it.
             </p>
           </div>
 
           <div className="space-y-3">
             <div>
-              <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-2">
+              <label className="block text-sm font-semibold text-fg-soft mb-2">
                 What would you like your physique to look like?
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
@@ -899,7 +914,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
 
             {/* Custom Description */}
             <div>
-              <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-1">
+              <label className="block text-sm font-semibold text-fg-soft mb-1">
                 Describe your ideal look in your own words (optional)
               </label>
               <input
@@ -907,7 +922,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                 value={desiredPhysiqueCustom}
                 onChange={(e) => setDesiredPhysiqueCustom(e.target.value)}
                 placeholder="e.g. Lean athletic with visible shoulders and less belly fat"
-                className="w-full px-3 py-2 rounded-xl bg-card border border-fg/[0.08] text-xs text-fg placeholder:text-zinc-600 focus:outline-none focus:border-accent"
+                className="w-full px-3 py-2 rounded-xl bg-card border border-fg/[0.08] text-xs text-fg placeholder:text-subtle focus:outline-none focus:border-accent"
               />
             </div>
 
@@ -915,14 +930,14 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
             <div className="rounded-xl bg-fg/[0.02] border border-fg/[0.05] p-2.5 flex items-start gap-2">
               <Info className="w-3.5 h-3.5 text-muted shrink-0 mt-0.5" />
               <div className="text-[10px] text-muted leading-relaxed">
-                <span className="font-semibold text-zinc-300">Why we ask: </span>
+                <span className="font-semibold text-muted">Why we ask: </span>
                 This guides exercise selection, repetition ranges, and volume bias so you progress toward your ideal build.
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-1">
+                <label className="block text-sm font-semibold text-fg-soft mb-1">
                   Target BF% reference
                 </label>
                 <div className="relative">
@@ -939,7 +954,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-1">
+                <label className="block text-sm font-semibold text-fg-soft mb-1">
                   Reference photo
                 </label>
                 {physiquePhotoPreview ? (
@@ -971,21 +986,21 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
       {/* STEP 5: TRAINING REALITY & HARD CONSTRAINTS                          */}
       {/* ===================================================================== */}
       {step === 5 && (
-        <div className="space-y-4 py-1 animate-fadeIn">
+        <div className="space-y-6 py-1 animate-fadeIn">
           <div>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-purple-500/15 text-purple-400 border border-purple-500/30 uppercase">
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-green-ink">
               <Dumbbell className="w-3 h-3" />
               Hard Constraints
             </span>
-            <h2 className="text-2xl font-bold tracking-tight text-fg mt-1.5">Equipment &amp; Split</h2>
-            <p className="text-xs text-muted mt-0.5">
-              AI strictly obeys what you actually have. No unavailable gym machines will be prescribed.
+            <h2 className="text-[28px] leading-tight font-extrabold tracking-tight text-fg mt-1.5">Equipment &amp; Split</h2>
+            <p className="text-sm text-muted mt-1.5 leading-relaxed">
+              Tell us what you can use. Nuvia only plans exercises with this equipment.
             </p>
           </div>
 
           <div className="space-y-3">
             <div>
-              <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-1.5">
+              <label className="block text-sm font-semibold text-fg-soft mb-1.5">
                 Training Experience &amp; Consistency
               </label>
               <div className="grid grid-cols-2 gap-2">
@@ -1017,7 +1032,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-1.5">
+              <label className="block text-sm font-semibold text-fg-soft mb-1.5">
                 Where do you train &amp; what equipment do you have?
               </label>
               <div className="grid grid-cols-4 gap-1.5 mb-2">
@@ -1028,8 +1043,8 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                     onClick={() => setEnvironment(loc)}
                     className={`py-1.5 rounded-xl text-[11px] font-semibold capitalize transition-all ${
                       environment === loc
-                        ? 'bg-fg text-app'
-                        : 'bg-card text-muted hover:text-fg border border-fg/[0.04]'
+                        ? 'bg-accent/15 text-fg border border-accent'
+                        : 'bg-card text-fg-soft hover:text-fg border border-line/60 hover:border-fg/25'
                     }`}
                   >
                     {loc}
@@ -1047,8 +1062,8 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                       onClick={() => toggleArrayItem(equipment, eq, setEquipment)}
                       className={`px-2.5 py-1.5 rounded-xl text-[10px] font-medium transition-all flex items-center gap-1 cursor-pointer border ${
                         isSelected
-                          ? 'bg-accent/20 border-accent text-fg font-bold'
-                          : 'bg-card border-fg/[0.06] text-muted hover:text-fg'
+                          ? 'bg-accent/15 border-accent text-fg font-bold'
+                          : 'bg-card border-line/60 text-fg-soft hover:text-fg hover:border-fg/25'
                       }`}
                     >
                       {isSelected && <Check className="w-3 h-3 text-green-ink" />}
@@ -1061,7 +1076,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-1">
+                <label className="block text-sm font-semibold text-fg-soft mb-1">
                   Preferred Split
                 </label>
                 <select
@@ -1076,7 +1091,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-1">
+                <label className="block text-sm font-semibold text-fg-soft mb-1">
                   Session Duration
                 </label>
                 <select
@@ -1099,21 +1114,21 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
       {/* STEP 6: PREFERENCES, CARDIO & ADHERENCE                               */}
       {/* ===================================================================== */}
       {step === 6 && (
-        <div className="space-y-4 py-1 animate-fadeIn">
+        <div className="space-y-6 py-1 animate-fadeIn">
           <div>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-emerald-500/15 text-green-ink border border-accent/30 uppercase">
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-green-ink">
               <Clock className="w-3 h-3" />
               Lifestyle &amp; Habit
             </span>
-            <h2 className="text-2xl font-bold tracking-tight text-fg mt-1.5">Habits &amp; Obstacles</h2>
-            <p className="text-xs text-muted mt-0.5">
-              Personalizing adherence so your plan fits into real life without burnout.
+            <h2 className="text-[28px] leading-tight font-extrabold tracking-tight text-fg mt-1.5">Habits &amp; Obstacles</h2>
+            <p className="text-sm text-muted mt-1.5 leading-relaxed">
+              So your plan fits your week and you can keep it up.
             </p>
           </div>
 
           <div className="space-y-3">
             <div>
-              <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-1">
+              <label className="block text-sm font-semibold text-fg-soft mb-1">
                 Regular Cardio / Physical Activity
               </label>
               <div className="grid grid-cols-3 gap-1.5 mb-1.5">
@@ -1124,8 +1139,8 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                     onClick={() => setCardioHabit(c)}
                     className={`py-1.5 rounded-xl text-[11px] font-medium transition-all ${
                       cardioHabit === c
-                        ? 'bg-fg text-app font-semibold'
-                        : 'bg-card text-muted hover:text-fg border border-fg/[0.04]'
+                        ? 'bg-accent/15 text-fg font-semibold border border-accent'
+                        : 'bg-card text-fg-soft hover:text-fg border border-line/60 hover:border-fg/25'
                     }`}
                   >
                     {c}
@@ -1143,7 +1158,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-1">
+                <label className="block text-sm font-semibold text-fg-soft mb-1">
                   Training Intensity
                 </label>
                 <select
@@ -1158,7 +1173,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-1">
+                <label className="block text-sm font-semibold text-fg-soft mb-1">
                   Best Time of Day
                 </label>
                 <select
@@ -1175,7 +1190,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-muted uppercase tracking-wider mb-1.5">
+              <label className="block text-sm font-semibold text-fg-soft mb-1.5">
                 What usually makes it hard to stay consistent?
               </label>
               <div className="flex flex-wrap gap-1.5">
@@ -1188,8 +1203,8 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                       onClick={() => toggleArrayItem(adherenceObstacles, obs, setAdherenceObstacles)}
                       className={`px-2.5 py-1.5 rounded-xl text-[10px] font-medium transition-all flex items-center gap-1 cursor-pointer border ${
                         isSelected
-                          ? 'bg-amber-500/20 border-amber-500 text-amber-200 font-semibold'
-                          : 'bg-card border-fg/[0.06] text-muted hover:text-fg'
+                          ? 'bg-accent/15 border-accent text-fg font-semibold'
+                          : 'bg-card border-line/60 text-fg-soft hover:text-fg hover:border-fg/25'
                       }`}
                     >
                       {isSelected && <Check className="w-3 h-3 text-orange-ink" />}
@@ -1210,9 +1225,9 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
         <div className="space-y-3.5 py-1 animate-fadeIn">
           <div>
             <div className="flex items-center justify-between">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-accent/15 text-green-ink border border-accent/30 uppercase">
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-green-ink">
                 <ShieldCheck className="w-3 h-3" />
-                Verified Personal Plan
+                Your plan
               </span>
               {(() => {
                 const strat = getGoalStrategy(goal);
@@ -1223,22 +1238,19 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                 );
               })()}
             </div>
-            <h2 className="text-2xl font-bold tracking-tight text-fg mt-1">Your Nuvia Blueprint</h2>
-            <p className="text-[11px] text-muted">
-              Review your personalized metabolic and training strategy before entering.
+            <h2 className="text-[28px] leading-tight font-extrabold tracking-tight text-fg mt-1.5">Ready to start</h2>
+            <p className="text-sm text-muted mt-1.5 leading-relaxed">
+              Check your targets and training plan before you start.
             </p>
           </div>
 
           {/* Primary Metabolic Target Card */}
           {calculatedTargets && (
-            <div className="p-3.5 rounded-2xl bg-gradient-to-br from-card to-elevated border border-fg/[0.1] shadow-xl space-y-2.5">
+            <div className="p-4 rounded-[var(--radius-card)] bg-card border border-line/60 space-y-2.5">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-semibold text-muted uppercase tracking-wider flex items-center gap-1.5">
-                  <Flame className="w-3.5 h-3.5 text-orange-ink" />
-                  Mifflin-St Jeor Energy Target
-                </span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-accent/20 text-green-ink">
-                  Deterministic
+                <span className="text-sm font-semibold text-fg-soft flex items-center gap-1.5">
+                  <Flame className="w-4 h-4 text-orange-ink" />
+                  Daily calorie target
                 </span>
               </div>
 
@@ -1250,7 +1262,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                   <span className="text-xs text-muted ml-1.5">kcal / day</span>
                 </div>
                 <div className="text-right text-[10px] text-muted">
-                  <span>At rest: {calculatedTargets.bmr}</span> · <span>Maintenance: {calculatedTargets.tdee}</span>
+                  <span>At rest {calculatedTargets.bmr.toLocaleString()}</span> · <span>Maintenance {calculatedTargets.tdee.toLocaleString()}</span>
                 </div>
               </div>
 
@@ -1273,7 +1285,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                   <p className="text-xs font-bold text-fg mt-0.5">{calculatedTargets.carbohydrate_target}g</p>
                 </div>
                 <div className="p-1.5 rounded-lg bg-app/30">
-                  <p className="text-[10px] text-sky-400 font-semibold">Fats</p>
+                  <p className="text-[10px] text-green-ink font-semibold">Fats</p>
                   <p className="text-xs font-bold text-fg mt-0.5">{calculatedTargets.fat_target}g</p>
                 </div>
               </div>
@@ -1281,11 +1293,11 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
           )}
 
           {/* Synthesized Training Strategy Card */}
-          <div className="p-3.5 rounded-2xl bg-card border border-fg/[0.08] space-y-2">
+          <div className="p-4 rounded-[var(--radius-card)] bg-card border border-line/60 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-green-ink flex items-center gap-1.5">
-                <TrendingUp className="w-3.5 h-3.5" />
-                <span>Tailored Training Strategy</span>
+              <span className="text-sm font-semibold text-fg-soft flex items-center gap-1.5">
+                <TrendingUp className="w-4 h-4 text-green-ink" />
+                <span>Your training plan</span>
               </span>
               <button
                 type="button"
@@ -1299,7 +1311,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
 
             <div className="space-y-1.5">
               {synthesizedStrategy.map((bullet, idx) => (
-                <div key={idx} className="flex items-start gap-2 text-[11px] text-zinc-300 leading-relaxed">
+                <div key={idx} className="flex items-start gap-2 text-[11px] text-muted leading-relaxed">
                   <span className="text-green-ink font-bold">•</span>
                   <span>{bullet}</span>
                 </div>
@@ -1308,7 +1320,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
           </div>
 
           {/* Visual Transformation Direction Card */}
-          <div className="p-3.5 rounded-2xl bg-card border border-fg/[0.08] shadow-md space-y-2">
+          <div className="p-4 rounded-[var(--radius-card)] bg-card border border-line/60 shadow-md space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-bold uppercase tracking-wider text-muted">
                 Your Transformation Direction
@@ -1368,7 +1380,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
 
           <div className="text-center pt-0.5">
             <p className="text-[11px] text-muted">
-              Does this look right? Tap below to establish these preferences.
+              Looks right? You can change any of this later in Profile.
             </p>
           </div>
         </div>
@@ -1377,36 +1389,47 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
 
       {/* ── BOTTOM ACTION BUTTON ───────────────────────────────────────────── */}
       <div
-        className="shrink-0 px-5 pt-3 border-t border-fg/[0.08] bg-black/80 backdrop-blur-xl z-10"
-        style={{ paddingBottom: 'max(20px, env(safe-area-inset-bottom, 20px))' }}
+        className="relative shrink-0 px-5 pt-3 z-10"
+        style={{
+          paddingBottom: 'max(20px, calc(env(safe-area-inset-bottom, 0px) + 12px))',
+          background: 'linear-gradient(to top, var(--theme-app) 70%, transparent)',
+        }}
       >
         {step < totalSteps ? (
-          <button
-            onClick={handleNextStep}
-            disabled={Boolean(stepError)}
-            className="w-full py-3.5 rounded-2xl bg-fg text-app font-bold text-xs transition-transform active:scale-[0.98] cursor-pointer shadow-md disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            {stepError || 'Continue'}
-          </button>
+          <>
+            {stepError && (
+              <p className="mb-2 text-center text-xs font-medium text-muted" role="status">
+                {stepError}
+              </p>
+            )}
+            <button
+              onClick={handleNextStep}
+              disabled={Boolean(stepError)}
+              className="w-full h-14 rounded-2xl bg-accent hover:bg-accent-hover text-on-accent font-extrabold text-base transition-transform active:scale-[0.98] cursor-pointer shadow-lg shadow-accent/20 flex items-center justify-center gap-2 disabled:bg-elevated disabled:text-muted disabled:shadow-none disabled:cursor-not-allowed"
+            >
+              Continue
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </>
         ) : (
           <div className="flex gap-2">
             <button
               type="button"
               onClick={() => setStep(1)}
-              className="px-4 py-3.5 rounded-2xl bg-elevated hover:bg-elevated-2 text-fg font-semibold text-xs transition-colors"
+              className="h-14 px-5 rounded-2xl bg-card border border-line/60 text-fg font-semibold text-sm transition-colors"
             >
               Edit
             </button>
             <button
               onClick={handleFinalSave}
               disabled={saving}
-              className="flex-1 py-3.5 rounded-2xl bg-accent hover:bg-accent-hover text-on-accent font-extrabold text-xs transition-transform active:scale-[0.98] cursor-pointer shadow-lg shadow-accent/20 flex items-center justify-center gap-2"
+              className="flex-1 h-14 rounded-2xl bg-accent hover:bg-accent-hover text-on-accent font-extrabold text-base transition-transform active:scale-[0.98] cursor-pointer shadow-lg shadow-accent/20 flex items-center justify-center gap-2"
             >
               {saving ? (
                 <span>Generating Your Plan...</span>
               ) : (
                 <>
-                  <span>Create My Plan &amp; Enter Nuvia</span>
+                  <span>Create my plan</span>
                   <Check className="w-4 h-4" />
                 </>
               )}
