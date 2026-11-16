@@ -48,7 +48,7 @@ export function ProfileView({
   }
 
   return (
-    <div className="flex-1 flex flex-col pb-24 px-5 pt-3 w-full max-w-md mx-auto space-y-4">
+    <div className="flex-1 flex flex-col pb-24 px-5 pt-4 w-full max-w-md mx-auto space-y-4">
       {/* 1. PROFILE HEADER (Personal, Apple-inspired) */}
       <ProfileHeader
         user={user}

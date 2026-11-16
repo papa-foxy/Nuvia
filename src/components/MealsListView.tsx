@@ -9,15 +9,18 @@ import { MealDetailsModal } from './MealDetailsModal';
 import { DateFilterBar } from './DateFilterBar';
 import { NuviaCache, allMealsKey, todaySummaryKey, todayMealsKey } from '@/lib/nuvia-cache';
 import { getLocalDateString } from '@/lib/data-service';
+import { ScreenHeader } from './ScreenHeader';
 
 interface MealsListViewProps {
   onOpenAddMeal: () => void;
   refreshKey?: number;
   /** Called after a meal is moved or deleted so other screens (Home) can refresh. */
   onMealsChanged?: () => void;
+  /** Opens Profile from the header avatar, like the other tabs. */
+  onOpenProfile?: () => void;
 }
 
-export function MealsListView({ onOpenAddMeal, refreshKey, onMealsChanged }: MealsListViewProps) {
+export function MealsListView({ onOpenAddMeal, refreshKey, onMealsChanged, onOpenProfile }: MealsListViewProps) {
   const { user } = useAuth();
   const [selectedDate, setSelectedDate] = useState(() => getLocalDateString());
   const [meals, setMeals] = useState<Meal[]>([]);
@@ -109,22 +112,12 @@ export function MealsListView({ onOpenAddMeal, refreshKey, onMealsChanged }: Mea
 
   return (
     <div className="flex-1 flex flex-col pb-24 px-5 pt-4 w-full max-w-md mx-auto space-y-6">
-      {/* Title Header with Date Filter */}
-      <div className="flex items-center justify-between pt-2">
-        <div>
-          <p className="text-[11px] font-semibold tracking-wider text-muted uppercase">
-            Nutrition & Diet
-          </p>
-          <h1 className="text-3xl font-bold tracking-tight text-fg mt-0.5">
-            Meals
-          </h1>
-        </div>
-
-        {/* Date Filter Bar with Calendar Selection */}
-        <DateFilterBar
-          selectedDate={selectedDate}
-          onDateChange={setSelectedDate}
-        />
+      {/* Header (same as the other tabs), date picker on its own row */}
+      <div className="-mx-5">
+        <ScreenHeader eyebrow="Meals & calories" title="Nutrition" onOpenProfile={onOpenProfile} />
+      </div>
+      <div className="-mt-3">
+        <DateFilterBar selectedDate={selectedDate} onDateChange={setSelectedDate} />
       </div>
 
       {/* Quick Summary Sub-row */}

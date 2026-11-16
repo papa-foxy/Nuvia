@@ -37,6 +37,7 @@ import {
 } from '@/lib/calculator';
 import { ActivityLevel, UserGoal, Profile, Goal } from '@/types/database';
 import { TabType } from './Navigation';
+import { ScreenHeader } from './ScreenHeader';
 
 interface GoalsViewProps {
   onNavigateTab?: (tab: TabType) => void;
@@ -239,25 +240,14 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
   const goalLabel = GOAL_LABELS[goalType] || 'Maintain weight';
 
   return (
-    <div className="flex-1 flex flex-col pb-28 px-4 pt-3 w-full max-w-md mx-auto space-y-5 animate-fadeIn">
+    <div className="flex-1 flex flex-col pb-28 px-5 pt-4 w-full max-w-md mx-auto space-y-5 animate-fadeIn">
       {/* ── TOP HEADER ─────────────────────────────────────────────────── */}
-      <div className="flex items-end justify-between pt-1">
-        <div>
-          <p className="text-[11px] font-semibold tracking-wider text-muted uppercase">
-            Configuration
-          </p>
-          <h1 className="text-3xl font-bold tracking-tight text-fg mt-0.5">
-            Goals
-          </h1>
-        </div>
-        {onNavigateTab && (
-          <button
-            onClick={() => onNavigateTab('home')}
-            className="text-xs font-semibold text-green-ink hover:text-green-ink px-2.5 py-1 rounded-full bg-fg/[0.04] border border-fg/[0.08] transition-colors mb-1 cursor-pointer"
-          >
-            Today →
-          </button>
-        )}
+      <div className="-mx-5">
+        <ScreenHeader
+          eyebrow="Weight goal & daily targets"
+          title="Goals"
+          onOpenProfile={onNavigateTab ? () => onNavigateTab('profile') : undefined}
+        />
       </div>
 
       {/* ── RECALCULATION NOTIFICATION BANNER ───────────────────────────── */}

@@ -543,9 +543,9 @@ export function ExerciseListView({
   }
 
   return (
-    <div className="flex-1 flex flex-col pb-28 px-4 pt-3 w-full max-w-md mx-auto space-y-6 animate-fadeIn">
+    <div className="flex-1 flex flex-col pb-28 px-5 pt-4 w-full max-w-md mx-auto space-y-6 animate-fadeIn">
       {/* ── HEADER ──────────────────────────────────────────────────────── */}
-      <div className="-mx-4 -mt-1">
+      <div className="-mx-5">
         <ScreenHeader
           eyebrow={todayDayName}
           title="Workout"

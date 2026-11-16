@@ -6,6 +6,7 @@ import { DataService, getLocalDateString } from '@/lib/data-service';
 import { DailySummary, Meal, ExerciseLog } from '@/types/database';
 import { MacroDonutChart } from './MacroDonutChart';
 import { DateFilterBar } from './DateFilterBar';
+import { ScreenHeader } from './ScreenHeader';
 import {
   NuviaCache,
   todaySummaryKey,
@@ -100,22 +101,11 @@ export function DailySummaryView({ refreshKey }: { refreshKey?: number } = {}) {
 
   return (
     <div className="flex-1 flex flex-col pb-20 px-5 pt-4 w-full max-w-md mx-auto space-y-6">
-      {/* Date Header */}
-      <div className="flex items-center justify-between pt-2">
-        <div>
-          <p className="text-[11px] font-semibold tracking-wider text-muted uppercase">
-            Overview
-          </p>
-          <h1 className="text-3xl font-bold tracking-tight text-fg mt-0.5">
-            Summary
-          </h1>
-        </div>
-
-        {/* Date Filter Bar with Calendar Selection */}
-        <DateFilterBar
-          selectedDate={selectedDate}
-          onDateChange={setSelectedDate}
-        />
+      <div className="-mx-5">
+        <ScreenHeader eyebrow="Your day at a glance" title="Summary" />
+      </div>
+      <div className="-mt-3">
+        <DateFilterBar selectedDate={selectedDate} onDateChange={setSelectedDate} />
       </div>
 
       {/* Primary Metrics (Calories Intake & Burned) */}

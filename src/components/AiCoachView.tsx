@@ -8,6 +8,7 @@ import { AiService, CoachAdviceResult } from '@/lib/ai-service';
 import { FitnessContextService } from '@/lib/fitness-context-service';
 import { IntentProposalCard } from '@/components/adaptive/IntentProposalCard';
 import { RescheduleProposal, AdaptiveScheduleChange } from '@/types/adaptive-training';
+import { ScreenHeader } from './ScreenHeader';
 
 export function AiCoachView() {
   const { user, profile, goals } = useAuth();
@@ -159,14 +160,8 @@ export function AiCoachView() {
 
   return (
     <div className="flex-1 flex flex-col pb-20 px-5 pt-4 w-full max-w-md mx-auto space-y-6">
-      {/* Title */}
-      <div className="pt-2">
-        <p className="text-[11px] font-semibold tracking-wider text-muted uppercase">
-          Intelligence
-        </p>
-        <h1 className="text-3xl font-bold tracking-tight text-fg mt-0.5">
-          Nuvia
-        </h1>
+      <div className="-mx-5">
+        <ScreenHeader eyebrow="Your AI coach" title="Coach" />
       </div>
 
       {/* Primary Insights List (Apple Health Inset Grouped Rows) */}

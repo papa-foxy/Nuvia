@@ -133,7 +133,7 @@ export function ProgressView({
   const target = goals?.target_weight_kg ?? profile?.target_weight_kg ?? null;
 
   return (
-    <div className="flex flex-col gap-6 pb-6">
+    <div className="flex-1 flex flex-col gap-6 pb-6 pt-4 w-full max-w-md mx-auto">
       <ScreenHeader
         eyebrow="Your training over time"
         title="Progress"

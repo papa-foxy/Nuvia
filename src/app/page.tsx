@@ -352,6 +352,7 @@ export default function HomePage() {
               {visited('meals') && (
               <MealsListView
                   onOpenAddMeal={() => setIsAddMealOpen(true)}
+                  onOpenProfile={() => setActiveTab('profile')}
                   refreshKey={refreshKey}
                   onMealsChanged={() => {
                     NuviaCache.invalidatePrefix('today-');
