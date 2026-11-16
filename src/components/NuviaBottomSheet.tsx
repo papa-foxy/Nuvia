@@ -198,8 +198,14 @@ export function NuviaBottomSheet({
     const delta = touchY - startYRef.current;
     if (delta > 0) {
       setDragY(delta);
+    } else if (!isHeader) {
+      // Swiping up in the content is a scroll: hand it back to the content.
+      // (The sheet used to rise here, leaving a dark gap above the nav.)
+      isDraggingRef.current = false;
+      setIsDragging(false);
+      setDragY(0);
     } else {
-      setDragY(delta * 0.2); // Rubber-band effect upwards
+      setDragY(0); // the sheet never moves above its resting place
     }
   };
 
@@ -227,11 +233,7 @@ export function NuviaBottomSheet({
     const onMouseMove = (e: MouseEvent) => {
       if (!isDraggingRef.current) return;
       const delta = e.clientY - startYRef.current;
-      if (delta > 0) {
-        setDragY(delta);
-      } else {
-        setDragY(delta * 0.2);
-      }
+      setDragY(Math.max(0, delta));
     };
 
     const onMouseUp = () => {

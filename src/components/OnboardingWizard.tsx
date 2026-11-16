@@ -414,8 +414,8 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
       data-theme="dark"
       className="relative w-full max-w-md mx-auto bg-app text-fg flex flex-col overflow-hidden"
       style={{
-        height: '100dvh',
-        minHeight: '-webkit-fill-available',
+        // Same screen height the app shell uses (100vh in the installed iOS app).
+        height: 'var(--sheet-viewport-h, 100dvh)',
       }}
     >
       {/* Ambient glowing emerald wave background */}
@@ -431,8 +431,8 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
 
       {/* ── TOP NAVIGATION & STEP PROGRESS ─────────────────────────────────── */}
       <div
-        className="shrink-0 px-5 pb-3 border-b border-fg/[0.08] bg-black/75 backdrop-blur-xl z-10"
-        style={{ paddingTop: 'max(16px, env(safe-area-inset-top, 16px))' }}
+        className="shrink-0 px-5 pb-3 border-b border-fg/[0.08] bg-app z-10"
+        style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)' }}
       >
         <div className="flex items-center justify-between">
           {step > 1 ? (

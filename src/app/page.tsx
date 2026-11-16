@@ -300,6 +300,14 @@ export default function HomePage() {
           height: '100%',
         }}
       >
+        {/* Solid strip behind the iOS status bar: scrolled content passes under
+            it instead of under the clock and battery. Zero height off iOS. */}
+        <div
+          aria-hidden="true"
+          className="absolute top-0 left-0 right-0 z-30 bg-app pointer-events-none"
+          style={{ height: 'env(safe-area-inset-top, 0px)' }}
+        />
+
         {/* PWA Install Banner */}
         <PwaInstallBanner />
 

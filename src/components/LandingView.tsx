@@ -192,7 +192,13 @@ export function LandingView({ onStartOnboarding, onEnterDashboard }: LandingView
       </div>
 
       {/* Main Container */}
-      <div className="relative z-10 w-full max-w-md mx-auto min-h-screen flex flex-col justify-between px-6 py-10">
+      <div
+        className="relative z-10 w-full max-w-md mx-auto min-h-screen flex flex-col justify-between px-6"
+        style={{
+          paddingTop: 'max(40px, calc(env(safe-area-inset-top, 0px) + 16px))',
+          paddingBottom: 'max(40px, calc(env(safe-area-inset-bottom, 0px) + 16px))',
+        }}
+      >
         {/* Top Brand Mark */}
         <div className="pt-2 flex items-center gap-2.5">
           <img
