@@ -85,6 +85,12 @@ export async function geminiGenerate(req: GeminiRequest): Promise<string | null>
         .filter((p) => !p.thought && typeof p.text === 'string')
         .map((p) => p.text)
         .join('');
+      if (text && generationConfig.responseMimeType === 'application/json' && !isParsableJson(text)) {
+        // Occasionally a model returns broken JSON (e.g. a missing quote):
+        // try the next model instead of failing the request.
+        console.warn(`[${task}] ${model} returned invalid JSON`);
+        continue;
+      }
       if (text) {
         coolingUntil.delete(model);
         return text;
@@ -97,4 +103,18 @@ export async function geminiGenerate(req: GeminiRequest): Promise<string | null>
     }
   }
   return null;
+}
+
+/** True when the reply (optionally wrapped in ``` fences) is valid JSON. */
+function isParsableJson(raw: string): boolean {
+  const cleaned = raw
+    .trim()
+    .replace(/^```(?:json)?\s*/, '')
+    .replace(/\s*```$/, '');
+  try {
+    JSON.parse(cleaned);
+    return true;
+  } catch {
+    return false;
+  }
 }

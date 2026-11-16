@@ -53,10 +53,15 @@ STEP 2: ESTIMATE FROM THE REFERENCE TABLE. Each line is ONE typical serving as s
 ${foodReferenceForPrompt()}
 
 Rules:
-- Start from the matching reference line and scale it to the portion you see (plate and bowl size, amount of rice, number of pieces). Typical servings: 1 bowl rice ~160 g ~210 kcal; a "bungkus" is smaller than a plate.
-- Do NOT add extra oil, santan or sugar on top of a reference value. Adjust upward only for things you can see or the user says: extra rice ("nasi tambah"), "banjir" (gravy flooded), extra sambal, extra pieces, add-ons (telur, ayam, sotong). Adjust downward for half portions, "kurang manis" (about -30% sugar), "kosong" (no sugar), "kurang minyak", skin removed.
+- SINGLE-ITEM dishes (a bowl of laksa, a plate of char kuey teow, a roti, a drink): start from the matching reference line and scale it to the portion you see (bowl/plate size, how full, number of pieces).
+- PLATES BUILT FROM PARTS (nasi kandar, nasi campur / economy rice, banana-leaf rice, any rice with separate dishes): do NOT copy a whole-plate line. Estimate EACH part from the photo and add them up, so a big plate comes out above the "typical" line and a small one below it:
+  * Rice: judge the grams from the mound (a small bowl ~160 g, a normal plate ~200–250 g, a big heaped plate ~300 g+) at ~1.3 kcal per g.
+  * Each protein: judge its size; fried/battered pieces are energy-dense (ayam goreng berempah / mamak ~2.8 kcal per g: a small piece ~90 g ~255 kcal, a large piece ~180 g ~500 kcal).
+  * Gravy (kuah campur, curry, dalcha) is ALWAYS its own item, judged by how much you see: a drizzle ~60–80 kcal; covering most of the rice ~150 kcal; "banjir" (rice swimming, gravy pooling across the plate) ~200–250 kcal.
+  * Vegetables, egg, papadom, sambal: each its own item.
+- Do NOT add extra oil, santan or sugar on top of a reference value. Adjust only for what you can see or the user says: extra rice ("nasi tambah"), "banjir", extra sambal, extra pieces, add-ons (telur, ayam, sotong); downward for half portions, "kurang manis" (about -30% sugar), "kosong" (no sugar), "kurang minyak", skin removed.
 - For a dish not in the table, build it from its parts using the closest lines.
-- Itemise each visible component in "foods" (e.g. rice, chicken, sambal, egg, drink). The items must add up to "total".
+- Itemise each visible component in "foods" with its estimated grams. The items must add up to "total".
 - If the photo is unclear, still give the best estimate, set "confidence": "low", and say what you assumed.
 
 STEP 3: Return strictly structured JSON matching this schema:

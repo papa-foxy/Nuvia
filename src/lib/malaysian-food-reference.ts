@@ -37,14 +37,14 @@ export const MALAYSIAN_FOODS: FoodReference[] = [
   { name: 'Nasi goreng kampung', aliases: ['nasi goreng kampung', 'nasi goreng', 'fried rice'], serving: '1 plate', grams: 405, kcal: 772, protein_g: 29, carbs_g: 100, fat_g: 29, kind: 'meal', source: 'lab' },
   { name: 'Chicken rice, steamed (nasi ayam)', aliases: ['chicken rice', 'nasi ayam', 'nasi ayam stim'], serving: '1 plate', grams: 412, kcal: 778, protein_g: 38, carbs_g: 88, fat_g: 30, kind: 'meal', source: 'lab' },
   { name: 'Chicken rice, roasted (nasi ayam panggang)', aliases: ['roast chicken rice', 'roasted chicken rice', 'nasi ayam panggang'], serving: '1 plate', grams: 285, kcal: 524, protein_g: 24, carbs_g: 67, fat_g: 18, kind: 'meal', source: 'lab' },
-  { name: 'Nasi kandar (rice, 1 meat, 2 veg, kuah campur)', aliases: ['nasi kandar'], serving: '1 plate', kcal: 800, protein_g: 30, carbs_g: 80, fat_g: 30, kind: 'meal', source: 'est' },
+  { name: 'Nasi kandar, typical plate (rice, 1 meat, 2 veg, kuah campur) — for photos add up the parts instead', aliases: ['nasi kandar'], serving: '1 plate', kcal: 800, protein_g: 30, carbs_g: 80, fat_g: 30, kind: 'meal', source: 'est' },
   { name: 'Nasi campur / economy rice (2 dishes)', aliases: ['nasi campur', 'economy rice', 'mixed rice', 'nasi bujang'], serving: '1 plate', kcal: 700, protein_g: 25, carbs_g: 75, fat_g: 25, kind: 'meal', source: 'est' },
   { name: 'Nasi ambang (chicken)', aliases: ['nasi ambang'], serving: '1 plate', grams: 630, kcal: 1104, protein_g: 58, carbs_g: 115, fat_g: 46, kind: 'meal', source: 'lab' },
   { name: 'Nasi kerabu', aliases: ['nasi kerabu'], serving: '1 plate', kcal: 500, protein_g: 20, carbs_g: 60, fat_g: 18, kind: 'meal', source: 'est' },
   { name: 'Nasi briyani, chicken', aliases: ['briyani', 'biryani', 'nasi beriani', 'nasi briyani'], serving: '1 plate', grams: 759, kcal: 1065, protein_g: 51, carbs_g: 98, fat_g: 49, kind: 'meal', source: 'hpb' },
   { name: 'Mutton biryani', aliases: ['mutton biryani', 'briyani kambing'], serving: '1 plate', grams: 459, kcal: 799, protein_g: 40, carbs_g: 67, fat_g: 41, kind: 'meal', source: 'lab' },
   { name: 'Lor mai kai', aliases: ['lor mai kai', 'loh mai kai'], serving: '1 portion', grams: 354, kcal: 547, protein_g: 15, carbs_g: 108, fat_g: 6, kind: 'meal', source: 'lab' },
-  { name: 'Plain white rice', aliases: ['nasi putih', 'white rice'], serving: '1 bowl (160 g)', grams: 160, kcal: 210, protein_g: 4, carbs_g: 46, fat_g: 0.5, kind: 'side', source: 'myfcd' },
+  { name: 'Plain white rice (~1.3 kcal per g; a normal plate is 200–250 g)', aliases: ['nasi putih', 'white rice'], serving: '1 bowl (160 g)', grams: 160, kcal: 210, protein_g: 4, carbs_g: 46, fat_g: 0.5, kind: 'side', source: 'myfcd' },
 
   // ── Noodles ─────────────────────────────────────────────────────────────
   { name: 'Char kuey teow', aliases: ['char kuey teow', 'char kway teow', 'kuey teow goreng', 'ckt'], serving: '1 plate', grams: 362, kcal: 659, protein_g: 15, carbs_g: 99, fat_g: 23, kind: 'meal', source: 'lab' },
@@ -80,7 +80,12 @@ export const MALAYSIAN_FOODS: FoodReference[] = [
   { name: 'Putu mayam', aliases: ['putu mayam', 'putu mayang'], serving: '1 portion', grams: 193, kcal: 312, protein_g: 4, carbs_g: 63, fat_g: 5, kind: 'snack', source: 'lab' },
 
   // ── Sides / proteins ────────────────────────────────────────────────────
-  { name: 'Ayam goreng (fried chicken, 1 thigh)', aliases: ['ayam goreng', 'fried chicken', 'ayam goreng berempah'], serving: '1 piece (90 g)', grams: 90, kcal: 255, protein_g: 22, carbs_g: 5, fat_g: 16, kind: 'side', source: 'myfcd' },
+  { name: 'Ayam goreng (fried chicken, small piece)', aliases: ['ayam goreng', 'fried chicken', 'ayam goreng berempah'], serving: '1 piece (90 g)', grams: 90, kcal: 255, protein_g: 22, carbs_g: 5, fat_g: 16, kind: 'side', source: 'myfcd' },
+  { name: 'Ayam goreng mamak / berempah, large battered piece', aliases: ['ayam goreng mamak', 'ayam goreng besar'], serving: '1 large piece (180 g)', grams: 180, kcal: 500, protein_g: 40, carbs_g: 14, fat_g: 32, kind: 'side', source: 'est' },
+  { name: 'Kuah campur / curry gravy, a drizzle', aliases: ['kuah sikit'], serving: '1 ladle (~60 ml)', kcal: 70, protein_g: 1, carbs_g: 4, fat_g: 6, kind: 'side', source: 'est' },
+  { name: 'Kuah campur / curry gravy, covering the rice', aliases: ['kuah campur'], serving: '~2 ladles (~120 ml)', kcal: 150, protein_g: 2, carbs_g: 8, fat_g: 12, kind: 'side', source: 'est' },
+  { name: 'Kuah campur, banjir (rice flooded, gravy pooling)', aliases: ['banjir'], serving: '~3 ladles (~180 ml)', kcal: 225, protein_g: 3, carbs_g: 12, fat_g: 18, kind: 'side', source: 'est' },
+  { name: 'Cabbage stir-fry / kobis masak (side)', aliases: ['kobis', 'cabbage'], serving: '1 portion (~70 g)', grams: 70, kcal: 60, protein_g: 1, carbs_g: 5, fat_g: 4, kind: 'side', source: 'est' },
   { name: 'Chicken curry (kari ayam)', aliases: ['kari ayam', 'chicken curry'], serving: '1 portion (96 g)', grams: 96, kcal: 195, protein_g: 15, carbs_g: 4, fat_g: 13, kind: 'side', source: 'myfcd' },
   { name: 'Rendang (ayam / daging)', aliases: ['rendang'], serving: '1 portion', kcal: 315, protein_g: 22, carbs_g: 6, fat_g: 22, kind: 'side', source: 'est' },
   { name: 'Ikan goreng (1 medium piece)', aliases: ['ikan goreng', 'fried fish'], serving: '1 piece', kcal: 240, protein_g: 25, carbs_g: 4, fat_g: 14, kind: 'side', source: 'est' },
