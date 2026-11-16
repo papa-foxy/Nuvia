@@ -329,8 +329,8 @@ export default function HomePage() {
         <main
           className="flex-1 flex flex-col overflow-y-auto pb-28 w-full relative"
           style={{
-            // Status bar height plus a small gap so the header doesn't sit right against it.
-            paddingTop: 'calc(env(safe-area-inset-top, 0px) + 11px)',
+            // Status bar height plus the shared top gap (globals.css --screen-top).
+            paddingTop: 'var(--screen-top)',
             overscrollBehaviorY: 'none',
           }}
         >

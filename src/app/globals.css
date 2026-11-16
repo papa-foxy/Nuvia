@@ -147,13 +147,17 @@
     /* Bottom Navigation Tokens */
     --bottom-nav-height: 56px;
 
+    /* Gap between the iOS status bar and the top of every screen. */
+    --screen-top-gap: 11px;
+    --screen-top: calc(env(safe-area-inset-top, 0px) + var(--screen-top-gap));
+
     /* Tallest a bottom sheet may be: viewport minus bottom nav, home indicator,
-       status bar (safe-area-inset-top) and a 12px gap. Keeps sheet headers
+       status bar (safe-area-inset-top) and the same top gap. Keeps sheet headers
        below the iOS status bar, where taps would otherwise be swallowed. */
     --sheet-viewport-h: 100dvh;
     --sheet-max-h: calc(
       var(--sheet-viewport-h) - var(--bottom-nav-height) - env(safe-area-inset-bottom, 0px) -
-        env(safe-area-inset-top, 0px) - 12px
+        env(safe-area-inset-top, 0px) - var(--screen-top-gap)
     );
   }
 

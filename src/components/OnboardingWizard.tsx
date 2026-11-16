@@ -432,7 +432,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
       {/* ── TOP NAVIGATION & STEP PROGRESS ─────────────────────────────────── */}
       <div
         className="shrink-0 px-5 pb-3 border-b border-fg/[0.08] bg-app z-10"
-        style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)' }}
+        style={{ paddingTop: 'var(--screen-top)' }}
       >
         <div className="flex items-center justify-between">
           {step > 1 ? (

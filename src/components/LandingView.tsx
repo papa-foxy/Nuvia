@@ -195,7 +195,7 @@ export function LandingView({ onStartOnboarding, onEnterDashboard }: LandingView
       <div
         className="relative z-10 w-full max-w-md mx-auto min-h-screen flex flex-col justify-between px-6"
         style={{
-          paddingTop: 'max(40px, calc(env(safe-area-inset-top, 0px) + 16px))',
+          paddingTop: 'max(40px, var(--screen-top))',
           paddingBottom: 'max(40px, calc(env(safe-area-inset-bottom, 0px) + 16px))',
         }}
       >
