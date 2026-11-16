@@ -18,7 +18,7 @@ import { StreakData, StreakDay, MilestoneBadge } from '@/types/streak';
 import { AdaptiveScheduleChange } from '@/types/adaptive-training';
 import { matchExercise, PLAYLIST_ID } from './exercise-catalog';
 import { createClient, isSupabaseConfigured } from './supabase/client';
-import { calculateTargets } from './calculator';
+import { calculateTargets, getUserCalculationContext } from './calculator';
 import {
   NuviaCache,
   workoutRoutinesKey,
@@ -289,20 +289,12 @@ export const DataService = {
             .eq('id', userId)
             .maybeSingle();
 
-          if (prof && prof.weight_kg && prof.height_cm) {
-            const birthYear = prof.date_of_birth
-              ? new Date(prof.date_of_birth).getFullYear()
-              : 2000;
-            const age = Math.max(16, new Date().getFullYear() - birthYear);
-            const calculated = calculateTargets({
-              age,
-              sex: prof.sex || 'male',
-              height_cm: Number(prof.height_cm) || 175,
-              weight_kg: Number(prof.weight_kg) || 70,
-              activity_level: prof.activity_level || 'moderately_active',
-              goal: prof.goal || 'build_muscle',
-              target_weight_kg: Number(prof.target_weight_kg) || 70,
-            });
+          // Only create targets from a complete profile. With details missing the
+          // result would be a guess saved as if it were real, so we leave goals
+          // empty and let onboarding ask for the missing details instead.
+          const calcCtx = prof ? getUserCalculationContext(prof as Profile, null) : null;
+          if (calcCtx && calcCtx.missing_fields.length === 0) {
+            const calculated = calculateTargets(calcCtx);
 
             const initialGoalPayload = {
               user_id: userId,
@@ -311,7 +303,7 @@ export const DataService = {
               carbohydrate_target: calculated.carbohydrate_target,
               fat_target: calculated.fat_target,
               exercise_minutes_target: calculated.exercise_minutes_target,
-              target_weight_kg: Number(prof.target_weight_kg) || 70,
+              target_weight_kg: calcCtx.target_weight_kg ?? null,
             };
 
             const { data: newG, error: gErr } = await supabase

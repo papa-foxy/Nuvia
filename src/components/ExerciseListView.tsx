@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { ScreenHeader } from './ScreenHeader';
 import { SegmentedControl } from './ui';
+import { MuscleRecoveryCard } from './workout/MuscleRecoveryCard';
 import { ExerciseLibraryView } from './ExerciseLibraryView';
 import { DataService, getLocalDateString } from '@/lib/data-service';
 import { Meal, ExerciseLog, DailySummary } from '@/types/database';
@@ -501,6 +502,7 @@ export function ExerciseListView({
       <>
         <RoutineDetailView
           routine={selectedRoutine}
+          recentLogs={exercises}
           initialMode={routineInitialMode}
           onBack={() => {
             setSelectedRoutine(null);
@@ -686,6 +688,9 @@ export function ExerciseListView({
           </div>
 
           <div className="h-px bg-fg/[0.06] w-full" />
+
+          {/* ── MUSCLE RECOVERY (body map from logged sets) ──────────────── */}
+          {!loadingLogs && <MuscleRecoveryCard logs={exercises} />}
 
           {/* ── UP NEXT (Action-First) ──────────────────────────────────── */}
           <div className="space-y-3">

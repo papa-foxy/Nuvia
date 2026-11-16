@@ -27,6 +27,13 @@ import {
   getUserCalculationContext,
   ACTIVITY_LABELS,
   CalculationResult,
+  getStoredWeeklyPace,
+  storeWeeklyPace,
+  cleanDietaryPreference,
+  describeMissingFields,
+  isSavedTargetOutOfDate,
+  paceToDailyKcal,
+  dailyKcalToPace,
 } from '@/lib/calculator';
 import { ActivityLevel, UserGoal, Profile, Goal } from '@/types/database';
 import { TabType } from './Navigation';
@@ -43,24 +50,32 @@ const GOAL_OPTIONS: { id: UserGoal; label: string; desc: string }[] = [
   { id: 'gain_weight', label: 'Gain weight', desc: 'Calorie surplus for healthy weight gain' },
 ];
 
+// Daily calorie change comes from the calculator (1 kg of body weight ≈ 7,700 kcal).
 const PACE_OPTIONS = [
-  { value: 0.25, label: '0.25 kg / week', desc: 'Gentle & sustainable pace' },
-  { value: 0.5, label: '0.5 kg / week', desc: 'Recommended standard pace' },
-  { value: 0.75, label: '0.75 kg / week', desc: 'Active & disciplined pace' },
-  { value: 1.0, label: '1.0 kg / week', desc: 'Aggressive target pace' },
-];
+  { value: 0.25, label: '0.25 kg / week', desc: 'Gentle' },
+  { value: 0.5, label: '0.5 kg / week', desc: 'Recommended' },
+  { value: 0.75, label: '0.75 kg / week', desc: 'Faster, needs more discipline' },
+  { value: 1.0, label: '1.0 kg / week', desc: 'Very fast, hard to keep up' },
+].map((o) => ({ ...o, desc: `${o.desc} · about ${paceToDailyKcal(o.value)} kcal a day` }));
+
+const GOAL_LABELS: Record<UserGoal, string> = {
+  recomposition: 'Lose fat & build muscle',
+  lose_weight: 'Lose weight',
+  maintain_weight: 'Maintain weight',
+  build_muscle: 'Build muscle',
+  gain_weight: 'Gain weight',
+};
 
 export function GoalsView({ onNavigateTab }: GoalsViewProps) {
   const { user, profile, goals, refreshProfileAndGoals } = useAuth();
 
-  // Active / selected pace from profile preferences or default 0.5
-  const currentPace = useMemo(() => {
-    if (profile?.dietary_preference?.startsWith('pace:')) {
-      const parsed = parseFloat(profile.dietary_preference.replace('pace:', ''));
-      if (!isNaN(parsed) && parsed > 0) return parsed;
-    }
-    return 0.5;
-  }, [profile?.dietary_preference]);
+  // Weekly pace the user chose (kept on this device; default 0.5)
+  const [paceVersion, setPaceVersion] = useState(0);
+  const currentPace = useMemo(
+    () => getStoredWeeklyPace(profile),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [profile, paceVersion]
+  );
 
   // Current authoritative calculation
   const calcContext = useMemo(
@@ -77,9 +92,19 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
   const proteinTarget = goals?.protein_target || currentCalc.protein_target;
   const carbTarget = goals?.carbohydrate_target || currentCalc.carbohydrate_target;
   const fatTarget = goals?.fat_target || currentCalc.fat_target;
-  const currentWeight = profile?.weight_kg || 73;
-  const targetWeight = goals?.target_weight_kg || profile?.target_weight_kg || 68;
-  const goalType = profile?.goal || 'lose_weight';
+  const currentWeight = calcContext.weight_kg;
+  // No target weight saved yet -> treat it as "stay at current weight" instead of inventing one
+  const targetWeight = calcContext.target_weight_kg || currentWeight;
+  const goalType = calcContext.goal;
+  const currentActivity = calcContext.activity_level;
+  const usesPace = goalType === 'lose_weight' || goalType === 'gain_weight';
+
+  // What the saved target means against today's maintenance estimate
+  const shownAdjustment = calorieTarget - currentCalc.tdee;
+  const shownPace = dailyKcalToPace(shownAdjustment);
+  // Saved numbers no longer match what the current body details give
+  const targetOutOfDate = isSavedTargetOutOfDate(goals, currentCalc);
+  const missingDetails = describeMissingFields(calcContext.missing_fields);
 
   // Sheet / Modal States
   const [showWhySheet, setShowWhySheet] = useState(false);
@@ -88,7 +113,7 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
   // Edit draft states
   const [draftGoal, setDraftGoal] = useState<UserGoal>(goalType);
   const [draftWeight, setDraftWeight] = useState<number>(targetWeight);
-  const [draftActivity, setDraftActivity] = useState<ActivityLevel>(profile?.activity_level || 'moderately_active');
+  const [draftActivity, setDraftActivity] = useState<ActivityLevel>(currentActivity);
   const [draftPace, setDraftPace] = useState<number>(currentPace);
   const [saving, setSaving] = useState(false);
 
@@ -99,15 +124,16 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
   } | null>(null);
 
   // Live preview for goal selector or editor modal
+  // Only the editor that is open contributes its draft; everything else stays as saved.
   const previewCalc = useMemo(() => {
     return calculateTargets({
       ...calcContext,
-      goal: draftGoal,
-      target_weight_kg: draftWeight,
-      activity_level: draftActivity,
-      weekly_pace_kg: draftPace,
+      goal: activeEditor === 'goal' ? draftGoal : calcContext.goal,
+      target_weight_kg: activeEditor === 'target_weight' ? draftWeight : calcContext.target_weight_kg,
+      activity_level: activeEditor === 'activity' ? draftActivity : calcContext.activity_level,
+      weekly_pace_kg: activeEditor === 'pace' ? draftPace : calcContext.weekly_pace_kg,
     });
-  }, [calcContext, draftGoal, draftWeight, draftActivity, draftPace]);
+  }, [calcContext, activeEditor, draftGoal, draftWeight, draftActivity, draftPace]);
 
   // Commit updated configuration
   const handleSavePlan = async (overrides?: {
@@ -116,10 +142,12 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
     activity_level?: ActivityLevel;
     weekly_pace_kg?: number;
   }) => {
-    const g = overrides?.goal ?? draftGoal;
-    const tw = overrides?.target_weight_kg ?? draftWeight;
-    const act = overrides?.activity_level ?? draftActivity;
-    const pace = overrides?.weekly_pace_kg ?? draftPace;
+    // Anything not being changed keeps its saved value (never a leftover draft
+    // from an editor the user opened and cancelled).
+    const g = overrides?.goal ?? goalType;
+    const tw = overrides?.target_weight_kg ?? targetWeight;
+    const act = overrides?.activity_level ?? currentActivity;
+    const pace = overrides?.weekly_pace_kg ?? currentPace;
 
     setSaving(true);
     try {
@@ -134,16 +162,20 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
         weekly_pace_kg: pace,
       });
 
-      // 1. Update profile (goal, target_weight, activity_level, pace tag)
+      // 1. Update profile (goal, target_weight, activity_level). The pace is kept
+      //    on the device; it used to overwrite dietary_preference with "pace:x".
+      const profileId = user?.id || profile?.id || DataService.getDemoUserId();
       const updatedProfile: Profile = {
         ...(profile || ({} as Profile)),
-        id: user?.id || profile?.id || DataService.getDemoUserId(),
+        id: profileId,
         name: profile?.name || 'User',
         goal: g,
         target_weight_kg: tw,
         activity_level: act,
-        dietary_preference: `pace:${pace}`,
+        dietary_preference: cleanDietaryPreference(profile?.dietary_preference),
       };
+      storeWeeklyPace(profileId, pace);
+      setPaceVersion((v) => v + 1);
       await DataService.saveProfile(updatedProfile);
 
       // 2. Update goals table
@@ -184,9 +216,15 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
 
   // Weight Progress calculations
   const weightDiff = Math.round(Math.abs(currentWeight - targetWeight) * 10) / 10;
-  const isLosing = goalType === 'lose_weight' || targetWeight < currentWeight;
-  const isGaining = goalType === 'gain_weight' || goalType === 'build_muscle' || targetWeight > currentWeight;
+  const isLosing = targetWeight < currentWeight;
+  const isGaining = targetWeight > currentWeight;
   const isAtGoal = currentWeight === targetWeight;
+  // Goal and target weight point in opposite directions (e.g. "lose weight" with a higher target)
+  const goalConflictsWithTarget =
+    (shownAdjustment < 0 && isGaining) || (shownAdjustment > 0 && isLosing);
+  // Time to goal uses the same pace the calorie target delivers
+  const shownWeeks =
+    !isAtGoal && !goalConflictsWithTarget && shownPace > 0 ? Math.ceil(weightDiff / shownPace) : null;
 
   // Macro calorie percentages
   const proteinCals = proteinTarget * 4;
@@ -198,14 +236,7 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
   const fatPct = Math.round((fatCals / totalMacroCals) * 100);
 
   // Goal name formatted
-  const goalLabel =
-    goalType === 'lose_weight'
-      ? 'Lose weight'
-      : goalType === 'maintain_weight'
-      ? 'Maintain weight'
-      : goalType === 'build_muscle'
-      ? 'Build muscle'
-      : 'Gain weight';
+  const goalLabel = GOAL_LABELS[goalType] || 'Maintain weight';
 
   return (
     <div className="flex-1 flex flex-col pb-28 px-4 pt-3 w-full max-w-md mx-auto space-y-5 animate-fadeIn">
@@ -257,6 +288,44 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
         </div>
       )}
 
+      {/* ── MISSING BODY DETAILS: numbers below are only an estimate ─────── */}
+      {missingDetails && (
+        <div className="p-3.5 rounded-2xl bg-card border border-warn/40 flex items-start gap-2.5">
+          <Info className="w-4 h-4 text-warn shrink-0 mt-0.5" />
+          <div>
+            <p className="text-xs font-bold text-fg">These numbers are a rough estimate</p>
+            <p className="text-[11px] text-muted mt-0.5">
+              Add your {missingDetails} in Profile so Nuvia can work out your real targets.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* ── SAVED TARGET NO LONGER MATCHES CURRENT BODY DETAILS ──────────── */}
+      {targetOutOfDate && !missingDetails && (
+        <div className="p-3.5 rounded-2xl bg-card border border-accent/30 space-y-2.5">
+          <div>
+            <p className="text-xs font-bold text-fg">Your targets can be updated</p>
+            <p className="text-[11px] text-muted mt-0.5 leading-relaxed">
+              You are using {calorieTarget.toLocaleString()} kcal ({proteinTarget} g protein, {carbTarget} g carbs,{' '}
+              {fatTarget} g fat). With your current details Nuvia now suggests{' '}
+              <span className="text-fg font-semibold">
+                {currentCalc.calorie_target.toLocaleString()} kcal ({currentCalc.protein_target} g protein,{' '}
+                {currentCalc.carbohydrate_target} g carbs, {currentCalc.fat_target} g fat)
+              </span>
+              .
+            </p>
+          </div>
+          <button
+            onClick={() => handleSavePlan({})}
+            disabled={saving}
+            className="w-full py-2.5 rounded-xl bg-accent hover:bg-accent-hover text-on-accent font-bold text-xs cursor-pointer"
+          >
+            {saving ? 'Updating...' : 'Use the new targets'}
+          </button>
+        </div>
+      )}
+
       {/* ── 1. HERO SECTION: YOUR GOAL ─────────────────────────────────── */}
       <div className="ios-card p-5 space-y-4">
         <div className="flex items-center justify-between">
@@ -274,6 +343,7 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
             {goalLabel}
           </h2>
           <p className="text-xs text-muted mt-1">
+            {goalType === 'recomposition' && 'A small calorie deficit with high protein, to lose fat while you train.'}
             {goalType === 'lose_weight' && 'A calorie target below your estimated maintenance to support weight loss.'}
             {goalType === 'maintain_weight' && 'A calorie target balanced with your estimated maintenance level.'}
             {goalType === 'build_muscle' && 'A controlled surplus with optimized protein for muscle growth.'}
@@ -406,17 +476,17 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
               </span>
               <span
                 className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded-md ${
-                  currentCalc.adjustment < 0
+                  shownAdjustment < 0
                     ? 'bg-emerald-500/20 text-green-ink'
-                    : currentCalc.adjustment > 0
+                    : shownAdjustment > 0
                     ? 'bg-info/20 text-blue-ink'
                     : 'bg-fg/10 text-zinc-300'
                 }`}
               >
-                {currentCalc.adjustment < 0
-                  ? `${currentCalc.adjustment} kcal`
-                  : currentCalc.adjustment > 0
-                  ? `+${currentCalc.adjustment} kcal`
+                {shownAdjustment < 0
+                  ? `${shownAdjustment} kcal`
+                  : shownAdjustment > 0
+                  ? `+${shownAdjustment} kcal`
                   : 'Balanced'}
               </span>
             </div>
@@ -427,10 +497,10 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
               <span className="text-xs text-muted">kcal</span>
             </div>
             <span className="text-[10px] text-muted block mt-1">
-              {currentCalc.adjustment < 0
-                ? `${Math.abs(currentCalc.adjustment)} kcal/day deficit`
-                : currentCalc.adjustment > 0
-                ? `${currentCalc.adjustment} kcal/day surplus`
+              {shownAdjustment < 0
+                ? `${Math.abs(shownAdjustment)} kcal/day deficit`
+                : shownAdjustment > 0
+                ? `${shownAdjustment} kcal/day surplus`
                 : 'Equal to maintenance'}
             </span>
           </div>
@@ -445,17 +515,17 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
           </div>
           <span
             className={`font-semibold text-xs ${
-              currentCalc.adjustment < 0
+              shownAdjustment < 0
                 ? 'text-green-ink'
-                : currentCalc.adjustment > 0
+                : shownAdjustment > 0
                 ? 'text-blue-ink'
                 : 'text-zinc-400'
             }`}
           >
-            {currentCalc.adjustment < 0
-              ? `${currentCalc.adjustment} vs maintenance`
-              : currentCalc.adjustment > 0
-              ? `+${currentCalc.adjustment} vs maintenance`
+            {shownAdjustment < 0
+              ? `${shownAdjustment} vs maintenance`
+              : shownAdjustment > 0
+              ? `+${shownAdjustment} vs maintenance`
               : 'Matches maintenance'}
           </span>
         </div>
@@ -464,7 +534,12 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
         <p className="text-xs text-muted leading-relaxed">
           {goalType === 'lose_weight' && (
             <>
-              Your target is <span className="text-fg font-medium">below estimated maintenance</span> to support steady, sustainable weight loss without metabolic crash.
+              Your target is <span className="text-fg font-medium">below estimated maintenance</span> to support steady, sustainable weight loss.
+            </>
+          )}
+          {goalType === 'recomposition' && (
+            <>
+              Your target is <span className="text-fg font-medium">slightly below estimated maintenance</span>, with high protein to help keep muscle while you lose fat.
             </>
           )}
           {goalType === 'maintain_weight' && (
@@ -499,21 +574,7 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
           </span>
         </div>
 
-        {/* Visual Progress Bar Path */}
         <div className="space-y-1.5 pt-1">
-          <div className="relative h-2.5 w-full bg-fg/[0.08] rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-accent to-info rounded-full transition-all duration-500"
-              style={{
-                width: isAtGoal
-                  ? '100%'
-                  : `${Math.min(
-                      100,
-                      Math.max(15, 100 - (weightDiff / (currentWeight || 1)) * 100)
-                    )}%`,
-              }}
-            />
-          </div>
           <div className="flex items-center justify-between text-[10px] text-muted px-0.5">
             <span>Current: {currentWeight} kg</span>
             <span className="font-semibold text-fg">
@@ -523,9 +584,39 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
           </div>
         </div>
 
-        <div className="p-3 rounded-xl bg-fg/[0.02] border border-fg/[0.04] text-xs text-muted flex items-center justify-between">
-          <span>Target pace</span>
-          <span className="font-semibold text-fg">{currentPace} kg / week</span>
+        <div className="p-3 rounded-xl bg-fg/[0.02] border border-fg/[0.04] text-xs text-muted space-y-1.5">
+          <div className="flex items-center justify-between">
+            <span>Expected pace at this target</span>
+            <span className="font-semibold text-fg">
+              {shownPace > 0
+                ? `about ${shownPace} kg / week ${shownAdjustment < 0 ? 'down' : 'up'}`
+                : 'Holding steady'}
+            </span>
+          </div>
+          {shownWeeks != null && (
+            <div className="flex items-center justify-between">
+              <span>Estimated time to {targetWeight} kg</span>
+              <span className="font-semibold text-fg">about {shownWeeks} weeks</span>
+            </div>
+          )}
+          {usesPace && !targetOutOfDate && currentCalc.limited_by !== 'none' && (
+            <p className="text-[11px] text-warn leading-relaxed">
+              You chose {currentPace} kg / week, but that would need a bigger calorie{' '}
+              {goalType === 'lose_weight' ? 'cut' : 'increase'} than Nuvia will suggest
+              {currentCalc.limited_by === 'min_calories'
+                ? ` (it will not go below ${currentCalc.min_calories.toLocaleString()} kcal a day)`
+                : ' (no more than a quarter of your maintenance calories)'}
+              , so your pace will be slower.
+            </p>
+          )}
+          {goalConflictsWithTarget && (
+            <p className="text-[11px] text-warn leading-relaxed">
+              Your goal and your target weight point in different directions. Check your target weight or change your goal.
+            </p>
+          )}
+          <p className="text-[10px] text-subtle leading-relaxed">
+            Estimates only. Real weight change varies from week to week.
+          </p>
         </div>
       </div>
 
@@ -664,7 +755,7 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
           {/* Row 3: Activity Level */}
           <button
             onClick={() => {
-              setDraftActivity(profile?.activity_level || 'moderately_active');
+              setDraftActivity(currentActivity);
               setActiveEditor('activity');
             }}
             className="w-full p-3.5 flex items-center justify-between hover:bg-fg/[0.02] transition-colors text-left cursor-pointer"
@@ -675,7 +766,7 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
             </div>
             <div className="flex items-center gap-1.5">
               <span className="font-semibold text-fg">
-                {ACTIVITY_LABELS[profile?.activity_level || 'moderately_active']?.label || 'Moderate'}
+                {ACTIVITY_LABELS[currentActivity]?.label || 'Not set'}
               </span>
               <ChevronRight className="w-4 h-4 text-muted" />
             </div>
@@ -694,7 +785,9 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
               <span className="font-medium text-muted">Weekly Pace</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="font-semibold text-fg">{currentPace} kg / week</span>
+              <span className="font-semibold text-fg">
+                {usesPace ? `${currentPace} kg / week` : 'Not used for this goal'}
+              </span>
               <ChevronRight className="w-4 h-4 text-muted" />
             </div>
           </button>
@@ -707,8 +800,8 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
           How Nuvia Calculates Your Target
         </span>
         <p className="text-xs text-muted leading-relaxed">
-          Your calorie recommendation is calculated from your body metrics using the clinical{' '}
-          <strong className="text-fg">Mifflin-St Jeor formula</strong> and physical activity multiplier:
+          Your calorie target is estimated from your age, sex, height and weight using the{' '}
+          <strong className="text-fg">Mifflin-St Jeor formula</strong>, multiplied by your activity level:
         </p>
 
         <div className="p-3.5 rounded-2xl bg-app/40 border border-fg/[0.04] space-y-2 text-xs">
@@ -720,17 +813,17 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
             <span className="text-muted">Goal adjustment ({goalLabel})</span>
             <span
               className={`font-bold ${
-                currentCalc.adjustment < 0
+                shownAdjustment < 0
                   ? 'text-green-ink'
-                  : currentCalc.adjustment > 0
+                  : shownAdjustment > 0
                   ? 'text-blue-ink'
                   : 'text-fg'
               }`}
             >
-              {currentCalc.adjustment < 0
-                ? `${currentCalc.adjustment} kcal`
-                : currentCalc.adjustment > 0
-                ? `+${currentCalc.adjustment} kcal`
+              {shownAdjustment < 0
+                ? `${shownAdjustment} kcal`
+                : shownAdjustment > 0
+                ? `+${shownAdjustment} kcal`
                 : '0 kcal'}
             </span>
           </div>
@@ -786,25 +879,26 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
                 <div className="p-2.5 rounded-xl bg-fg/[0.03] border border-fg/[0.04]">
                   <span className="text-[10px] text-muted block">Sex & Age</span>
                   <span className="font-semibold text-fg">
-                    {profile?.sex || 'Male'}, {calcContext.age} yrs
+                    {profile?.sex ? <span className="capitalize">{profile.sex}</span> : 'Sex not set'},{' '}
+                    {calcContext.missing_fields.includes('date_of_birth') ? 'age not set' : `${calcContext.age} yrs`}
                   </span>
                 </div>
                 <div className="p-2.5 rounded-xl bg-fg/[0.03] border border-fg/[0.04]">
                   <span className="text-[10px] text-muted block">Height & Weight</span>
                   <span className="font-semibold text-fg">
-                    {profile?.height_cm || 175} cm, {currentWeight} kg
+                    {calcContext.height_cm} cm, {currentWeight} kg
                   </span>
                 </div>
                 <div className="p-2.5 rounded-xl bg-fg/[0.03] border border-fg/[0.04]">
                   <span className="text-[10px] text-muted block">Activity Level</span>
                   <span className="font-semibold text-fg">
-                    {ACTIVITY_LABELS[profile?.activity_level || 'moderately_active']?.label || 'Moderate'}
+                    {ACTIVITY_LABELS[currentActivity]?.label || 'Not set'}
                   </span>
                 </div>
                 <div className="p-2.5 rounded-xl bg-fg/[0.03] border border-fg/[0.04]">
                   <span className="text-[10px] text-muted block">Goal & Pace</span>
                   <span className="font-semibold text-fg">
-                    {goalLabel} ({currentPace} kg/wk)
+                    {goalLabel}{usesPace ? ` (${currentPace} kg/wk)` : ''}
                   </span>
                 </div>
               </div>
@@ -840,19 +934,19 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
                 <div className="flex items-center justify-between font-semibold text-fg">
                   <span>3. Goal Adjustment</span>
                   <span className="text-green-ink">
-                    {currentCalc.adjustment < 0
-                      ? `${currentCalc.adjustment} kcal`
-                      : currentCalc.adjustment > 0
-                      ? `+${currentCalc.adjustment} kcal`
+                    {shownAdjustment < 0
+                      ? `${shownAdjustment} kcal`
+                      : shownAdjustment > 0
+                      ? `+${shownAdjustment} kcal`
                       : '0 kcal'}
                   </span>
                 </div>
                 <p className="text-[11px] text-muted">
-                  {goalType === 'lose_weight'
-                    ? `Safe daily deficit for your target pace of ${currentPace} kg/week.`
-                    : goalType === 'build_muscle'
-                    ? 'Lean surplus to synthesize new muscle tissue with minimal fat gain.'
-                    : 'Target aligned with your maintenance expenditure.'}
+                  {shownAdjustment < 0
+                    ? `Eating ${Math.abs(shownAdjustment)} kcal below maintenance each day works out to about ${shownPace} kg lost per week (1 kg of body weight is roughly 7,700 kcal).`
+                    : shownAdjustment > 0
+                    ? `Eating ${shownAdjustment} kcal above maintenance each day works out to about ${shownPace} kg gained per week (1 kg of body weight is roughly 7,700 kcal).`
+                    : 'Your target matches your maintenance calories.'}
                 </p>
               </div>
 
@@ -868,7 +962,7 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
             </div>
 
             <p className="text-[11px] text-muted pt-1 leading-relaxed">
-              Nuvia recalculates your targets automatically whenever your weight, activity level, or goal changes in your profile.
+              Your targets update when you change your goal, pace or activity level here, or save new body details in Profile. Calories burned in workouts are not added back, because your activity level already covers them.
             </p>
 
             <button
@@ -1105,6 +1199,10 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
               })}
             </div>
 
+            <p className="text-[11px] text-muted leading-relaxed">
+              Not sure? Pick the lower option. Choosing a level that is too high makes your calorie target too high.
+            </p>
+
             <div className="pt-2 flex gap-2">
               <button
                 onClick={() => setActiveEditor(null)}
@@ -1187,9 +1285,25 @@ export function GoalsView({ onNavigateTab }: GoalsViewProps) {
                 </span>
               </div>
               <span className="text-green-ink font-semibold">
-                {previewCalc.adjustment} kcal/day
+                {previewCalc.adjustment > 0 ? `+${previewCalc.adjustment}` : previewCalc.adjustment} kcal/day
               </span>
             </div>
+
+            {!usesPace && (
+              <p className="text-[11px] text-muted leading-relaxed">
+                Weekly pace only changes your calories when your goal is Lose weight or Gain weight.
+              </p>
+            )}
+            {usesPace && previewCalc.limited_by !== 'none' && (
+              <p className="text-[11px] text-warn leading-relaxed">
+                {draftPace} kg / week would need a bigger calorie {goalType === 'lose_weight' ? 'cut' : 'increase'} than
+                Nuvia will suggest
+                {previewCalc.limited_by === 'min_calories'
+                  ? ` (it will not go below ${previewCalc.min_calories.toLocaleString()} kcal a day)`
+                  : ' (no more than a quarter of your maintenance calories)'}
+                . At this target, expect about {previewCalc.expected_pace_kg} kg / week.
+              </p>
+            )}
 
             <div className="pt-2 flex gap-2">
               <button

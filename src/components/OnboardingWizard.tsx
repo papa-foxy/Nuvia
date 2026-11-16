@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   ArrowLeft,
   ArrowRight,
@@ -30,7 +30,13 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { PhysiqueIllustration } from '@/components/physique/PhysiqueIllustration';
-import { calculateTargets, CalculationResult } from '@/lib/calculator';
+import {
+  calculateTargets,
+  calculateAge,
+  getUserCalculationContext,
+  cleanDietaryPreference,
+  CalculationResult,
+} from '@/lib/calculator';
 import { DataService } from '@/lib/data-service';
 import { ActivityLevel, UserGoal, Profile, Goal } from '@/types/database';
 import {
@@ -51,17 +57,18 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
 
   // ── Step 1 & 2: Core Biometrics & Metabolism (Deterministic Calorie Inputs) ──
   const [sex, setSex] = useState<'male' | 'female'>(profile?.sex === 'female' ? 'female' : 'male');
-  const [dob, setDob] = useState(profile?.date_of_birth || '2004-09-23');
-  const [heightCm, setHeightCm] = useState(profile?.height_cm ? String(profile.height_cm) : '176');
-  const [weightKg, setWeightKg] = useState(profile?.weight_kg ? String(profile.weight_kg) : '79');
+  // Body details start empty for a new user: nothing is pre-filled with someone else's numbers.
+  const [dob, setDob] = useState(profile?.date_of_birth?.slice(0, 10) || '');
+  const [heightCm, setHeightCm] = useState(profile?.height_cm ? String(profile.height_cm) : '');
+  const [weightKg, setWeightKg] = useState(profile?.weight_kg ? String(profile.weight_kg) : '');
   const [activityLevel, setActivityLevel] = useState<ActivityLevel>(
     profile?.activity_level || 'moderately_active'
   );
   const [goal, setGoal] = useState<UserGoal>(profile?.goal || 'build_muscle');
   const [targetWeightKg, setTargetWeightKg] = useState(
-    profile?.target_weight_kg ? String(profile.target_weight_kg) : '72'
+    profile?.target_weight_kg ? String(profile.target_weight_kg) : ''
   );
-  const [dietaryPref, setDietaryPref] = useState(profile?.dietary_preference || 'Halal');
+  const [dietaryPref, setDietaryPref] = useState(cleanDietaryPreference(profile?.dietary_preference) || 'Halal');
 
   // ── Step 3: Understand Your Body (Current Physique Self-Assessment) ─────────
   const [currentPhysique, setCurrentPhysique] = useState<
@@ -117,15 +124,52 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
   ]);
 
   // ── Calculation & Save State ──────────────────────────────────────────────
-  const [calculatedTargets, setCalculatedTargets] = useState<CalculationResult | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const calculateAge = (dobString: string): number => {
-    const birthday = new Date(dobString);
-    const ageDifMs = Date.now() - birthday.getTime();
-    const ageDate = new Date(ageDifMs);
-    return Math.abs(ageDate.getUTCFullYear() - 1970) || 22;
-  };
+  // Body details must be real, plausible values before any target is calculated.
+  const heightNum = Number(heightCm);
+  const weightNum = Number(weightKg);
+  const targetWeightNum = Number(targetWeightKg);
+  const bodyDetailsError =
+    !(heightNum >= 100 && heightNum <= 250)
+      ? 'Enter your height in centimetres (for example 170).'
+      : !(weightNum >= 25 && weightNum <= 350)
+      ? 'Enter your weight in kilograms (for example 70).'
+      : calculateAge(dob) == null
+      ? 'Enter your date of birth.'
+      : null;
+  const needsTargetWeight = goal === 'lose_weight' || goal === 'gain_weight';
+  const targetWeightError =
+    targetWeightKg.trim() === ''
+      ? needsTargetWeight
+        ? 'Enter the weight you want to reach.'
+        : null
+      : !(targetWeightNum >= 25 && targetWeightNum <= 350)
+      ? 'Enter your target weight in kilograms.'
+      : goal === 'lose_weight' && targetWeightNum >= weightNum
+      ? 'To lose weight, your target weight should be below your current weight.'
+      : goal === 'gain_weight' && targetWeightNum <= weightNum
+      ? 'To gain weight, your target weight should be above your current weight.'
+      : null;
+  const stepError = step === 1 ? bodyDetailsError : step === 2 ? targetWeightError : null;
+  const savedTargetWeight = targetWeightKg.trim() !== '' && !targetWeightError ? targetWeightNum : null;
+
+  // Targets always come from the shared calculator, using exactly what was entered.
+  const calculatedTargets: CalculationResult | null = useMemo(() => {
+    if (bodyDetailsError) return null;
+    return calculateTargets(
+      getUserCalculationContext({
+        ...(profile || ({} as Profile)),
+        date_of_birth: dob,
+        sex,
+        height_cm: heightNum,
+        weight_kg: weightNum,
+        activity_level: activityLevel,
+        goal,
+        target_weight_kg: savedTargetWeight,
+      })
+    );
+  }, [bodyDetailsError, profile, dob, sex, heightNum, weightNum, activityLevel, goal, savedTargetWeight]);
 
   const currentPhysiqueOptions = [
     { id: 'lean', label: 'Lean', desc: 'Slender, minimal body fat' },
@@ -226,25 +270,8 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
     }
   };
 
-  // Re-calculate metabolic targets whenever advancing past step 2
-  const runCalorieCalculation = () => {
-    const age = calculateAge(dob);
-    const res = calculateTargets({
-      age,
-      sex,
-      height_cm: Number(heightCm) || 176,
-      weight_kg: Number(weightKg) || 73,
-      activity_level: activityLevel,
-      goal,
-      target_weight_kg: Number(targetWeightKg) || Number(weightKg),
-    });
-    setCalculatedTargets(res);
-  };
-
   const handleNextStep = () => {
-    if (step === 2) {
-      runCalorieCalculation();
-    }
+    if (stepError) return;
     if (step < totalSteps) {
       setStep((s) => s + 1);
     }
@@ -252,8 +279,14 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
 
   // Final submission of all biometric, metabolic, and qualitative context
   const handleFinalSave = async () => {
-    if (!calculatedTargets) {
-      runCalorieCalculation();
+    // Never save a plan built from missing or invalid body details.
+    if (!calculatedTargets || bodyDetailsError) {
+      setStep(1);
+      return;
+    }
+    if (targetWeightError) {
+      setStep(2);
+      return;
     }
     setSaving(true);
     const userId = user?.id || DataService.getDemoUserId();
@@ -261,30 +294,20 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
     // 1. Authoritative Biometric Profile
     const updatedProfile: Profile = {
       id: userId,
-      name: profile?.name || 'Wann',
+      name: profile?.name || null,
       date_of_birth: dob,
       sex,
-      height_cm: Number(heightCm) || 176,
-      weight_kg: Number(weightKg) || 73,
+      height_cm: heightNum,
+      weight_kg: weightNum,
       activity_level: activityLevel,
       goal,
-      target_weight_kg: Number(targetWeightKg) || 68,
+      target_weight_kg: savedTargetWeight,
       dietary_preference: dietaryPref,
       allergies: [],
     };
 
     // 2. Authoritative Nutritional Goals (deterministic Mifflin-St Jeor)
-    const targets =
-      calculatedTargets ||
-      calculateTargets({
-        age: calculateAge(dob),
-        sex,
-        height_cm: Number(heightCm) || 176,
-        weight_kg: Number(weightKg) || 73,
-        activity_level: activityLevel,
-        goal,
-        target_weight_kg: Number(targetWeightKg) || 68,
-      });
+    const targets = calculatedTargets;
 
     const newGoals: Goal = {
       id: `goal-${Date.now()}`,
@@ -294,7 +317,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
       carbohydrate_target: targets.carbohydrate_target,
       fat_target: targets.fat_target,
       exercise_minutes_target: targets.exercise_minutes_target,
-      target_weight_kg: Number(targetWeightKg) || 68,
+      target_weight_kg: savedTargetWeight,
     };
 
     // 3. Qualitative Personal Fitness Context (Physical reality, equipment limits, adherence)
@@ -352,18 +375,22 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
   };
 
   const getGoalStrategy = (g: UserGoal) => {
+    // The label shows the real gap between this user's target and their maintenance calories.
+    const adj = calculatedTargets?.adjustment ?? 0;
+    const label =
+      adj < 0 ? `${adj} kcal vs maintenance` : adj > 0 ? `+${adj} kcal vs maintenance` : 'At maintenance';
     switch (g) {
       case 'recomposition':
-        return { label: 'Recomp (-200 kcal)', tag: 'Lose Fat & Build Muscle', color: 'text-emerald-400 bg-emerald-400/15 border-emerald-400/30' };
+        return { label, tag: 'Lose Fat & Build Muscle', color: 'text-emerald-400 bg-emerald-400/15 border-emerald-400/30' };
       case 'lose_weight':
-        return { label: '-450 kcal Deficit', tag: 'Fat Loss', color: 'text-amber-400 bg-amber-400/15 border-amber-400/30' };
+        return { label, tag: 'Fat Loss', color: 'text-amber-400 bg-amber-400/15 border-amber-400/30' };
       case 'build_muscle':
-        return { label: '+200 kcal Surplus', tag: 'Muscle Growth', color: 'text-green-ink bg-accent/15 border-accent/30' };
+        return { label, tag: 'Muscle Growth', color: 'text-green-ink bg-accent/15 border-accent/30' };
       case 'gain_weight':
-        return { label: '+400 kcal Surplus', tag: 'Weight Gain', color: 'text-sky-400 bg-sky-400/15 border-sky-400/30' };
+        return { label, tag: 'Weight Gain', color: 'text-sky-400 bg-sky-400/15 border-sky-400/30' };
       case 'maintain_weight':
       default:
-        return { label: 'Energy Balance', tag: 'Maintenance', color: 'text-fg bg-fg/10 border-fg/20' };
+        return { label, tag: 'Maintenance', color: 'text-fg bg-fg/10 border-fg/20' };
     }
   };
 
@@ -495,6 +522,10 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                 <div className="relative">
                   <input
                     type="number"
+                    inputMode="decimal"
+                    min={100}
+                    max={250}
+                    placeholder="e.g. 170"
                     value={heightCm}
                     onChange={(e) => setHeightCm(e.target.value)}
                     className="w-full px-3.5 py-2.5 rounded-xl bg-card border border-fg/[0.08] text-sm text-fg font-semibold focus:outline-none focus:border-accent"
@@ -510,7 +541,11 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                 <div className="relative">
                   <input
                     type="number"
+                    inputMode="decimal"
                     step="0.1"
+                    min={25}
+                    max={350}
+                    placeholder="e.g. 70"
                     value={weightKg}
                     onChange={(e) => setWeightKg(e.target.value)}
                     className="w-full px-3.5 py-2.5 rounded-xl bg-card border border-fg/[0.08] text-sm text-fg font-semibold focus:outline-none focus:border-accent"
@@ -526,6 +561,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
               </label>
               <input
                 type="date"
+                max={new Date().toISOString().slice(0, 10)}
                 value={dob}
                 onChange={(e) => setDob(e.target.value)}
                 className="w-full px-3.5 py-2.5 rounded-xl bg-card border border-fg/[0.08] text-sm text-fg font-semibold focus:outline-none focus:border-accent"
@@ -619,7 +655,11 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
               <div className="relative">
                 <input
                   type="number"
+                  inputMode="decimal"
                   step="0.1"
+                  min={25}
+                  max={350}
+                  placeholder={needsTargetWeight ? 'e.g. 65' : 'Optional'}
                   value={targetWeightKg}
                   onChange={(e) => setTargetWeightKg(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-card border border-fg/[0.08] text-sm text-fg font-semibold focus:outline-none focus:border-accent"
@@ -635,7 +675,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
               <div className="grid grid-cols-2 gap-2">
                 {[
                   { id: 'sedentary' as ActivityLevel, label: 'Sedentary' },
-                  { id: 'lightly_active' as ActivityLevel, label: 'Light (1-2d)' },
+                  { id: 'lightly_active' as ActivityLevel, label: 'Light (1-3d)' },
                   { id: 'moderately_active' as ActivityLevel, label: 'Moderate (3-5d)' },
                   { id: 'very_active' as ActivityLevel, label: 'Active (6-7d)' },
                 ].map((act) => (
@@ -651,6 +691,9 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                   </button>
                 ))}
               </div>
+              <p className="text-[10px] text-muted mt-1.5">
+                Days of exercise per week. Not sure? Pick the lower option, because a level that is too high makes your calorie target too high.
+              </p>
             </div>
           </div>
         </div>
@@ -1207,9 +1250,17 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                   <span className="text-xs text-muted ml-1.5">kcal / day</span>
                 </div>
                 <div className="text-right text-[10px] text-muted">
-                  <span>BMR: {calculatedTargets.bmr}</span> · <span>TDEE: {calculatedTargets.tdee}</span>
+                  <span>At rest: {calculatedTargets.bmr}</span> · <span>Maintenance: {calculatedTargets.tdee}</span>
                 </div>
               </div>
+
+              <p className="text-[10px] text-muted leading-relaxed">
+                {calculatedTargets.expected_pace_kg > 0
+                  ? `An estimate from your age, sex, height, weight and activity. At this target, expect about ${calculatedTargets.expected_pace_kg} kg ${calculatedTargets.adjustment < 0 ? 'lost' : 'gained'} per week${calculatedTargets.weeks_to_goal != null ? `, roughly ${calculatedTargets.weeks_to_goal} weeks to ${savedTargetWeight} kg` : ''}.`
+                  : 'An estimate from your age, sex, height, weight and activity.'}
+                {calculatedTargets.limited_by !== 'none' &&
+                  ' Nuvia kept the calorie change within a safe range, so the pace is gentler than the standard 0.5 kg per week.'}
+              </p>
 
               {/* Macros Row */}
               <div className="grid grid-cols-3 gap-2 pt-1 border-t border-fg/[0.06] text-center">
@@ -1332,9 +1383,10 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
         {step < totalSteps ? (
           <button
             onClick={handleNextStep}
-            className="w-full py-3.5 rounded-2xl bg-fg text-app font-bold text-xs transition-transform active:scale-[0.98] cursor-pointer shadow-md"
+            disabled={Boolean(stepError)}
+            className="w-full py-3.5 rounded-2xl bg-fg text-app font-bold text-xs transition-transform active:scale-[0.98] cursor-pointer shadow-md disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            Continue
+            {stepError || 'Continue'}
           </button>
         ) : (
           <div className="flex gap-2">

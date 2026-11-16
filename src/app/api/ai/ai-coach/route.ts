@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { calculateTargets, getUserCalculationContext } from '@/lib/calculator';
+import { calculateTargets, getUserCalculationContext, cleanDietaryPreference, describeMissingFields } from '@/lib/calculator';
 import { AdaptiveTrainingEngine } from '@/lib/adaptive-training-engine';
 import { geminiGenerate } from '@/lib/server/gemini';
 
@@ -115,7 +115,7 @@ export async function POST(req: NextRequest) {
       caloriesEaten: foodCalories,
       remainingCalories,
       overTargetBy: overCalories,
-      goalType: profile?.goal || 'lose_weight',
+      goalType: calcCtx.goal,
     };
 
     const remainingProtein = Math.max(0, (goals?.protein_target || authCalc.protein_target) - (todaySummary?.protein_consumed || 0));
@@ -131,8 +131,8 @@ export async function POST(req: NextRequest) {
       const userContext = `
 USER CONTEXT:
 - Name: ${profile?.name || profile?.full_name || 'User'}
-- Goal: ${profile?.goal || 'lose_weight'}
-- Estimated Maintenance (TDEE): ${maintenanceCalories} kcal/day
+- Goal: ${profile?.goal || 'not set'}
+- Estimated Maintenance (TDEE): ${maintenanceCalories} kcal/day${calcCtx.missing_fields.length ? ` (rough estimate: the user has not entered their ${describeMissingFields(calcCtx.missing_fields)}; suggest they add it in Profile)` : ''}
 - Daily Calorie Target: ${authoritativeCalorieTarget} kcal/day (Goal Adjustment: ${goalAdjustment >= 0 ? `+${goalAdjustment}` : goalAdjustment} kcal/day vs maintenance)
 - Calorie Intake Today: ${JSON.stringify(structuredCalorieState, null, 2)}
 - Calorie Intake Status:
@@ -140,7 +140,7 @@ USER CONTEXT:
   * ${isOverTarget ? `${overCalories} kcal above target` : `${remainingCalories} kcal left to eat today`}
 - Protein Goal: ${goals?.protein_target || authCalc.protein_target} g (Consumed: ${todaySummary?.protein_consumed || 0} g, Remaining: ${remainingProtein} g)
 - Exercise: ${todaySummary?.exercise_minutes || 0} min / Target ${goals?.exercise_minutes_target || authCalc.exercise_minutes_target} min (Burned: ${exerciseCalories} kcal)
-- Dietary Preference: ${profile?.dietary_preference || 'None'}
+- Dietary Preference: ${cleanDietaryPreference(profile?.dietary_preference) || 'None'}
 ${exerciseContext}
 - Recent meals: ${(recentMeals || []).map((m: any) => `${m.meal_type}: ${m.description}`).join('; ')}
 ${fitnessContextBlock}

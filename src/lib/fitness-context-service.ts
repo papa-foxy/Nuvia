@@ -15,6 +15,7 @@
 
 import { DataService, getLocalDateString } from './data-service';
 import { NuviaCache } from './nuvia-cache';
+import { calculateAge, getStoredWeeklyPace } from './calculator';
 import { cleanActivityTitle } from './activity-utils';
 import { AdaptiveTrainingEngine } from './adaptive-training-engine';
 import {
@@ -370,21 +371,8 @@ export class FitnessContextService {
     }
 
     // Goal pace extraction
-    let goalPace = 0.5;
-    if (profile?.dietary_preference && profile.dietary_preference.includes('pace:')) {
-      const match = profile.dietary_preference.match(/pace:([0-9.]+)/);
-      if (match) goalPace = parseFloat(match[1]);
-    }
-
-    let calculatedAge: number | undefined;
-    if (profile?.date_of_birth) {
-      const birth = new Date(profile.date_of_birth);
-      const today = new Date();
-      let age = today.getFullYear() - birth.getFullYear();
-      const m = today.getMonth() - birth.getMonth();
-      if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
-      if (age > 0) calculatedAge = age;
-    }
+    const goalPace = getStoredWeeklyPace(profile);
+    const calculatedAge = calculateAge(profile?.date_of_birth) ?? undefined;
 
     const synthesizedStrategy = generateTrainingStrategy({
       goal: profile?.goal || 'lose_weight',

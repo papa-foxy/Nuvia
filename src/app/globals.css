@@ -288,3 +288,37 @@
     height: 100vh;
   }
 }
+
+/* ── Anatomy muscle map ─────────────────────────────────────────────────── */
+.anatomy-muscle {
+  cursor: pointer;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+@media (hover: hover) {
+  .anatomy-muscle:hover {
+    filter: brightness(1.18) saturate(1.1);
+  }
+}
+.anatomy-muscle:focus-visible {
+  stroke: var(--theme-fg);
+  stroke-width: 7;
+}
+/* Front/back turn: the figure rotates around its vertical axis. */
+.anatomy-stage {
+  perspective: 900px;
+}
+.anatomy-turn {
+  animation: anatomyTurn 0.45s cubic-bezier(0.2, 0.7, 0.2, 1);
+  transform-origin: 50% 50%;
+}
+@keyframes anatomyTurn {
+  from {
+    transform: rotateY(-88deg) scale(0.96);
+    opacity: 0.2;
+  }
+  to {
+    transform: rotateY(0deg) scale(1);
+    opacity: 1;
+  }
+}

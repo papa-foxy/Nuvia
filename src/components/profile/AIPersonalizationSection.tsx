@@ -123,7 +123,7 @@ export function AIPersonalizationSection({ userId, profile }: AIPersonalizationS
             <span className="text-[10px] text-green-ink font-semibold">User Confirmed</span>
           </div>
           <p className="text-xs font-medium text-fg">
-            {profile?.dietary_preference || 'Balanced / Halal'}
+            {profile?.dietary_preference?.startsWith('pace:') ? 'Balanced / Halal' : profile?.dietary_preference || 'Balanced / Halal'}
           </p>
         </div>
 

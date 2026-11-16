@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import {
+  Timer,
   ArrowLeft,
   Play,
   Pause,
@@ -34,6 +35,8 @@ import { calculateWorkoutCalories } from '@/lib/calorie-calculator';
 import { DataService, getLocalDateString } from '@/lib/data-service';
 import { useAuth } from '@/lib/auth-context';
 import { ExerciseThumbnail } from './ExerciseThumbnail';
+import { RoutineMuscleStrip } from './workout/RoutineMuscleStrip';
+import type { ExerciseLog } from '@/types/database';
 import { cleanActivityTitle } from '@/lib/activity-utils';
 import {
   NuviaCache,
@@ -51,6 +54,8 @@ interface RoutineDetailViewProps {
   onWorkoutFinished?: () => void;
   onNavigateHome?: () => void;
   initialMode?: 'overview' | 'workout';
+  /** Recent exercise logs, for the muscle recovery strip. */
+  recentLogs?: ExerciseLog[];
 }
 
 type WorkoutStatus = 'idle' | 'active' | 'paused' | 'finished';
@@ -69,6 +74,7 @@ export function RoutineDetailView({
   onWorkoutFinished,
   onNavigateHome,
   initialMode = 'overview',
+  recentLogs = [],
 }: RoutineDetailViewProps) {
   const { user, profile, refreshProfileAndGoals } = useAuth();
 
@@ -744,6 +750,9 @@ export function RoutineDetailView({
           <span>Start Workout Session</span>
         </button>
 
+        {/* Muscles trained, with current recovery */}
+        <RoutineMuscleStrip exercises={currentRoutine.exercises} logs={recentLogs} />
+
         {/* Exercise Preview List */}
         <div className="space-y-2.5 pt-2">
           <span className="text-[11px] font-bold uppercase tracking-wider text-muted block px-1">
@@ -973,6 +982,9 @@ export function RoutineDetailView({
         {currentRoutine.exercises.map((ex, exIdx) => {
           const sets = sessionSets[ex.id] || [];
           const allSetsDone = sets.length > 0 && sets.every((s) => s.completed);
+          const doneCount = sets.filter((s) => s.completed).length;
+          const nextSetIdx = sets.findIndex((s) => !s.completed);
+          const restSec = ex.rest_seconds ?? 90;
 
           return (
             <div
@@ -1028,24 +1040,51 @@ export function RoutineDetailView({
 
               {/* Set-by-Set Table (Phase 4) */}
               <div className="space-y-1.5 pt-1">
+                <div className="flex items-center justify-between px-1 pb-1">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted">
+                    {sets.length} working set{sets.length === 1 ? '' : 's'}
+                  </span>
+                  <span className="text-[10px] font-semibold text-subtle tabular-nums flex items-center gap-1">
+                    <Timer className="w-3 h-3" />
+                    {formatTimer(restSec)} rest · {doneCount}/{sets.length} done
+                  </span>
+                </div>
                 <div className="grid grid-cols-12 gap-1 text-[10px] text-muted font-semibold px-2">
-                  <span className="col-span-2">SET · LAST</span>
+                  <span className="col-span-2">SET</span>
                   <span className="col-span-4 text-center">REPS</span>
                   <span className="col-span-4 text-center">WEIGHT (KG)</span>
                   <span className="col-span-2 text-right">DONE</span>
                 </div>
 
                 {sets.map((set, sIdx) => (
+                  <React.Fragment key={sIdx}>
+                  {sIdx > 0 && (
+                    <div className="flex items-center gap-2 pl-[19px] h-4" aria-hidden="true">
+                      <span className={`w-0.5 h-full rounded-full ${sets[sIdx - 1].completed ? 'bg-accent/60' : 'bg-fg/10'}`} />
+                      <span className="text-[10px] text-subtle tabular-nums">{formatTimer(restSec)} rest</span>
+                    </div>
+                  )}
                   <div
-                    key={sIdx}
                     className={`grid grid-cols-12 gap-1 items-center px-2 py-1.5 rounded-xl border transition-colors ${
                       set.completed
                         ? 'bg-accent/10 border-accent/25'
-                        : 'bg-app/30 border-fg/[0.04]'
+                        : sIdx === nextSetIdx
+                          ? 'bg-app/30 border-fg/30'
+                          : 'bg-app/30 border-fg/[0.04]'
                     }`}
                   >
-                    <span className="col-span-2 px-1 flex flex-col leading-tight">
-                      <span className="text-xs font-bold text-fg">{set.set_number}</span>
+                    <span className="col-span-2 flex flex-col items-start leading-tight">
+                      <span
+                        className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-extrabold tabular-nums ${
+                          set.completed
+                            ? 'bg-accent text-on-accent'
+                            : sIdx === nextSetIdx
+                              ? 'bg-fg text-app'
+                              : 'bg-elevated text-muted'
+                        }`}
+                      >
+                        {set.set_number}
+                      </span>
                       {(() => {
                         const prev = previousSetsMap[ex.name.toLowerCase()]?.[sIdx];
                         if (!prev) return null;
@@ -1119,7 +1158,30 @@ export function RoutineDetailView({
                       </button>
                     </div>
                   </div>
+                  </React.Fragment>
                 ))}
+
+                {/* Log the next set in one tap */}
+                {nextSetIdx >= 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => handleToggleSetComplete(ex.id, nextSetIdx, restSec)}
+                    className="mt-2 w-full h-11 rounded-xl bg-accent hover:bg-accent-hover text-on-accent text-sm font-bold flex items-center justify-center gap-2 active:scale-[0.99] transition-transform"
+                  >
+                    <Check className="w-4 h-4 stroke-[3]" />
+                    <span>
+                      Log set {sets[nextSetIdx].set_number} · {sets[nextSetIdx].reps} reps
+                      {sets[nextSetIdx].weight_kg ? ` × ${sets[nextSetIdx].weight_kg} kg` : ''}
+                    </span>
+                  </button>
+                ) : (
+                  sets.length > 0 && (
+                    <p className="mt-2 text-center text-xs font-semibold text-green-ink flex items-center justify-center gap-1.5">
+                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                      All sets done
+                    </p>
+                  )
+                )}
               </div>
 
               {/* Add / Remove Set Row */}

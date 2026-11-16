@@ -15,7 +15,14 @@ import {
 } from 'lucide-react';
 import { Profile, ActivityLevel, UserGoal, Goal } from '@/types/database';
 import { DataService } from '@/lib/data-service';
-import { calculateTargets } from '@/lib/calculator';
+import {
+  calculateTargets,
+  getUserCalculationContext,
+  calculateAge,
+  cleanDietaryPreference,
+  describeMissingFields,
+  ACTIVITY_LABELS,
+} from '@/lib/calculator';
 import { NuviaBottomSheet } from '../NuviaBottomSheet';
 import { FitnessContextService } from '@/lib/fitness-context-service';
 import { PhysiqueIllustration } from '../physique/PhysiqueIllustration';
@@ -50,15 +57,17 @@ export function AboutYouSection({
   // Editable Form State
   const [name, setName] = useState(profile?.name || '');
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || '');
-  const [sex, setSex] = useState<'male' | 'female'>(profile?.sex || 'male');
-  const [heightCm, setHeightCm] = useState(String(profile?.height_cm || 175));
-  const [weightKg, setWeightKg] = useState(String(profile?.weight_kg || 73));
-  const [activityLevel, setActivityLevel] = useState<ActivityLevel>(
-    profile?.activity_level || 'moderately_active'
+  // Body details start empty when the profile has none, so nothing is invented.
+  const [sex, setSex] = useState<'male' | 'female' | ''>(profile?.sex || '');
+  const [dob, setDob] = useState(profile?.date_of_birth?.slice(0, 10) || '');
+  const [heightCm, setHeightCm] = useState(String(profile?.height_cm || ''));
+  const [weightKg, setWeightKg] = useState(String(profile?.weight_kg || ''));
+  const [activityLevel, setActivityLevel] = useState<ActivityLevel | ''>(
+    profile?.activity_level || ''
   );
-  const [goal, setGoal] = useState<UserGoal>(profile?.goal || 'lose_weight');
+  const [goal, setGoal] = useState<UserGoal | ''>(profile?.goal || '');
   const [dietaryPreference, setDietaryPreference] = useState(
-    profile?.dietary_preference || 'Halal / Balanced'
+    cleanDietaryPreference(profile?.dietary_preference) || 'Halal / Balanced'
   );
   const [syncTargets, setSyncTargets] = useState(true);
 
@@ -74,47 +83,48 @@ export function AboutYouSection({
   useEffect(() => {
     setName(profile?.name || '');
     setAvatarUrl(profile?.avatar_url || '');
-    setSex(profile?.sex || 'male');
-    setHeightCm(String(profile?.height_cm || 175));
-    setWeightKg(String(profile?.weight_kg || 73));
-    setActivityLevel(profile?.activity_level || 'moderately_active');
-    setGoal(profile?.goal || 'lose_weight');
-    setDietaryPreference(profile?.dietary_preference || 'Halal / Balanced');
+    setSex(profile?.sex || '');
+    setDob(profile?.date_of_birth?.slice(0, 10) || '');
+    setHeightCm(String(profile?.height_cm || ''));
+    setWeightKg(String(profile?.weight_kg || ''));
+    setActivityLevel(profile?.activity_level || '');
+    setGoal(profile?.goal || '');
+    setDietaryPreference(cleanDietaryPreference(profile?.dietary_preference) || 'Halal / Balanced');
     const fp = FitnessContextService.getStoredPreferences(profile?.id);
     setCurrentPhysique(fp.current_physique || 'soft_low_muscle');
     setDesiredPhysique(fp.desired_physique || 'athletic');
     setAdaptivePlanMode(fp.adaptive_plan_mode || 'ask_first');
   }, [profile]);
 
-  const age = useMemo(() => {
-    if (!profile?.date_of_birth) return 23;
-    const b = new Date(profile.date_of_birth);
-    if (isNaN(b.getTime())) return 23;
-    return Math.abs(new Date(Date.now() - b.getTime()).getUTCFullYear() - 1970) || 23;
-  }, [profile?.date_of_birth]);
+  const savedAge = useMemo(() => calculateAge(profile?.date_of_birth), [profile?.date_of_birth]);
 
-  // Scientific live calculation using Mifflin-St Jeor formula
-  const calculatedPreview = useMemo(() => {
-    return calculateTargets({
-      age,
-      sex,
-      height_cm: Number(heightCm) || 175,
-      weight_kg: Number(weightKg) || 73,
-      activity_level: activityLevel,
-      goal,
-      target_weight_kg: profile?.target_weight_kg || Number(weightKg) || 68,
-    });
-  }, [age, sex, heightCm, weightKg, activityLevel, goal, profile?.target_weight_kg]);
+  // Live preview: the same calculation every other screen uses, fed with the form values.
+  const previewContext = useMemo(
+    () =>
+      getUserCalculationContext({
+        ...(profile || ({} as Profile)),
+        date_of_birth: dob || null,
+        sex: sex || null,
+        height_cm: Number(heightCm) || null,
+        weight_kg: Number(weightKg) || null,
+        activity_level: activityLevel || null,
+        goal: goal || null,
+      }),
+    [profile, dob, sex, heightCm, weightKg, activityLevel, goal]
+  );
+  const calculatedPreview = useMemo(() => calculateTargets(previewContext), [previewContext]);
+  const previewMissing = describeMissingFields(previewContext.missing_fields);
 
   const openEditModal = () => {
     setName(profile?.name || '');
     setAvatarUrl(profile?.avatar_url || '');
-    setSex(profile?.sex || 'male');
-    setHeightCm(String(profile?.height_cm || 175));
-    setWeightKg(String(profile?.weight_kg || 73));
-    setActivityLevel(profile?.activity_level || 'moderately_active');
-    setGoal(profile?.goal || 'lose_weight');
-    setDietaryPreference(profile?.dietary_preference || 'Halal / Balanced');
+    setSex(profile?.sex || '');
+    setDob(profile?.date_of_birth?.slice(0, 10) || '');
+    setHeightCm(String(profile?.height_cm || ''));
+    setWeightKg(String(profile?.weight_kg || ''));
+    setActivityLevel(profile?.activity_level || '');
+    setGoal(profile?.goal || '');
+    setDietaryPreference(cleanDietaryPreference(profile?.dietary_preference) || 'Halal / Balanced');
     const fp = FitnessContextService.getStoredPreferences(profile?.id);
     setAdaptivePlanMode(fp.adaptive_plan_mode || 'ask_first');
     setSyncTargets(true);
@@ -138,26 +148,20 @@ export function AboutYouSection({
     setStatusBanner(null);
 
     try {
-      const height = Number(profile?.height_cm) || 175;
-      const weight = Number(profile?.weight_kg) || 73;
-      const targetWeight = Number(profile?.target_weight_kg) || (weight > 5 ? weight - 5 : 68);
-      const biologicalSex = profile?.sex || 'male';
-      const actLevel = profile?.activity_level || 'moderately_active';
-      const userGoal = profile?.goal || 'lose_weight';
-
-      // 1. Pure deterministic calculation
-      const calculated = calculateTargets({
-        age,
-        sex: biologicalSex,
-        height_cm: height,
-        weight_kg: weight,
-        activity_level: actLevel,
-        goal: userGoal,
-        target_weight_kg: targetWeight,
-      });
-
-      // 2. Fetch existing goals to compare
+      // 1. Fetch existing goals (keeps the saved target weight)
       const currentGoal = await DataService.getGoals(profile?.id);
+
+      // 2. Same calculation as every other screen, from the saved profile and pace
+      const ctx = getUserCalculationContext(profile, currentGoal);
+      if (ctx.missing_fields.length > 0) {
+        setStatusBanner({
+          type: 'error',
+          message: `Add your ${describeMissingFields(ctx.missing_fields)} first (tap Edit), then recalculate.`,
+        });
+        return;
+      }
+      const calculated = calculateTargets(ctx);
+      const targetWeight = ctx.target_weight_kg ?? null;
 
       // 3. Persist new goal record
       const updatedGoal: Goal = {
@@ -205,12 +209,13 @@ export function AboutYouSection({
         id: profile?.id || 'demo-profile',
         name: name.trim() || profile?.name || null,
         avatar_url: avatarUrl.trim() || profile?.avatar_url || null,
-        sex,
-        height_cm: Number(heightCm) || profile?.height_cm || 175,
-        weight_kg: Number(weightKg) || profile?.weight_kg || 73,
-        activity_level: activityLevel,
-        goal,
-        dietary_preference: dietaryPreference.trim() || null,
+        date_of_birth: dob || profile?.date_of_birth || null,
+        sex: sex || profile?.sex || null,
+        height_cm: Number(heightCm) || profile?.height_cm || null,
+        weight_kg: Number(weightKg) || profile?.weight_kg || null,
+        activity_level: activityLevel || profile?.activity_level || null,
+        goal: goal || profile?.goal || null,
+        dietary_preference: cleanDietaryPreference(dietaryPreference),
       };
 
       await DataService.saveProfile(updatedProfile);
@@ -247,8 +252,8 @@ export function AboutYouSection({
         profile?.id
       );
 
-      // Auto-sync calculated targets if requested
-      if (syncTargets) {
+      // Update targets if requested (never from incomplete details)
+      if (syncTargets && previewContext.missing_fields.length === 0) {
         const newGoal: Goal = {
           id: `goal-${Date.now()}`,
           user_id: profile?.id || DataService.getDemoUserId(),
@@ -257,7 +262,7 @@ export function AboutYouSection({
           carbohydrate_target: calculatedPreview.carbohydrate_target,
           fat_target: calculatedPreview.fat_target,
           exercise_minutes_target: calculatedPreview.exercise_minutes_target,
-          target_weight_kg: profile?.target_weight_kg || Number(weightKg) || 68,
+          target_weight_kg: previewContext.target_weight_kg ?? null,
         };
         await DataService.saveGoals(newGoal);
       }
@@ -284,7 +289,7 @@ export function AboutYouSection({
       case 'extremely_active':
         return 'Extremely active';
       default:
-        return 'Moderately active';
+        return 'Not set';
     }
   };
 
@@ -301,7 +306,7 @@ export function AboutYouSection({
       case 'build_muscle':
         return 'Build muscle';
       default:
-        return 'Maintain weight';
+        return 'Not set';
     }
   };
 
@@ -364,17 +369,22 @@ export function AboutYouSection({
       <div className="divide-y divide-fg/[0.04]">
         <div className="w-full p-3.5 flex justify-between items-center text-left">
           <span className="text-muted">Height</span>
-          <span className="font-semibold text-fg">{profile?.height_cm || 175} cm</span>
+          <span className="font-semibold text-fg">{profile?.height_cm ? `${profile.height_cm} cm` : 'Not set'}</span>
         </div>
 
         <div className="w-full p-3.5 flex justify-between items-center text-left">
           <span className="text-muted">Current Weight</span>
-          <span className="font-semibold text-fg">{profile?.weight_kg || 73} kg</span>
+          <span className="font-semibold text-fg">{profile?.weight_kg ? `${profile.weight_kg} kg` : 'Not set'}</span>
+        </div>
+
+        <div className="w-full p-3.5 flex justify-between items-center text-left">
+          <span className="text-muted">Age</span>
+          <span className="font-semibold text-fg">{savedAge != null ? `${savedAge} years` : 'Not set'}</span>
         </div>
 
         <div className="w-full p-3.5 flex justify-between items-center text-left">
           <span className="text-muted">Biological Sex</span>
-          <span className="font-semibold text-fg capitalize">{profile?.sex || 'Male'}</span>
+          <span className="font-semibold text-fg capitalize">{profile?.sex || 'Not set'}</span>
         </div>
 
         <div className="w-full p-3.5 flex justify-between items-center text-left">
@@ -390,7 +400,7 @@ export function AboutYouSection({
         <div className="w-full p-3.5 flex justify-between items-center text-left">
           <span className="text-muted">Dietary Style</span>
           <span className="font-semibold text-fg truncate max-w-[170px]">
-            {profile?.dietary_preference || 'Halal / Balanced'}
+            {cleanDietaryPreference(profile?.dietary_preference) || 'Halal / Balanced'}
           </span>
         </div>
 
@@ -505,9 +515,11 @@ export function AboutYouSection({
               <label className="block text-muted mb-1 font-medium">Sex</label>
               <select
                 value={sex}
-                onChange={(e) => setSex(e.target.value as 'male' | 'female')}
+                onChange={(e) => setSex(e.target.value as 'male' | 'female' | '')}
+                required
                 className="w-full px-2.5 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg font-semibold focus:outline-none focus:border-accent"
               >
+                <option value="" disabled className="bg-card">Select</option>
                 <option value="male" className="bg-card">Male</option>
                 <option value="female" className="bg-card">Female</option>
               </select>
@@ -517,6 +529,10 @@ export function AboutYouSection({
               <label className="block text-muted mb-1 font-medium">Height (cm)</label>
               <input
                 type="number"
+                min={100}
+                max={250}
+                required
+                placeholder="e.g. 170"
                 value={heightCm}
                 onChange={(e) => setHeightCm(e.target.value)}
                 className="w-full px-3 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg font-semibold focus:outline-none focus:border-accent"
@@ -528,11 +544,28 @@ export function AboutYouSection({
               <input
                 type="number"
                 step="0.1"
+                min={25}
+                max={350}
+                required
+                placeholder="e.g. 70"
                 value={weightKg}
                 onChange={(e) => setWeightKg(e.target.value)}
                 className="w-full px-3 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg font-semibold focus:outline-none focus:border-accent"
               />
             </div>
+          </div>
+
+          {/* Date of birth (age changes your calorie estimate) */}
+          <div>
+            <label className="block text-muted mb-1 font-medium">Date of Birth</label>
+            <input
+              type="date"
+              required
+              max={new Date().toISOString().slice(0, 10)}
+              value={dob}
+              onChange={(e) => setDob(e.target.value)}
+              className="w-full px-3 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg font-semibold focus:outline-none focus:border-accent"
+            />
           </div>
 
           {/* Activity Level */}
@@ -541,14 +574,19 @@ export function AboutYouSection({
             <select
               value={activityLevel}
               onChange={(e) => setActivityLevel(e.target.value as ActivityLevel)}
+              required
               className="w-full px-3 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg font-semibold focus:outline-none focus:border-accent"
             >
-              <option value="sedentary" className="bg-card">Sedentary (Little to no exercise)</option>
-              <option value="lightly_active" className="bg-card">Lightly Active (1-3 days/week)</option>
-              <option value="moderately_active" className="bg-card">Moderately Active (3-5 days/week)</option>
-              <option value="very_active" className="bg-card">Very Active (6-7 days/week)</option>
-              <option value="extremely_active" className="bg-card">Extremely Active (Athletic/Physical Job)</option>
+              <option value="" disabled className="bg-card">Select</option>
+              {(Object.keys(ACTIVITY_LABELS) as ActivityLevel[]).map((level) => (
+                <option key={level} value={level} className="bg-card">
+                  {ACTIVITY_LABELS[level].label} ({ACTIVITY_LABELS[level].desc})
+                </option>
+              ))}
             </select>
+            <p className="text-[10px] text-muted mt-1">
+              Not sure? Pick the lower option. A level that is too high makes your calorie target too high.
+            </p>
           </div>
 
           {/* Goal */}
@@ -557,8 +595,10 @@ export function AboutYouSection({
             <select
               value={goal}
               onChange={(e) => setGoal(e.target.value as UserGoal)}
+              required
               className="w-full px-3 py-2.5 rounded-xl bg-fg/5 border border-fg/10 text-fg font-semibold focus:outline-none focus:border-accent"
             >
+              <option value="" disabled className="bg-card">Select</option>
               <option value="recomposition" className="bg-card">Lose Fat &amp; Build Muscle (Recomposition)</option>
               <option value="lose_weight" className="bg-card">Lose Weight</option>
               <option value="build_muscle" className="bg-card">Build Muscle</option>
@@ -620,14 +660,14 @@ export function AboutYouSection({
               <div className="flex flex-col items-center">
                 <span className="text-[8px] text-muted mb-0.5 uppercase font-medium">Current</span>
                 <div className="w-10 h-16 rounded bg-fg/[0.03] p-0.5 flex items-center justify-center">
-                  <PhysiqueIllustration sex={sex} type={currentPhysique} className="w-full h-full" />
+                  <PhysiqueIllustration sex={sex || 'male'} type={currentPhysique} className="w-full h-full" />
                 </div>
               </div>
               <ArrowRight className="w-3.5 h-3.5 text-green-ink" />
               <div className="flex flex-col items-center">
                 <span className="text-[8px] text-green-ink mb-0.5 uppercase font-medium">Desired</span>
                 <div className="w-10 h-16 rounded bg-accent/5 p-0.5 border border-accent/20 flex items-center justify-center">
-                  <PhysiqueIllustration sex={sex} type={desiredPhysique} className="w-full h-full" selected />
+                  <PhysiqueIllustration sex={sex || 'male'} type={desiredPhysique} className="w-full h-full" selected />
                 </div>
               </div>
             </div>
@@ -684,10 +724,21 @@ export function AboutYouSection({
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-bold text-green-ink uppercase tracking-wider flex items-center gap-1">
                 <Sparkles className="w-3 h-3" />
-                <span>Scientific Calculation</span>
+                <span>{previewMissing ? 'Rough Estimate' : 'Your New Targets'}</span>
               </span>
               <span className="text-[10px] font-semibold text-muted">Mifflin-St Jeor</span>
             </div>
+
+            {previewMissing && (
+              <p className="text-[11px] text-warn leading-relaxed">
+                Add your {previewMissing} above to get your real targets. Until then these numbers are only a rough guess and will not be saved as your targets.
+              </p>
+            )}
+            {!previewMissing && calculatedPreview.limited_by !== 'none' && (
+              <p className="text-[11px] text-muted leading-relaxed">
+                Your chosen pace of {calculatedPreview.weekly_pace_kg} kg / week needs a bigger calorie change than Nuvia will suggest, so this target gives about {calculatedPreview.expected_pace_kg} kg / week.
+              </p>
+            )}
 
             <div className="flex items-baseline justify-between">
               <div>
@@ -695,9 +746,9 @@ export function AboutYouSection({
                 <span className="text-[10px] text-muted ml-1">kcal / day</span>
               </div>
               <div className="text-right text-[10px] text-muted">
-                <span>BMR: <strong className="text-fg">{calculatedPreview.bmr}</strong></span>
+                <span>At rest: <strong className="text-fg">{calculatedPreview.bmr}</strong></span>
                 <span className="mx-1">·</span>
-                <span>TDEE: <strong className="text-fg">{calculatedPreview.tdee}</strong></span>
+                <span>Maintenance: <strong className="text-fg">{calculatedPreview.tdee}</strong></span>
               </div>
             </div>
 
@@ -726,7 +777,7 @@ export function AboutYouSection({
                 className="w-3.5 h-3.5 accent-accent rounded cursor-pointer"
               />
               <span className="text-[11px] text-fg-soft font-medium">
-                Auto-update daily calorie &amp; macro targets with these values
+                Update my daily calorie &amp; macro targets with these values
               </span>
             </label>
           </div>
