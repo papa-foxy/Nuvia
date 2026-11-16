@@ -187,6 +187,77 @@ function performances(log: ExerciseLog): Perf[] {
 
 const round1 = (n: number) => Math.round(n * 10) / 10;
 
+/** Effective sets per muscle in one log, and which exercises contributed. */
+function logMuscleLoad(log: ExerciseLog): Map<MuscleId, { sets: number; by: Map<string, number> }> {
+  const load = new Map<MuscleId, { sets: number; by: Map<string, number> }>();
+  const add = (id: MuscleId, sets: number, exercise: string) => {
+    if (sets <= 0) return;
+    const cur = load.get(id) || { sets: 0, by: new Map<string, number>() };
+    cur.sets += sets;
+    cur.by.set(exercise, (cur.by.get(exercise) || 0) + sets);
+    load.set(id, cur);
+  };
+  for (const p of performances(log)) {
+    const done = (p.sets || []).filter((s) => s.completed).length;
+    if (!done) continue;
+    const weights = musclesForExercise(p.name || '', p.target_muscle || '');
+    for (const [id, w] of Object.entries(weights) as [MuscleId, number][]) add(id, done * w, p.name || 'Exercise');
+  }
+  if (load.size === 0) {
+    const title = log.exercise_type || 'Activity';
+    for (const [id, sets] of Object.entries(cardioLoad(log)) as [MuscleId, number][]) add(id, sets, title);
+  }
+  return load;
+}
+
+export interface MuscleWork {
+  id: MuscleId;
+  label: string;
+  /** Effective sets across the given logs. */
+  sets: number;
+  /** Exercises that worked it, biggest contribution first. */
+  exercises: string[];
+}
+
+/** What a set of logs (e.g. one day) worked, per muscle, most sets first. */
+export function muscleWork(logs: ExerciseLog[]): MuscleWork[] {
+  const total = new Map<MuscleId, { sets: number; by: Map<string, number> }>();
+  for (const log of logs) {
+    for (const [id, { sets, by }] of logMuscleLoad(log)) {
+      const cur = total.get(id) || { sets: 0, by: new Map<string, number>() };
+      cur.sets += sets;
+      for (const [name, n] of by) cur.by.set(name, (cur.by.get(name) || 0) + n);
+      total.set(id, cur);
+    }
+  }
+  return [...total.entries()]
+    .filter(([, v]) => v.sets >= 1)
+    .map(([id, v]) => ({
+      id,
+      label: MUSCLE_INFO[id].label,
+      sets: round1(v.sets),
+      exercises: [...v.by.entries()].sort((a, b) => b[1] - a[1]).map(([n]) => n),
+    }))
+    .sort((a, b) => b.sets - a.sets);
+}
+
+/** Muscles a planned routine targets (primary work only), with planned sets. */
+export function plannedMuscles(exercises: { name: string; target_muscle: string; sets?: number }[]): MuscleWork[] {
+  const total = new Map<MuscleId, { sets: number; by: Set<string> }>();
+  for (const ex of exercises) {
+    for (const [id, w] of Object.entries(musclesForExercise(ex.name, ex.target_muscle)) as [MuscleId, number][]) {
+      if (w < 0.7) continue;
+      const cur = total.get(id) || { sets: 0, by: new Set<string>() };
+      cur.sets += Number(ex.sets) || 0;
+      cur.by.add(ex.name);
+      total.set(id, cur);
+    }
+  }
+  return [...total.entries()]
+    .map(([id, v]) => ({ id, label: MUSCLE_INFO[id].label, sets: v.sets, exercises: [...v.by] }))
+    .sort((a, b) => b.sets - a.sets);
+}
+
 /** Recovery and history for every muscle, from the given logs. */
 export function muscleStatus(logs: ExerciseLog[], now = new Date()): MuscleStatus[] {
   const nowMs = now.getTime();
@@ -198,28 +269,7 @@ export function muscleStatus(logs: ExerciseLog[], now = new Date()): MuscleStatu
     const age = nowMs - when.getTime();
     if (age < 0 || age > HISTORY_WINDOW_MS) continue;
 
-    const load = new Map<MuscleId, { sets: number; by: Map<string, number> }>();
-    const add = (id: MuscleId, sets: number, exercise: string) => {
-      if (sets <= 0) return;
-      const cur = load.get(id) || { sets: 0, by: new Map<string, number>() };
-      cur.sets += sets;
-      cur.by.set(exercise, (cur.by.get(exercise) || 0) + sets);
-      load.set(id, cur);
-    };
-
-    const perfs = performances(log);
-    for (const p of perfs) {
-      const done = (p.sets || []).filter((s) => s.completed).length;
-      if (!done) continue;
-      const weights = musclesForExercise(p.name || '', p.target_muscle || '');
-      for (const [id, w] of Object.entries(weights) as [MuscleId, number][]) add(id, done * w, p.name || 'Exercise');
-    }
-    if (load.size === 0) {
-      const title = log.exercise_type || 'Activity';
-      for (const [id, sets] of Object.entries(cardioLoad(log)) as [MuscleId, number][]) add(id, sets, title);
-    }
-
-    for (const [id, { sets, by }] of load) {
+    for (const [id, { sets, by }] of logMuscleLoad(log)) {
       if (sets < 1) continue; // too little to matter
       sessions.get(id)!.push({
         date: when.toISOString(),

@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { Meal, ExerciseLog, DailySummary } from '@/types/database';
 import { WorkoutRoutine } from '@/types/routine';
-import { BodyMuscleMap } from './BodyMuscleMap';
+import { DayMuscleMap } from './workout/DayMuscleMap';
 import { ExerciseThumbnail } from './ExerciseThumbnail';
 
 interface DayDetailsModalProps {
@@ -188,45 +188,6 @@ export function DayDetailsModal({
   });
 
   const hasExercises = exercises.length > 0;
-  const exerciseNames = exercises.map((e) => (e as any).exercise_name || e.exercise_type || e.description || 'Exercise');
-
-  let targetMuscles = Array.from(
-    new Set(
-      exercises
-        .map((e) => (e as any).target_muscle || (e as any).muscle_group)
-        .filter(Boolean)
-    )
-  );
-
-  if (targetMuscles.length === 0) {
-    if (hasExercises) {
-      const exercisedMuscles = exercises.flatMap((ex) => {
-        const desc = `${ex.exercise_type} ${ex.description || ''}`.toLowerCase();
-        const list: string[] = [];
-        if (desc.includes('push') || desc.includes('chest') || desc.includes('bench')) list.push('chest');
-        if (desc.includes('shoulder') || desc.includes('press') || desc.includes('lateral')) list.push('shoulders');
-        if (desc.includes('abs') || desc.includes('crunch') || desc.includes('plank') || desc.includes('twist') || desc.includes('knee raise') || desc.includes('core')) list.push('abs');
-        if (desc.includes('bicep') || desc.includes('curl')) list.push('biceps');
-        if (desc.includes('tricep')) list.push('triceps');
-        if (desc.includes('back') || desc.includes('row') || desc.includes('pull')) list.push('back');
-        if (desc.includes('leg') || desc.includes('squat') || desc.includes('lunge')) list.push('quads');
-        return list;
-      });
-      targetMuscles = Array.from(new Set(exercisedMuscles));
-      if (targetMuscles.length === 0) {
-        targetMuscles = ['chest', 'abs', 'shoulders'];
-      }
-    } else if (routine) {
-      const focus = (routine.focus || '').toLowerCase();
-      if (focus.includes('upper')) {
-        targetMuscles = ['chest', 'shoulders', 'triceps', 'biceps', 'back'];
-      } else if (focus.includes('abs') || focus.includes('core')) {
-        targetMuscles = ['abs'];
-      } else if (focus.includes('leg')) {
-        targetMuscles = ['quads', 'hamstrings', 'calves'];
-      }
-    }
-  }
 
   return (
     <>
@@ -462,19 +423,8 @@ export function DayDetailsModal({
             </div>
           )}
 
-          {/* MUSCLE ACTIVATION PUMP HEATMAP */}
-          <BodyMuscleMap
-            workedMuscles={targetMuscles}
-            isPumpActive={hasExercises}
-            exercisesPerformed={exerciseNames}
-            routineTitle={
-              hasExercises
-                ? `Muscle Pump (${targetMuscles.join(', ')})`
-                : routine
-                ? `Target Muscles: ${routine.focus}`
-                : 'Muscles In Rest & Recovery'
-            }
-          />
+          {/* Muscles worked this day (same anatomy map as the Workout tab) */}
+          <DayMuscleMap key={dateStr} exercises={exercises} routine={routine} />
 
           {/* LOGGED MEALS ON THIS SPECIFIC DAY */}
           <div className="space-y-2.5 pt-1">

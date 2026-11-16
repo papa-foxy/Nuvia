@@ -730,8 +730,8 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                       onClick={() => setCurrentPhysique(opt.id)}
                       className={`relative p-2.5 rounded-2xl text-center transition-all cursor-pointer border flex flex-col items-center justify-between active:scale-[0.98] ${
                         isSelected
-                          ? 'bg-fg/[0.08] border-accent ring-1 ring-accent/40 shadow-sm scale-[1.02]'
-                          : 'bg-card border-fg/[0.05] hover:border-fg/20'
+                          ? 'bg-card border-accent ring-1 ring-accent/40 shadow-sm scale-[1.02]'
+                          : 'bg-card border-line/60 hover:border-fg/20'
                       }`}
                     >
                       {isSelected && (
@@ -828,8 +828,8 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
                       onClick={() => setDesiredPhysique(opt.id)}
                       className={`relative p-2.5 rounded-2xl text-center transition-all cursor-pointer border flex flex-col items-center justify-between active:scale-[0.98] ${
                         isSelected
-                          ? 'bg-fg/[0.08] border-accent ring-1 ring-accent/40 shadow-sm scale-[1.02]'
-                          : 'bg-card border-fg/[0.05] hover:border-fg/20'
+                          ? 'bg-card border-accent ring-1 ring-accent/40 shadow-sm scale-[1.02]'
+                          : 'bg-card border-line/60 hover:border-fg/20'
                       }`}
                     >
                       {isSelected && (
@@ -855,7 +855,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
             </div>
 
             {/* Live Interactive Transformation Preview Card */}
-            <div className="p-3.5 rounded-2xl bg-gradient-to-br from-card to-[#141416] border border-fg/[0.08] shadow-lg">
+            <div className="p-3.5 rounded-[var(--radius-card)] bg-card border border-line/60">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-muted">
                   Your Direction
@@ -868,7 +868,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
               <div className="flex items-center justify-around py-1">
                 <div className="flex flex-col items-center">
                   <span className="text-[10px] uppercase font-semibold text-muted mb-1">Current</span>
-                  <div className="w-16 h-24 rounded-xl bg-app/40 border border-fg/10 p-1 flex items-center justify-center">
+                  <div className="w-16 h-24 rounded-xl bg-card border border-line/60 p-1 flex items-center justify-center">
                     <PhysiqueIllustration sex={sex} type={currentPhysique} className="w-full h-full" />
                   </div>
                   <span className="text-[11px] font-semibold text-fg mt-1 text-center">
@@ -883,7 +883,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
 
                 <div className="flex flex-col items-center">
                   <span className="text-[10px] uppercase font-semibold text-green-ink mb-1">Desired</span>
-                  <div className="w-16 h-24 rounded-xl bg-accent/10 border border-accent/30 p-1 flex items-center justify-center">
+                  <div className="w-16 h-24 rounded-xl bg-card border border-accent p-1 flex items-center justify-center">
                     <PhysiqueIllustration sex={sex} type={desiredPhysique} className="w-full h-full" selected />
                   </div>
                   <span className="text-[11px] font-semibold text-green-ink mt-1 text-center">
@@ -1326,7 +1326,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
             <div className="flex items-center justify-around py-1">
               <div className="flex flex-col items-center">
                 <span className="text-[9px] uppercase font-semibold text-muted mb-1">Current</span>
-                <div className="w-14 h-20 rounded-xl bg-app/50 border border-fg/10 p-1 flex items-center justify-center">
+                <div className="w-16 h-24 rounded-xl bg-card border border-line/60 p-1 flex items-center justify-center">
                   <PhysiqueIllustration sex={sex} type={currentPhysique} className="w-full h-full" />
                 </div>
                 <span className="text-[10px] font-semibold text-fg mt-1 text-center">
@@ -1341,7 +1341,7 @@ export function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps
 
               <div className="flex flex-col items-center">
                 <span className="text-[9px] uppercase font-semibold text-green-ink mb-1">Desired</span>
-                <div className="w-14 h-20 rounded-xl bg-accent/10 border border-accent/30 p-1 flex items-center justify-center">
+                <div className="w-16 h-24 rounded-xl bg-card border border-accent p-1 flex items-center justify-center">
                   <PhysiqueIllustration sex={sex} type={desiredPhysique} className="w-full h-full" selected />
                 </div>
                 <span className="text-[10px] font-semibold text-green-ink mt-1 text-center">

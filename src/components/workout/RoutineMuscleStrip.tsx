@@ -64,20 +64,20 @@ export function RoutineMuscleStrip({ exercises, logs }: { exercises: RoutineExer
             <div
               key={group}
               role="listitem"
-              className="shrink-0 w-[84px] rounded-2xl bg-card border border-line/60 p-2 flex flex-col items-center text-center"
+              className="shrink-0 w-[84px] rounded-[var(--radius-card)] bg-card border border-line/60 p-2 flex flex-col items-center text-center"
             >
               <div className="relative">
                 <AnatomyFigure
                   view={view}
                   className="w-10 h-20"
                   label={`${group}, ${percent}% recovered`}
-                  fillFor={(id) => (muscles.has(id) ? recoveryColor(percent) || 'var(--theme-fg)' : null)}
+                  fillFor={(id) => (muscles.has(id) ? recoveryColor(percent) || 'color-mix(in srgb, var(--theme-fg) 55%, var(--theme-card))' : null)}
                 />
                 <span
                   className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 rounded-full text-[10px] font-extrabold tabular-nums border-2 border-card"
                   style={{
                     backgroundColor: recoveryColor(percent) || 'var(--theme-elevated)',
-                    color: fresh ? 'var(--theme-fg)' : '#111315',
+                    color: fresh ? 'var(--theme-fg)' : 'var(--theme-on-accent)',
                   }}
                 >
                   {percent}%

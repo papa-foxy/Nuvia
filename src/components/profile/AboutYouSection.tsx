@@ -420,10 +420,10 @@ export function AboutYouSection({
                 </span>
               </div>
 
-              <div className="flex items-center justify-around py-1 bg-fg/[0.02] rounded-xl border border-fg/[0.04]">
+              <div className="flex items-center justify-around py-2 rounded-xl border border-line/60">
                 <div className="flex flex-col items-center">
                   <span className="text-[9px] uppercase font-semibold text-muted mb-1">Starting</span>
-                  <div className="w-12 h-18 rounded-lg bg-app/50 border border-fg/10 p-0.5 flex items-center justify-center">
+                  <div className="w-16 h-24 rounded-xl bg-card border border-line/60 p-1 flex items-center justify-center">
                     <PhysiqueIllustration sex={profile?.sex || 'male'} type={currentType} className="w-full h-full" />
                   </div>
                   <span className="text-[10px] font-semibold text-fg mt-1 text-center truncate max-w-[90px]">
@@ -438,7 +438,7 @@ export function AboutYouSection({
 
                 <div className="flex flex-col items-center">
                   <span className="text-[9px] uppercase font-semibold text-green-ink mb-1">Desired</span>
-                  <div className="w-12 h-18 rounded-lg bg-accent/10 border border-accent/30 p-0.5 flex items-center justify-center">
+                  <div className="w-16 h-24 rounded-xl bg-card border border-accent p-1 flex items-center justify-center">
                     <PhysiqueIllustration sex={profile?.sex || 'male'} type={desiredType} className="w-full h-full" selected />
                   </div>
                   <span className="text-[10px] font-semibold text-green-ink mt-1 text-center truncate max-w-[90px]">
@@ -656,17 +656,17 @@ export function AboutYouSection({
               </div>
             </div>
 
-            <div className="flex items-center justify-around py-1.5 bg-app/40 rounded-xl border border-fg/[0.04]">
+            <div className="flex items-center justify-around py-2 rounded-xl border border-line/60">
               <div className="flex flex-col items-center">
                 <span className="text-[8px] text-muted mb-0.5 uppercase font-medium">Current</span>
-                <div className="w-10 h-16 rounded bg-fg/[0.03] p-0.5 flex items-center justify-center">
+                <div className="w-16 h-24 rounded-xl bg-card border border-line/60 p-1 flex items-center justify-center">
                   <PhysiqueIllustration sex={sex || 'male'} type={currentPhysique} className="w-full h-full" />
                 </div>
               </div>
               <ArrowRight className="w-3.5 h-3.5 text-green-ink" />
               <div className="flex flex-col items-center">
                 <span className="text-[8px] text-green-ink mb-0.5 uppercase font-medium">Desired</span>
-                <div className="w-10 h-16 rounded bg-accent/5 p-0.5 border border-accent/20 flex items-center justify-center">
+                <div className="w-16 h-24 rounded-xl bg-card border border-accent p-1 flex items-center justify-center">
                   <PhysiqueIllustration sex={sex || 'male'} type={desiredPhysique} className="w-full h-full" selected />
                 </div>
               </div>

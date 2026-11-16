@@ -128,7 +128,7 @@ export function AnatomyFigure({ view, fillFor, selected, onSelect, describe, bad
         return (
           <g key={b.id} transform={`translate(${at[0] - w / 2}, ${at[1] - 28})`} pointerEvents="none" aria-hidden="true">
             <rect width={w} height="56" rx="28" fill={b.color} stroke="var(--theme-card)" strokeWidth="6" />
-            <text x={w / 2} y="40" textAnchor="middle" fontSize="36" fontWeight="800" fill="#111315">
+            <text x={w / 2} y="40" textAnchor="middle" fontSize="36" fontWeight="800" fill="var(--theme-on-accent)">
               {b.label}
             </text>
           </g>
