@@ -438,7 +438,7 @@ export function AddMealModal({
                     type="text"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="e.g. Grilled chicken breast with white rice & broccoli"
+                    placeholder="e.g. Chicken curry, mostly bone, little gravy eaten"
                     className="w-full px-3.5 py-2.5 rounded-xl bg-surface border border-fg/[0.06] text-xs text-fg placeholder-muted focus:outline-none focus:border-accent"
                   />
                 </div>

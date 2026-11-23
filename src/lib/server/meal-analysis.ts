@@ -17,10 +17,58 @@ export interface MealAnalysisParams {
 }
 
 const PERSONAL_RULES = `
-PERSONALISATION (most important when it applies):
-- The block below is THIS user's own history. If the photo or description plausibly shows one of their usual items (same kind of food or drink, similar look, typical time of day), identify it AS that item: use their exact name (keep qualifiers like "no stevia", "less ice", "oat milk"), their usual portion and their usual calories and macros. Add the assumption "Matched your usual <name>".
+PERSONALISATION:
+- The block below is THIS user's own history. If the photo or description plausibly shows one of their usual items (same kind of food or drink, similar look, typical time of day), identify it AS that item: use their exact name (keep qualifiers like "no stevia", "less ice", "oat milk"). Reuse their usual portion and macros only when the current edible portion matches. Current photo evidence and user notes about amounts eaten, bones, and leftovers take precedence. Add the assumption "Matched your usual <name>" when reusing the usual portion and macros.
 - Past corrections show what the AI got wrong before. Never repeat a corrected guess for the same kind of photo: e.g. if "Kopi Ais" was corrected to "Latte (no stevia)", an iced milky coffee is their latte, not kopi ais.
 - Only identify something else when it is clearly a different food or drink.`;
+
+type MealFood = MealAnalysisResult['foods'][number];
+type GeminiMeal = Omit<MealAnalysisResult, 'foods'> & {
+  foods: (MealFood & {
+    bone_in?: {
+      served_g: number;
+      edible_g: number;
+      per_100g: MealAnalysisResult['total'];
+    };
+  })[];
+};
+
+function applyEdiblePortions(meal: GeminiMeal): MealAnalysisResult {
+  let adjusted = false;
+  const foods = meal.foods.flatMap(({ bone_in, ...food }) => {
+    if (!bone_in) return [food];
+    const { served_g, edible_g, per_100g } = bone_in;
+    if (!Number.isFinite(served_g) || served_g <= 0 || !Number.isFinite(edible_g) || edible_g < 0 || edible_g > served_g) {
+      return [food];
+    }
+    if (!per_100g) return [food];
+    const { calories, protein_g, carbs_g, fat_g } = per_100g;
+    if (![calories, protein_g, carbs_g, fat_g].every((value) => Number.isFinite(value) && value >= 0)) return [food];
+
+    adjusted = true;
+    if (edible_g === 0) return [];
+    const portion = edible_g / 100;
+    return [{
+      ...food,
+      estimated_quantity: edible_g,
+      unit: 'g',
+      calories: Math.round(calories * portion),
+      protein_g: Math.round(protein_g * portion),
+      carbs_g: Math.round(carbs_g * portion),
+      fat_g: Math.round(fat_g * portion),
+    }];
+  });
+
+  if (!adjusted) return { ...meal, foods };
+  const sum = (key: keyof MealAnalysisResult['total']) =>
+    Math.round(foods.reduce((total, food) => total + (Number(food[key]) || 0), 0) * 10) / 10;
+  return {
+    ...meal,
+    foods,
+    total: { calories: sum('calories'), protein_g: sum('protein_g'), carbs_g: sum('carbs_g'), fat_g: sum('fat_g') },
+    assumptions: ['Bone-in portions are shown as estimated edible weight.', ...(meal.assumptions || [])],
+  };
+}
 
 function cleanJsonString(raw: string): string {
   let cleaned = raw.trim();
@@ -53,38 +101,45 @@ STEP 2: ESTIMATE FROM THE REFERENCE TABLE. Each line is ONE typical serving as s
 ${foodReferenceForPrompt()}
 
 Rules:
+- BONE-IN PORTIONS: For chicken wings, drumsticks, chopped curry chicken, ribs, and whole or bone-in fish, estimate grams of edible cooked meat separately from the weight of the pieces with their bones. Exclude bones from both calories and protein. If the pieces are mostly bone or the user says "mostly bone" / "banyak tulang", use less than half the weight of the pieces as edible, or less still when there is only a little meat. For example, if 180 g of chopped chicken is mostly bone and has about 70 g of meat, use 70 g to estimate its nutrition. Do not treat each piece as a full serving. Use any stated edible weight. If the meat is hard to see, give a conservative estimate and state the assumption.
 - SINGLE-ITEM dishes (a bowl of laksa, a plate of char kuey teow, a roti, a drink): start from the matching reference line and scale it to the portion you see (bowl/plate size, how full, number of pieces).
 - PLATES BUILT FROM PARTS (nasi kandar, nasi campur / economy rice, banana-leaf rice, any rice with separate dishes): do NOT copy a whole-plate line. Estimate EACH part from the photo and add them up, so a big plate comes out above the "typical" line and a small one below it:
   * Rice: judge the grams from the mound (a small bowl ~160 g, a normal plate ~200–250 g, a big heaped plate ~300 g+) at ~1.3 kcal per g.
-  * Each protein: judge its size; fried/battered pieces are energy-dense (ayam goreng berempah / mamak ~2.8 kcal per g: a small piece ~90 g ~255 kcal, a large piece ~180 g ~500 kcal).
-  * Gravy (kuah campur, curry, dalcha) is ALWAYS its own item, judged by how much you see: a drizzle ~60–80 kcal; covering most of the rice ~150 kcal; "banjir" (rice swimming, gravy pooling across the plate) ~200–250 kcal.
+  * Each protein: use edible weight. For curry chicken served with rice, estimate the meat and the curry gravy separately, even when both are in the same bowl. Use cooked meat nutrition without gravy for the chicken, and include skin or coating if eaten.
+  * Gravy (kuah campur, curry, dalcha) is its own item on these plates. Estimate how much was eaten using the photo and any user notes. A drizzle is ~60–80 kcal; covering most of the rice ~150 kcal; "banjir" (rice swimming, gravy pooling across the plate) ~200–250 kcal.
   * Vegetables, egg, papadom, sambal: each its own item.
 - Do NOT add extra oil, santan or sugar on top of a reference value. Adjust only for what you can see or the user says: extra rice ("nasi tambah"), "banjir", extra sambal, extra pieces, add-ons (telur, ayam, sotong); downward for half portions, "kurang manis" (about -30% sugar), "kosong" (no sugar), "kurang minyak", skin removed.
 - For a dish not in the table, build it from its parts using the closest lines.
 - Itemise each visible component in "foods" with its estimated grams. The items must add up to "total".
+- For bone-in items, report the edible weight in "estimated_quantity" (unit "g") and provide calories and macros for that amount. Include the "bone_in" fields shown below. "served_g" includes the bones, "edible_g" excludes them, and both weights exclude separately itemised gravy. "per_100g" describes 100 g of the cooked edible item. Omit "bone_in" for boneless foods, rice, and gravy.
 - If the photo is unclear, still give the best estimate, set "confidence": "low", and say what you assumed.
 
 STEP 3: Return strictly structured JSON matching this schema:
 {
   "meal_type": "${mealType || 'lunch'}",
-  "meal_name": "Authentic dish name (e.g. Ayam Gepuk Top Global with Rice & Sambal)",
+  "meal_name": "Ayam Goreng",
   "foods": [
     {
-      "name": "Food item name (e.g. Smashed Fried Chicken)",
-      "estimated_quantity": 160,
+      "name": "Ayam Goreng (edible portion)",
+      "estimated_quantity": 70,
       "unit": "g",
-      "calories": 340,
-      "protein_g": 30,
-      "carbs_g": 2,
-      "fat_g": 24,
-      "confidence": "high"
+      "calories": 196,
+      "protein_g": 18,
+      "carbs_g": 6,
+      "fat_g": 11,
+      "confidence": "medium",
+      "bone_in": {
+        "served_g": 120,
+        "edible_g": 70,
+        "per_100g": { "calories": 280, "protein_g": 25, "carbs_g": 8, "fat_g": 16 }
+      }
     }
   ],
   "total": {
-    "calories": 920,
-    "protein_g": 49,
-    "carbs_g": 73,
-    "fat_g": 50.5
+    "calories": 196,
+    "protein_g": 18,
+    "carbs_g": 6,
+    "fat_g": 11
   },
   "confidence": "high",
   "assumptions": ["List of realistic culinary assumptions (e.g. includes oil in sambal gepuk, standard portion of white rice)"],
@@ -135,7 +190,7 @@ ${personalContext}` });
       });
       if (text) {
         try {
-          return JSON.parse(cleanJsonString(text));
+          return applyEdiblePortions(JSON.parse(cleanJsonString(text)));
         } catch {
           console.warn('[meal-analysis] Gemini returned invalid JSON');
         }
